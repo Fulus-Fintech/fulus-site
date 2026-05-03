@@ -41,5 +41,14 @@
   "services.cards.3.title": "Automate Profit Distribution",
   "services.cards.3.body": "Pro-rata calculations across all members, every cycle — accurate, automatic, auditable.",
   "services.cards.4.title": "Generate Clear Reports Instantly",
-  "services.cards.4.body": "Member-level statements, club-wide P&L, transaction histories — exportable on demand."
+  "services.cards.4.body": "Member-level statements, club-wide P&L, transaction histories — exportable on demand.",
+  "features.eyebrow": "Features",
+  "features.title": "All features in one place",
+  "features.subhead": "Everything your club needs to manage, invest, and grow together with confidence.",
+  "features.items.0": "Easy Club Creation & Membership",
+  "features.items.1": "Transparent Contributions Tracking",
+  "features.items.2": "Real-Time Ownership & Valuations",
+  "features.items.3": "Smarter Investment Management",
+  "features.items.4": "Clear Dashboards & Reports",
+  "features.items.5": "Secure Collaboration & Decisions"
 }

@@ -195,3 +195,8 @@ h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.005em; line-height: 1
 
 /* --- services --- */
 .services-stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+
+/* --- features --- */
+.feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.feature-list li { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--text-muted); }
+.feature-list li::before { content: ""; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-block-start: 8px; transform: scale(1); }
