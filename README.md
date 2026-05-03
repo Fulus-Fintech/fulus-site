@@ -12,7 +12,8 @@ Hosted on Cloudflare Pages; auto-deploys on push to `main`.
   - `apple-app-site-association` — iOS Universal Links manifest. Whitelist of route paths the app handles.
   - `assetlinks.json` — Android App Links manifest. Carries the upload-key SHA-256 fingerprint.
 - `_headers` — Cloudflare Pages: forces `Content-Type: application/json` on the two `.well-known/` files.
-- `_redirects` — Cloudflare Pages: 301s `www.fulus.sa/*` to `fulus.sa/*` (apex is canonical).
+
+`www.fulus.sa` → `fulus.sa` redirect is **not** in `_redirects` because Cloudflare Pages' validator (code 10021) rejects host-based redirects in that file — they have to be path-relative. Configure the www-to-apex redirect in the Cloudflare dashboard once both domains are added as custom domains: Pages project → Custom domains → add `fulus.sa` and `www.fulus.sa` → Bulk Redirects (account-level) or a Page Rule that 301s `www.fulus.sa/*` to `https://fulus.sa/$1`.
 
 ## Editing the landing page
 
