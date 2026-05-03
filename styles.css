@@ -1,0 +1,143 @@
+/* fulus-site styles.css */
+
+:root {
+  --bg: #04070D;
+  --bg-elev: #10131C;
+  --text: #FFFFFF;
+  --text-muted: #D5DBE6;
+  --accent: #00FFB2;
+  --accent-2: #0099FF;
+  --border: rgba(216, 231, 242, 0.07);
+  --border-strong: rgba(207, 231, 255, 0.2);
+  --max-width: 1200px;
+  --gutter: 24px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+  --section-pad-y: 96px;
+  --header-blur: blur(12px);
+}
+
+@media (max-width: 809.98px) {
+  :root {
+    --gutter: 16px;
+    --section-pad-y: 64px;
+  }
+}
+
+/* --- reset / normalize --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img, svg { max-width: 100%; height: auto; display: block; }
+button { font: inherit; cursor: pointer; background: none; border: 0; color: inherit; }
+ul { list-style: none; }
+
+/* --- skip link (a11y) --- */
+.skip-link {
+  position: absolute;
+  inset-inline-start: -9999px;
+  top: 8px;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 4px;
+  z-index: 1000;
+}
+.skip-link:focus { inset-inline-start: 8px; }
+
+/* --- container + section --- */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+section { padding-block: var(--section-pad-y); border-bottom: 1px solid var(--border); }
+
+/* --- typography --- */
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; }
+h1 { font-size: clamp(36px, 6vw, 64px); }
+h2 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.015em; line-height: 1.15; }
+h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.3; }
+.eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-block-end: 16px;
+  font-weight: 500;
+}
+.subhead {
+  font-size: 18px;
+  color: var(--text-muted);
+  max-width: 720px;
+  line-height: 1.5;
+}
+.section-head {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 64px;
+}
+.section-head .subhead { margin-inline: auto; }
+
+/* --- buttons --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  font-size: 15px;
+  text-align: center;
+  transition: transform 200ms ease, opacity 200ms ease, border-color 200ms ease;
+  border: 1px solid transparent;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+.btn-primary:hover { transform: translateY(-1px); opacity: 0.92; }
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--accent); }
+
+/* --- card primitive --- */
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+/* --- reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* --- RTL adjustments --- */
+[dir="rtl"] { /* logical properties auto-flip; targeted overrides as needed by section CSS */ }
+
+/* --- per-section CSS lives below in subsequent tasks --- */
