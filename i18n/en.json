@@ -92,5 +92,17 @@
   "comparison.items.1": "Set your own rules and make decisions as a team",
   "comparison.items.2": "Real-time tracking & dashboards",
   "comparison.items.3": "Wide investment options through tokenization",
-  "comparison.items.4": "Collaborate securely with contracts and forums"
+  "comparison.items.4": "Collaborate securely with contracts and forums",
+  "faq.eyebrow": "FAQ",
+  "faq.title": "Frequently Asked Questions",
+  "faq.items.0.q": "What is an Investment Club?",
+  "faq.items.0.a": "A group of members pooling funds to invest together, share knowledge, and make joint decisions.",
+  "faq.items.1.q": "How do I create or join a club?",
+  "faq.items.1.a": "Sign up, then create a new club or join an existing one by accepting an invitation or sending a join request.",
+  "faq.items.2.q": "Is my money safe on the platform?",
+  "faq.items.2.a": "The platform currently tracks your investments and contributions, while funds are managed securely by club managers through their bank accounts. Future updates will include integrated digital wallets for added convenience and security.",
+  "faq.items.3.q": "How are profits and losses shared?",
+  "faq.items.3.a": "They are automatically calculated based on each member's contribution and ownership percentage.",
+  "faq.items.4.q": "Do I need investing experience?",
+  "faq.items.4.a": "No, clubs are designed for all experience levels, and members learn while investing."
 }
