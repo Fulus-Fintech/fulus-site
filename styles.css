@@ -141,3 +141,26 @@ h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.005em; line-height: 1
 [dir="rtl"] { /* logical properties auto-flip; targeted overrides as needed by section CSS */ }
 
 /* --- per-section CSS lives below in subsequent tasks --- */
+
+/* --- header --- */
+#site-header { position: sticky; top: 0; z-index: 100; background: rgba(4,7,13,0.85); backdrop-filter: var(--header-blur); -webkit-backdrop-filter: var(--header-blur); border-bottom: 1px solid var(--border); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; padding-block: 18px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; }
+.logo img { width: 32px; height: 32px; }
+.nav-desktop ul { display: flex; gap: 28px; align-items: center; }
+.nav-desktop a { font-size: 15px; color: var(--text-muted); transition: color 200ms ease; }
+.nav-desktop a:hover { color: var(--accent); }
+.lang-toggle { display: inline-flex; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 2px; font-size: 13px; font-weight: 500; }
+.lang-btn { padding: 6px 14px; border-radius: var(--radius-pill); color: var(--text-muted); transition: background 200ms ease, color 200ms ease; }
+.lang-btn[aria-pressed="true"], .lang-btn.active { background: var(--accent); color: var(--bg); }
+.hamburger { display: none; width: 36px; height: 36px; padding: 8px; }
+.hamburger span { display: block; height: 2px; background: var(--text); margin: 4px 0; transition: transform 200ms ease, opacity 200ms ease; }
+.hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+.nav-mobile { border-top: 1px solid var(--border); padding: 16px var(--gutter) 24px; }
+.nav-mobile ul { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.nav-mobile a { display: block; padding: 12px 0; font-size: 16px; color: var(--text-muted); }
+@media (max-width: 1199.98px) { .nav-desktop ul { gap: 20px; } }
+@media (max-width: 809.98px) { .nav-desktop, .lang-toggle:not(.lang-toggle-mobile) { display: none; } .hamburger { display: inline-flex; align-items: center; justify-content: center; } }
+@media (min-width: 810px) { .nav-mobile { display: none !important; } }

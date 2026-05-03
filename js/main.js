@@ -17,6 +17,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 1. i18n boot — apply stored/detected lang before paint.
   await initI18n();
 
+  const { setLang, getLang } = await import('./i18n.js');
+  function syncLangButtons() {
+    const cur = getLang();
+    document.querySelectorAll('.lang-btn').forEach((b) => {
+      const isActive = b.dataset.lang === cur;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-pressed', String(isActive));
+    });
+  }
+  syncLangButtons();
+  document.addEventListener('langchange', syncLangButtons);
+  document.querySelectorAll('.lang-btn').forEach((b) => {
+    b.addEventListener('click', () => setLang(b.dataset.lang));
+  });
+
+  const hamburger = document.querySelector('.hamburger');
+  const navMobile = document.getElementById('nav-mobile');
+  if (hamburger && navMobile) {
+    hamburger.addEventListener('click', () => {
+      const open = hamburger.getAttribute('aria-expanded') === 'true';
+      hamburger.setAttribute('aria-expanded', String(!open));
+      navMobile.hidden = open;
+    });
+    navMobile.querySelectorAll('a').forEach((a) =>
+      a.addEventListener('click', () => {
+        hamburger.setAttribute('aria-expanded', 'false');
+        navMobile.hidden = true;
+      }),
+    );
+  }
+
   // 2. GSAP + ScrollTrigger setup (loaded via CDN; available on window).
   if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
     console.error('[fulus-site] GSAP or ScrollTrigger missing; animations skipped.');
