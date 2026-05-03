@@ -10,5 +10,15 @@
   "nav.pricing": "Pricing",
   "nav.faq": "FAQ",
   "lang.en": "EN",
-  "lang.ar": "عربي"
+  "lang.ar": "عربي",
+  "hero.head.0": "First",
+  "hero.head.1": "Web3,",
+  "hero.head.2": "Decentralized",
+  "hero.head.3": "Group",
+  "hero.head.4": "Investing",
+  "hero.head.5": "Platform",
+  "hero.subhead": "Fulus is an all-in-one mobile platform for group investing where people pool money, collaborate together, and invest under one web3 decentralized wallet.",
+  "hero.cta.primary": "Get Started Now",
+  "hero.cta.secondary": "See Features",
+  "phone.balance.label": "Total Balance"
 }
