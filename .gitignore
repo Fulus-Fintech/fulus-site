@@ -1,0 +1,11 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Working files
+_*.html
+_scratch/

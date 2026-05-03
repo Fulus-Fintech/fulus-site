@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fulus.fintech",
+      "sha256_cert_fingerprints": [
+        "63:E3:4A:95:3D:B6:BF:95:50:2F:44:62:A3:79:E7:24:F5:8E:E3:A4:CE:95:D5:2D:CA:AC:29:E9:DD:AB:62:C0"
+      ]
+    }
+  }
+]
