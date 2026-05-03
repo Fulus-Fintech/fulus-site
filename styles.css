@@ -191,3 +191,4 @@ h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.005em; line-height: 1
 
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .card p { color: var(--text-muted); font-size: 15px; margin-block-start: 12px; }
+.services-stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }

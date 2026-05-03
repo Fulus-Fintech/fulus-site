@@ -28,5 +28,18 @@
   "benefits.cards.1.title": "Reduced Risk",
   "benefits.cards.1.body": "Invest in a wider range of assets to diversify risk.",
   "benefits.cards.2.title": "Knowledge Sharing",
-  "benefits.cards.2.body": "Leverage collective knowledge and resources to achieve better returns."
+  "benefits.cards.2.body": "Leverage collective knowledge and resources to achieve better returns.",
+  "services.eyebrow": "Services",
+  "services.title": "Smarter Services, Built for Investment Clubs",
+  "services.subhead": "Everything you need to simplify management, grow together, and stay in control.",
+  "services.cards.0.title": "Launch Your Club with Ease",
+  "services.cards.0.body": "Set up a new club in minutes — invite members, define rules, and start investing together.",
+  "services.cards.1.title": "Manage Shared Funds",
+  "services.cards.1.body": "Distribute profit, transfer funds, handle redemption and subscription — all from one dashboard.",
+  "services.cards.2.title": "Track Portfolios in Real Time",
+  "services.cards.2.body": "Live tickers and valuations across your club's holdings — equities, crypto, and tokenized assets.",
+  "services.cards.3.title": "Automate Profit Distribution",
+  "services.cards.3.body": "Pro-rata calculations across all members, every cycle — accurate, automatic, auditable.",
+  "services.cards.4.title": "Generate Clear Reports Instantly",
+  "services.cards.4.body": "Member-level statements, club-wide P&L, transaction histories — exportable on demand."
 }
