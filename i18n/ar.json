@@ -75,5 +75,14 @@
   "stories.pullquote": "\"خلقوا مساحة كان فيها تبادل المعرفة سلسًا، والنتائج على محفظتنا تحدثت عن نفسها.\"",
   "integrations.eyebrow": "التكاملات",
   "integrations.title": "تكاملات سلسة",
-  "integrations.subhead": "استثمر في جميع أصولك المفضلة على السلسلة وخارجها."
+  "integrations.subhead": "استثمر في جميع أصولك المفضلة على السلسلة وخارجها.",
+  "pricing.eyebrow": "الأسعار",
+  "pricing.title": "خطط مرنة لكل نادٍ",
+  "pricing.suffix": "لكل نادٍ / سنويًا",
+  "pricing.cta": "ابدأ",
+  "pricing.popular": "الأكثر شيوعًا",
+  "pricing.free.name": "مجاني",
+  "pricing.free.members": "حتى 10 أعضاء",
+  "pricing.premium.name": "مميز",
+  "pricing.premium.members": "أعضاء بلا حدود"
 }

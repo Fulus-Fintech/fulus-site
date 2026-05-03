@@ -54,6 +54,7 @@ export async function setLang(lang) {
   localStorage.setItem(STORAGE_KEY, lang);
   if (lang === 'ar') ensureArabicFont();
   dictionary = await loadDictionary(lang);
+  window.__fulusDict = dictionary;
   applyDictionary(dictionary);
   document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
 }

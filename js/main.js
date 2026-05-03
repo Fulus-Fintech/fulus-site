@@ -32,6 +32,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     b.addEventListener('click', () => setLang(b.dataset.lang));
   });
 
+  function syncPopularLabel() {
+    const dict = window.__fulusDict || {};
+    const label = dict['pricing.popular'] || 'Popular';
+    document.querySelectorAll('.price-card.popular').forEach((c) => c.setAttribute('data-popular-label', label));
+  }
+  syncPopularLabel();
+  document.addEventListener('langchange', syncPopularLabel);
+
   const hamburger = document.querySelector('.hamburger');
   const navMobile = document.getElementById('nav-mobile');
   if (hamburger && navMobile) {

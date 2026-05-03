@@ -75,5 +75,14 @@
   "stories.pullquote": "\"They created a space where knowledge sharing was effortless, and the results on our portfolio spoke for themselves.\"",
   "integrations.eyebrow": "Integrations",
   "integrations.title": "Seamless Integrations",
-  "integrations.subhead": "Invest in all your favorite assets on-chain & off-chain."
+  "integrations.subhead": "Invest in all your favorite assets on-chain & off-chain.",
+  "pricing.eyebrow": "Pricing",
+  "pricing.title": "Flexible Plans for Every Club",
+  "pricing.suffix": "per club / year",
+  "pricing.cta": "Get Started",
+  "pricing.popular": "Popular",
+  "pricing.free.name": "Free",
+  "pricing.free.members": "Up to 10 members",
+  "pricing.premium.name": "Premium",
+  "pricing.premium.members": "Unlimited members"
 }
