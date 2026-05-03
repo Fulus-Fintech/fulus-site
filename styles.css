@@ -231,7 +231,7 @@ h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.005em; line-height: 1
 .orbit-center img { width: 64px; height: 64px; }
 @media (max-width: 809.98px) {
   .orbit { width: 100%; height: auto; aspect-ratio: 1; max-width: 360px; }
-  .orbit-ring { display: none; }
+  .orbit-ring { display: contents; }
   .orbit-icon { position: static; transform: none; margin: 0; }
   .orbit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; }
   .orbit-center { grid-column: 2; grid-row: 2; position: static; transform: none; }
