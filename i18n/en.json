@@ -84,5 +84,13 @@
   "pricing.free.name": "Free",
   "pricing.free.members": "Up to 10 members",
   "pricing.premium.name": "Premium",
-  "pricing.premium.members": "Unlimited members"
+  "pricing.premium.members": "Unlimited members",
+  "comparison.eyebrow": "Comparison",
+  "comparison.title": "See How We Stand Out",
+  "comparison.subhead": "How we outperform traditional clubs and solo investing.",
+  "comparison.items.0": "Collaborative investing with groups",
+  "comparison.items.1": "Set your own rules and make decisions as a team",
+  "comparison.items.2": "Real-time tracking & dashboards",
+  "comparison.items.3": "Wide investment options through tokenization",
+  "comparison.items.4": "Collaborate securely with contracts and forums"
 }

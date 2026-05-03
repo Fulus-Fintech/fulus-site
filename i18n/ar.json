@@ -84,5 +84,13 @@
   "pricing.free.name": "مجاني",
   "pricing.free.members": "حتى 10 أعضاء",
   "pricing.premium.name": "مميز",
-  "pricing.premium.members": "أعضاء بلا حدود"
+  "pricing.premium.members": "أعضاء بلا حدود",
+  "comparison.eyebrow": "المقارنة",
+  "comparison.title": "اكتشف كيف نتميّز",
+  "comparison.subhead": "كيف نتفوق على الأندية التقليدية والاستثمار الفردي.",
+  "comparison.items.0": "استثمار جماعي مع مجموعات",
+  "comparison.items.1": "ضع قواعدك واتخذ القرارات كفريق",
+  "comparison.items.2": "تتبّع ولوحات تحكم لحظية",
+  "comparison.items.3": "خيارات استثمار واسعة من خلال الترميز",
+  "comparison.items.4": "تعاون آمن عبر العقود والمنتديات"
 }
