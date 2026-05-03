@@ -50,5 +50,14 @@
   "features.items.2": "Real-Time Ownership & Valuations",
   "features.items.3": "Smarter Investment Management",
   "features.items.4": "Clear Dashboards & Reports",
-  "features.items.5": "Secure Collaboration & Decisions"
+  "features.items.5": "Secure Collaboration & Decisions",
+  "process.eyebrow": "Process",
+  "process.title": "Our Simple & Smart Process",
+  "process.subhead": "Everything you need to create, invest, and grow together.",
+  "process.cards.0.title": "Create or Join a Club",
+  "process.cards.0.body": "Start your investment journey by forming a new club or joining an existing one with ease.",
+  "process.cards.1.title": "Contribute & Collaborate",
+  "process.cards.1.body": "Pool funds with members, propose investments, and decide together with transparent records.",
+  "process.cards.2.title": "Invest, Track, Distribute",
+  "process.cards.2.body": "Buy and hold across asset classes; the platform handles ownership math and profit distribution."
 }
