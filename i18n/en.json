@@ -20,5 +20,13 @@
   "hero.subhead": "Fulus is an all-in-one mobile platform for group investing where people pool money, collaborate together, and invest under one web3 decentralized wallet.",
   "hero.cta.primary": "Get Started Now",
   "hero.cta.secondary": "See Features",
-  "phone.balance.label": "Total Balance"
+  "phone.balance.label": "Total Balance",
+  "benefits.eyebrow": "Why Investment Clubs?",
+  "benefits.title": "Everything you need to automate, optimize, and scale",
+  "benefits.cards.0.title": "Access to Exclusive Investments",
+  "benefits.cards.0.body": "Invest in assets that are typically out of reach for individual investors.",
+  "benefits.cards.1.title": "Reduced Risk",
+  "benefits.cards.1.body": "Invest in a wider range of assets to diversify risk.",
+  "benefits.cards.2.title": "Knowledge Sharing",
+  "benefits.cards.2.body": "Leverage collective knowledge and resources to achieve better returns."
 }
