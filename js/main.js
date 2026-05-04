@@ -43,17 +43,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const hamburger = document.querySelector('.hamburger');
   const navMobile = document.getElementById('nav-mobile');
   if (hamburger && navMobile) {
+    function closeDrawer() {
+      hamburger.setAttribute('aria-expanded', 'false');
+      navMobile.hidden = true;
+    }
     hamburger.addEventListener('click', () => {
       const open = hamburger.getAttribute('aria-expanded') === 'true';
       hamburger.setAttribute('aria-expanded', String(!open));
       navMobile.hidden = open;
     });
-    navMobile.querySelectorAll('a').forEach((a) =>
-      a.addEventListener('click', () => {
-        hamburger.setAttribute('aria-expanded', 'false');
-        navMobile.hidden = true;
-      }),
-    );
+    navMobile.querySelectorAll('a').forEach((a) => a.addEventListener('click', closeDrawer));
+    // Reset stale ARIA when viewport widens past the hamburger breakpoint.
+    const desktopMq = window.matchMedia('(min-width: 810px)');
+    desktopMq.addEventListener('change', (e) => { if (e.matches) closeDrawer(); });
   }
 
   // 2. GSAP + ScrollTrigger setup (loaded via CDN; available on window).
