@@ -1,5 +1,5 @@
 // js/animations/hero.js
-import { reducedMotion } from '../lib.js';
+import { reducedMotion, rtlAware } from '../lib.js';
 
 export function initHero(/* lenis */) {
   if (reducedMotion) {
@@ -21,7 +21,7 @@ export function initHero(/* lenis */) {
   // Subhead.
   tl.from('.hero-subhead', { opacity: 0, y: 16, duration: 0.6 }, 0.4);
   // CTAs.
-  tl.from('.hero-cta .btn', { opacity: 0, x: -12, duration: 0.5, stagger: 0.08 }, 0.55);
+  tl.from('.hero-cta .btn', { opacity: 0, x: rtlAware(-12), duration: 0.5, stagger: 0.08 }, 0.55);
   // Phone scale-in.
   tl.from('.phone-frame', { opacity: 0, scale: 0.92, rotation: -2, duration: 0.8, ease: 'expo.out' }, 0.3);
   // Chart draw.
@@ -41,9 +41,11 @@ export function initHero(/* lenis */) {
 }
 
 function formatNumber(n, el) {
-  // BTC has integer prices; others have 2 decimals. Heuristic: if data-counter integer, no decimals.
-  const target = parseFloat(el.dataset.counter);
-  const isInt = Number.isInteger(target);
-  if (isInt) return Math.round(n).toLocaleString();
-  return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Read decimal intent from the raw data-counter string so e.g. "3420.00" keeps 2 decimals
+  // even though parseFloat collapses to 3420 (would otherwise be misclassified as integer).
+  const raw = el.dataset.counter;
+  const dot = raw.indexOf('.');
+  if (dot < 0) return Math.round(n).toLocaleString();
+  const places = raw.length - dot - 1;
+  return n.toLocaleString(undefined, { minimumFractionDigits: places, maximumFractionDigits: places });
 }
