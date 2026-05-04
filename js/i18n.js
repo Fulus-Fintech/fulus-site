@@ -15,7 +15,7 @@ function detectInitialLang() {
 }
 
 async function loadDictionary(lang) {
-  const res = await fetch(`/i18n/${lang}.json`, { cache: 'no-cache' });
+  const res = await fetch(`/i18n/${lang}.json`);
   if (!res.ok) throw new Error(`i18n: failed to load ${lang}.json (${res.status})`);
   return res.json();
 }
