@@ -1,5 +1,5 @@
 // js/animations/services.js
-import { reducedMotion, isDesktop } from '../lib.js';
+import { reducedMotion, isDesktop, rtlAware } from '../lib.js';
 
 export function initServices(/* lenis */) {
   const cards = gsap.utils.toArray('#services .service-card');
@@ -30,7 +30,7 @@ export function initServices(/* lenis */) {
   gsap.set(cards, { flex: '0 0 320px' });
 
   gsap.to(stack, {
-    x: () => -(stack.scrollWidth - window.innerWidth + 48),
+    x: () => rtlAware(-(stack.scrollWidth - window.innerWidth + 48)),
     ease: 'none',
     scrollTrigger: {
       trigger: '#services',
