@@ -2,6 +2,8 @@
   "meta.title": "Fulus – Group Investing Platform",
   "meta.description": "Fulus is an all-in-one mobile platform for group investing where people pool money, collaborate together, and invest under one web3 decentralized wallet.",
   "a11y.skip": "Skip to content",
+  "a11y.menu.open": "Open menu",
+  "a11y.menu.close": "Close menu",
   "nav.benefits": "Benefits",
   "nav.services": "Services",
   "nav.features": "Features",
