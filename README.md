@@ -28,9 +28,14 @@ It's a single static file. Edit `index.html` and push — Cloudflare Pages will 
 3. Open a PR there.
 4. After it merges, copy the updated file(s) here and push.
 
+## Deferred backlog
+
+Pre-launch punch list, polish items, and forward-looking work tracked in [`BACKLOG.md`](BACKLOG.md). Skim that before resuming the engagement.
+
 ## See also
 
 - Flutter repo: https://github.com/Fulus-Fintech/fulus
+- Pixel-match rebuild spec: `docs/superpowers/specs/2026-05-03-fulus-site-pixel-match-design.md` (in the Flutter repo)
 - h-2.7 spec: `docs/superpowers/specs/2026-05-02-h-2-7-deep-link-signing-design.md` (in the Flutter repo)
 - Bootstrap runbook: `audit/runbooks/h-2-7-fulus-site-bootstrap.md`
 - Deploy runbook: `audit/runbooks/h-2-7-cloudflare-pages-deploy.md`
