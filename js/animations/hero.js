@@ -6,7 +6,7 @@ export function initHero(/* lenis */) {
     // Set everything to final state instantly.
     gsap.set('.hero-headline .word, .hero-subhead, .hero-cta, .phone-mockup', { opacity: 1, y: 0, scale: 1 });
     gsap.set('.phone-chart path', { strokeDashoffset: 0 });
-    document.querySelectorAll('[data-counter]').forEach((el) => {
+    document.querySelectorAll('#hero [data-counter]').forEach((el) => {
       const target = parseFloat(el.dataset.counter);
       const prefix = el.dataset.counterPrefix || '';
       el.textContent = prefix + formatNumber(target, el);
@@ -27,7 +27,7 @@ export function initHero(/* lenis */) {
   // Chart draw.
   tl.to('.phone-chart path', { strokeDashoffset: 0, duration: 1.2, ease: 'power2.inOut' }, 0.7);
   // Counters.
-  document.querySelectorAll('[data-counter]').forEach((el) => {
+  document.querySelectorAll('#hero [data-counter]').forEach((el) => {
     const target = parseFloat(el.dataset.counter);
     const prefix = el.dataset.counterPrefix || '';
     const obj = { v: 0 };

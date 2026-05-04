@@ -261,7 +261,7 @@ h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.005em; line-height: 1
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item .plus { font-size: 24px; color: var(--accent); transition: transform 200ms ease; flex-shrink: 0; }
 .faq-item[open] .plus { transform: rotate(45deg); }
-.faq-item .answer { color: var(--text-muted); font-size: 16px; padding: 0 0 24px; line-height: 1.6; }
+.faq-item .answer { color: var(--text-muted); font-size: 16px; padding: 0 0 24px; line-height: 1.6; overflow: hidden; }
 
 /* --- footer --- */
 #site-footer { padding-block: 48px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 14px; }
