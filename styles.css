@@ -290,10 +290,157 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
 /* task-10-header */
 
 /* ===== Portal System ===== */
-/* task-9-portal */
+/* One vector source: logo-mark.svg polygon 72.12 0 / 0 26.48 / 0 93.68 /
+   72.12 67.2 in viewBox 0 0 72.12 93.68 — intrinsic ratio ≈1:1.30 (the SVG
+   as shipped is the drawing source of truth; never force 1:1.27 on it).
+   Geometry never changes and NEVER mirrors in RTL; only the light changes
+   via .is-closed → .is-invitation → .is-activated. Interior fill is the
+   shared <linearGradient id="portal-grad"> in the index.html icon sprite. */
+.portal { position: relative; aspect-ratio: 72.12 / 93.68; }
+.portal-svg {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+  transition: filter var(--fulus-duration-long) var(--fulus-ease-standard);
+}
+.portal-svg polygon {
+  fill: url(#portal-grad);
+  fill-opacity: 0; /* fill-opacity 0 == the spec's "fill transparent" closed state,
+                      and unlike `fill`, it transitions smoothly to the lit states */
+  stroke: var(--fulus-outline);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  transition: fill-opacity var(--fulus-duration-long) var(--fulus-ease-standard),
+              stroke var(--fulus-duration-long) var(--fulus-ease-standard);
+}
+
+/* Light states — exactly one per .portal instance */
+.portal.is-closed .portal-svg { filter: none; }
+.portal.is-closed .portal-svg polygon { fill-opacity: 0; stroke: var(--fulus-outline); }
+
+.portal.is-invitation .portal-svg { filter: drop-shadow(0 0 24px var(--fulus-cyan-glow-25)); }
+.portal.is-invitation .portal-svg polygon { fill-opacity: 0.35; stroke: var(--fulus-cyan); }
+
+.portal.is-activated .portal-svg {
+  filter: drop-shadow(0 0 32px var(--fulus-cyan-glow-45))
+          drop-shadow(0 0 72px var(--fulus-teal-glow-25));
+}
+.portal.is-activated .portal-svg polygon { fill-opacity: 1; stroke: var(--fulus-cyan); }
+
+/* Size modifiers (mobile-first; desktop sizes in the hero media queries) */
+.portal--hero { inline-size: min(78vw, 380px); max-inline-size: 100%; margin-inline: auto; }
+.portal--cta { inline-size: min(44vh, 420px); margin-inline: auto; }
+.portal--marker { inline-size: 48px; }
+
+/* Content seen "through" a Portal (hero dashboard composite): the <img>
+   sits BENEATH the SVG stroke/light layer (z-index 1 < 2) and is clipped
+   to the Mark's exact polygon. viewBox points → percentages:
+   (72.12, 0)    → 100% 0%
+   (0,     26.48)→ 0%   28.27%   (26.48 / 93.68)
+   (0,     93.68)→ 0%   100%
+   (72.12, 67.2) → 100% 71.73%   (67.20 / 93.68)
+   clip-path coordinates are physical geometry, not writing-direction —
+   they do not flip in RTL, which is exactly the "never mirrored" law. */
+.portal-window {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  clip-path: polygon(100% 0%, 0% 28.27%, 0% 100%, 100% 71.73%);
+}
+/* Keep the dashboard legible behind the invitation light: soften the
+   interior wash only when a window image is present (hero). */
+.portal--hero.is-invitation .portal-svg polygon { fill-opacity: 0.15; }
 
 /* ===== Section: Hero ===== */
-/* task-9-hero */
+#hero {
+  position: relative;
+  overflow: clip; /* contains the blurred halo bleed */
+  padding-block-start: calc(var(--fulus-space-3xl) + 40px);
+}
+.hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--fulus-space-2xl);
+  align-items: center;
+}
+/* Source order is free; CSS order guarantees the form panel renders FIRST
+   (above the portal window) in the single-column mobile stack, and lands
+   in the inline-start column on desktop. */
+#hero-panel { order: 1; display: grid; gap: var(--fulus-space-lg); justify-items: start; }
+.hero-visual { order: 2; position: relative; display: grid; place-items: center; }
+
+.hero-eyebrow {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fulus-neon-teal);
+}
+[lang='ar'] .hero-eyebrow { text-transform: none; letter-spacing: 0; }
+.hero-sub {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--fulus-on-surface-variant);
+  max-inline-size: 44ch;
+}
+#hero .waitlist-form { inline-size: 100%; max-inline-size: 480px; }
+.hero-microcopy {
+  display: flex;
+  align-items: center;
+  gap: var(--fulus-space-sm);
+  font-size: 13px;
+  color: var(--fulus-on-surface-variant);
+}
+.hero-microcopy .icon { font-size: 14px; }
+
+/* Campaign halo — Voltage gradient colors at low alpha, strictly BEHIND
+   the Portal (z-index 0 under .hero-grid's z-index 1), heavily blurred.
+   Never on CTAs or text. Pure CSS: a static frame, no animation. */
+.hero-halo {
+  position: absolute;
+  z-index: 0;
+  inset-block-start: 50%;
+  inset-inline-end: -15%;
+  translate: 0 -50%;
+  inline-size: 70vmin;
+  aspect-ratio: 1;
+  border-radius: var(--fulus-radius-full);
+  background:
+    radial-gradient(circle at 35% 40%, var(--fulus-halo-blue), transparent 60%),
+    radial-gradient(circle at 70% 60%, var(--fulus-halo-magenta), transparent 65%);
+  filter: blur(72px);
+  pointer-events: none;
+}
+
+/* Hero responsive — 600 / 1024 / 1440 */
+@media (min-width: 600px) {
+  .portal--hero { inline-size: min(60vw, 440px); }
+}
+@media (min-width: 1024px) {
+  #hero { padding-block-start: calc(var(--fulus-space-3xl) + 80px); }
+  .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
+  .portal--hero { inline-size: min(56vh, 520px); }
+}
+@media (min-width: 1440px) {
+  .hero-grid { gap: var(--fulus-space-3xl); }
+  .portal--hero { inline-size: min(58vh, 560px); }
+}
+
+/* Reduced motion: no state transitions; the lit states themselves remain
+   as static glow (the global kill in Media & Motion also covers this —
+   this rule makes the portal contract explicit). */
+@media (prefers-reduced-motion: reduce) {
+  .portal-svg, .portal-svg polygon { transition: none; }
+}
 
 /* ===== Section: Problem ===== */
 /* task-10-problem */
