@@ -16,3 +16,8 @@ _scratch/
 !.dev.vars.example
 .env*
 !.env.example
+
+# asset-generation scratch (rebuild Tasks 2-3)
+tmp-fontwork/
+tmp-images/
+node_modules/
