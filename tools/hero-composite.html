@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fulus hero composite (dev render source — screenshot at 1242x2688)</title>
+<style>
+  @font-face {
+    font-family: 'Readex Pro';
+    src: url('../assets/fonts/readex-pro-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: 'Riyal';
+    src: url('../assets/fonts/riyal.woff2') format('woff2');
+    unicode-range: U+20C1;
+    font-display: block;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1242px; height: 2688px; overflow: hidden; }
+  body {
+    position: relative;
+    background: #020B18;
+    color: #FFFFFF;
+    font-family: 'Readex Pro', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Ambient base: the real dashboard render, dimmed + blurred so the clean
+     Noor overlay reads as the foreground (product-proof, not double-vision). */
+  .base {
+    position: absolute; inset: 0;
+    width: 1242px; height: 2688px;
+    object-fit: cover;
+    opacity: 0.18;
+    filter: blur(2px) saturate(0.8);
+  }
+  .scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(2,11,24,0.72) 0%, rgba(2,11,24,0.94) 46%, #020B18 100%);
+  }
+  .screen { position: relative; z-index: 1; padding: 96px 72px 120px; display: flex; flex-direction: column; gap: 56px; }
+  .riyal { font-family: 'Riyal', 'Readex Pro', sans-serif; }
+  .money { font-variant-numeric: tabular-nums lining-nums; }
+  /* Club header — Noor banner with the logo + name lockup */
+  .banner { position: relative; border-radius: 32px; overflow: hidden; height: 300px; border: 1px solid #15243C; }
+  .banner img.bannerimg { width: 100%; height: 100%; object-fit: cover; }
+  .banner .veil { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,11,24,0.85), rgba(2,11,24,0.25)); }
+  .lockup { position: absolute; inset-block-end: 32px; inset-inline-start: 40px; display: flex; align-items: center; gap: 28px; }
+  .lockup img.logo { width: 132px; height: 132px; border-radius: 28px; border: 2px solid rgba(0,229,255,0.55); object-fit: cover; }
+  .lockup .who h1 { font-size: 52px; font-weight: 600; letter-spacing: -0.01em; }
+  .lockup .who p { font-size: 30px; color: #7A8AA0; margin-top: 6px; }
+  /* Cards */
+  .card { background: #0B1E33; border: 1px solid #15243C; border-radius: 28px; padding: 44px 48px; }
+  .card .label { font-size: 26px; letter-spacing: 0.06em; text-transform: uppercase; color: #7A8AA0; font-weight: 500; }
+  .balance .figure { margin-top: 20px; display: flex; align-items: baseline; gap: 16px; }
+  .balance .figure .num { font-size: 96px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+  .balance .figure .cur { font-size: 60px; color: #00E5FF; }
+  .balance .delta { margin-top: 22px; font-size: 30px; color: #F2A81D; font-weight: 500; }
+  /* Members row */
+  .members .avatars { margin-top: 28px; display: flex; gap: 28px; }
+  .members .member { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .members .member img { width: 116px; height: 116px; border-radius: 9999px; border: 2px solid #122842; object-fit: cover; }
+  .members .member span { font-size: 24px; color: #7A8AA0; }
+  /* Live-vote card — the "one card mid-vote", cyan-lit */
+  .vote { border-color: rgba(0,229,255,0.45); box-shadow: 0 0 60px rgba(0,229,255,0.16); }
+  .vote .pill { display: inline-flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 600; color: #020B18; background: linear-gradient(135deg,#00E5FF,#00FFB2); padding: 12px 26px; border-radius: 9999px; }
+  .vote .pill .dot { width: 16px; height: 16px; border-radius: 9999px; background: #020B18; }
+  .vote h2 { margin-top: 26px; font-size: 44px; font-weight: 600; }
+  .vote .bars { margin-top: 32px; display: flex; flex-direction: column; gap: 22px; }
+  .vote .bar { display: flex; align-items: center; gap: 24px; font-size: 30px; }
+  .vote .bar .track { flex: 1; height: 26px; border-radius: 9999px; background: #122842; overflow: hidden; }
+  .vote .bar .fill { height: 100%; border-radius: 9999px; }
+  .vote .bar.yes .fill { width: 75%; background: linear-gradient(135deg,#00E5FF,#00FFB2); }
+  .vote .bar.no .fill { width: 25%; background: #1A3552; }
+  .vote .bar .who { width: 96px; color: #7A8AA0; }
+  .vote .tally { margin-top: 30px; font-size: 28px; color: #7A8AA0; }
+  /* Contributions */
+  .contrib .rows { margin-top: 26px; display: flex; flex-direction: column; gap: 26px; }
+  .contrib .row { display: flex; align-items: center; justify-content: space-between; font-size: 30px; }
+  .contrib .row .name { color: #FFFFFF; }
+  .contrib .row .amt { color: #00FFB2; font-weight: 500; }
+</style>
+</head>
+<body>
+  <img class="base" src="../../fulus-brand/assets/screens/screen-06-club-dashboard.png" alt="">
+  <div class="scrim"></div>
+  <div class="screen">
+    <div class="banner">
+      <img class="bannerimg" src="../assets/images/noor-banner.webp" alt="">
+      <div class="veil"></div>
+      <div class="lockup">
+        <img class="logo" src="../assets/images/noor-logo.webp" alt="">
+        <div class="who">
+          <h1>Noor Family Club</h1>
+          <p>Private investment circle · 4 members</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card balance">
+      <div class="label">Club balance</div>
+      <div class="figure money">
+        <span class="cur riyal">&#x20C1;</span><span class="num">486,200</span>
+      </div>
+      <div class="delta">+4.2% this cycle</div>
+    </div>
+
+    <div class="card members">
+      <div class="label">Members</div>
+      <div class="avatars">
+        <div class="member"><img src="../assets/images/avatar-abdulaziz.webp" alt=""><span>Abdulaziz</span></div>
+        <div class="member"><img src="../assets/images/avatar-mahmoud.webp" alt=""><span>Mahmoud</span></div>
+        <div class="member"><img src="../assets/images/avatar-mohammed.webp" alt=""><span>Mohammed</span></div>
+        <div class="member"><img src="../assets/images/avatar-nizar.webp" alt=""><span>Nizar</span></div>
+      </div>
+    </div>
+
+    <div class="card vote">
+      <span class="pill"><span class="dot"></span> Live vote</span>
+      <h2>Add SABIC to the portfolio</h2>
+      <div class="bars">
+        <div class="bar yes"><span class="who">Yes</span><span class="track"><span class="fill"></span></span><span>3</span></div>
+        <div class="bar no"><span class="who">No</span><span class="track"><span class="fill"></span></span><span>1</span></div>
+      </div>
+      <div class="tally">3 of 4 members voted · closes in 2 days</div>
+    </div>
+
+    <div class="card contrib">
+      <div class="label">This cycle</div>
+      <div class="rows">
+        <div class="row"><span class="name">Abdulaziz · contribution</span><span class="amt money"><span class="riyal">&#x20C1;</span> 12,000</span></div>
+        <div class="row"><span class="name">Mahmoud · contribution</span><span class="amt money"><span class="riyal">&#x20C1;</span> 9,500</span></div>
+        <div class="row"><span class="name">Distribution · Q2</span><span class="amt money"><span class="riyal">&#x20C1;</span> 18,750</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
