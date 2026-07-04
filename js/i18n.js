@@ -2,8 +2,6 @@
 
 const SUPPORTED = ['en', 'ar'];
 const STORAGE_KEY = 'fulus.lang';
-const ARABIC_FONT_HREF =
-  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap';
 
 let dictionary = {};
 
@@ -18,16 +16,6 @@ async function loadDictionary(lang) {
   const res = await fetch(`/i18n/${lang}.json`);
   if (!res.ok) throw new Error(`i18n: failed to load ${lang}.json (${res.status})`);
   return res.json();
-}
-
-function ensureArabicFont() {
-  if (document.querySelector('link[data-i18n-font="ar"]')) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = ARABIC_FONT_HREF;
-  link.crossOrigin = 'anonymous';
-  link.dataset.i18nFont = 'ar';
-  document.head.appendChild(link);
 }
 
 function applyDictionary(dict) {
@@ -52,7 +40,6 @@ export async function setLang(lang) {
   html.dir = lang === 'ar' ? 'rtl' : 'ltr';
   html.dataset.lang = lang;
   localStorage.setItem(STORAGE_KEY, lang);
-  if (lang === 'ar') ensureArabicFont();
   dictionary = await loadDictionary(lang);
   window.__fulusDict = dictionary;
   applyDictionary(dictionary);
