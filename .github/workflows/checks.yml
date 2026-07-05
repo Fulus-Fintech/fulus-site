@@ -1,0 +1,24 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: i18n key parity + no empty values
+        run: node tools/check_i18n_parity.mjs
+      - name: local js/ byte budget
+        run: node tools/check_js_budget.mjs
+      - name: .well-known integrity
+        run: node tools/check_wellknown.mjs
+      - name: internal links + asset existence
+        run: node tools/check_links.mjs
+      - name: html-validate
+        run: npx --yes html-validate@8 index.html privacy.html
