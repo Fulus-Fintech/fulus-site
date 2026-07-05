@@ -287,7 +287,37 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
 .icon { inline-size: 1em; block-size: 1em; flex: none; fill: currentColor; }
 
 /* ===== Header ===== */
-/* task-10-header */
+#site-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 100;
+  background: var(--fulus-canvas-a80);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-block-end: 1px solid var(--fulus-outline-variant);
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fulus-space-md);
+  min-block-size: 64px;
+}
+.header-logo img, .header-logo svg { block-size: 28px; inline-size: auto; }
+.header-actions { display: flex; align-items: center; gap: var(--fulus-space-md); }
+.lang-btn {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  padding-inline: var(--fulus-space-sm);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--fulus-on-surface-variant);
+}
+.lang-btn:hover { color: var(--fulus-cyan); }
+.lang-btn[aria-pressed='true'] { color: var(--fulus-on-surface); }
+/* Header anchor CTA is the outline variant (the Main gradient stays
+   exclusive to the two Save My Spot buttons); compact 44px height here. */
+#site-header .btn--outline { min-block-size: 44px; min-inline-size: 0; }
 
 /* ===== Portal System ===== */
 /* One vector source: logo-mark.svg polygon 72.12 0 / 0 26.48 / 0 93.68 /
@@ -443,31 +473,227 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
 }
 
 /* ===== Section: Problem ===== */
-/* task-10-problem */
+.problem-grid { display: grid; gap: var(--fulus-space-xl); align-items: center; }
+.section-head { display: grid; gap: var(--fulus-space-md); max-inline-size: 60ch; }
+.char-figure { inline-size: min(58vw, 300px); margin-inline: auto; }
+.fragments { display: grid; gap: var(--fulus-space-md); align-content: center; }
+.fragment {
+  background: var(--fulus-surface-container-low);
+  border: 1px solid var(--fulus-outline-variant);
+  border-radius: var(--fulus-radius);
+  padding: var(--fulus-space-md) var(--fulus-space-lg);
+  color: var(--fulus-on-surface-variant);
+  font-size: 14px;
+  box-shadow: var(--fulus-shadow-sm);
+}
+.fragment:nth-child(odd) { rotate: -1.5deg; }
+.fragment:nth-child(even) { rotate: 1.2deg; margin-inline-start: var(--fulus-space-xl); }
+@media (min-width: 1024px) {
+  .problem-grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+}
 
 /* ===== Section: Product ===== */
-/* task-10-product */
+.chapter {
+  display: grid;
+  gap: var(--fulus-space-xl);
+  align-items: center;
+  padding-block: var(--fulus-space-3xl);
+}
+.chapter-kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--fulus-space-md);
+  font-variant-numeric: tabular-nums lining-nums; /* 01–04 numerals align */
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--fulus-cyan);
+}
+[lang='ar'] .chapter-kicker { letter-spacing: 0; }
+.chapter-kicker .portal--marker { flex: none; } /* chapter marker portal steps the light states down the page */
+.chapter-copy { display: grid; gap: var(--fulus-space-md); justify-items: start; }
+.chapter-copy p { max-inline-size: 52ch; }
+.screen-card {
+  background: var(--fulus-surface-container-high);
+  border: 1px solid var(--fulus-outline-variant);
+  border-radius: var(--fulus-radius-md);
+  padding: var(--fulus-space-md);
+  box-shadow: var(--fulus-shadow-lg);
+}
+.screen-card img { border-radius: var(--fulus-radius); inline-size: 100%; }
+@media (min-width: 1024px) {
+  .chapter { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--fulus-space-3xl); }
+  /* Alternate media/copy sides. Grid columns follow the inline direction,
+     so this alternation mirrors automatically in RTL — no dir override. */
+  .chapter:nth-of-type(even) .chapter-media { order: -1; }
+}
 
 /* ===== Section: How ===== */
-/* task-10-how */
+.how-steps {
+  position: relative;
+  display: grid;
+  gap: var(--fulus-space-xl);
+  margin-block-start: var(--fulus-space-2xl);
+}
+.how-step { position: relative; z-index: 1; display: grid; gap: var(--fulus-space-sm); justify-items: start; }
+.step-index {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--fulus-radius-full);
+  background: var(--fulus-surface-container);
+  border: 1px solid var(--fulus-outline);
+  color: var(--fulus-cyan);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.how-step h3 { font-size: 20px; }
+.how-step p { font-size: 15px; max-inline-size: 34ch; }
+.how-keyart { margin-block-start: var(--fulus-space-3xl); display: grid; justify-items: center; }
+.how-keyart img { inline-size: min(90vw, 720px); }
+@media (min-width: 1024px) {
+  .how-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--fulus-space-2xl); }
+  /* Connector — symmetric transparent→cyan→transparent hairline behind the
+     step badges; the gradient is symmetric, so it is direction-neutral and
+     needs no RTL flip. */
+  .how-steps::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 24px;
+    inset-inline: 8%;
+    block-size: 1px;
+    background: linear-gradient(90deg, transparent, var(--fulus-cyan-glow-45), transparent);
+  }
+}
 
 /* ===== Section: Trust ===== */
-/* task-10-trust */
+.founder-note {
+  background: var(--fulus-surface-container-low);
+  border: 1px solid var(--fulus-outline-variant);
+  border-inline-start: 2px solid var(--fulus-cyan);
+  border-radius: var(--fulus-radius-md);
+  padding: var(--fulus-space-xl);
+  max-inline-size: 640px;
+  display: grid;
+  gap: var(--fulus-space-md);
+}
+/* Body copy on raised surfaces uses full on-surface white — the muted
+   #7A8AA0 only reaches AA large-text (not 4.5:1) on container-high ramps;
+   see the contrast audit step. */
+.founder-note p { color: var(--fulus-on-surface); line-height: 1.7; }
+.founder-sig { color: var(--fulus-on-surface-variant); font-size: 14px; }
+.trust-lines { display: grid; gap: var(--fulus-space-md); margin-block-start: var(--fulus-space-xl); }
+.trust-line {
+  display: flex;
+  align-items: center;
+  gap: var(--fulus-space-sm);
+  color: var(--fulus-on-surface-variant);
+  font-size: 15px;
+}
+.trust-line .icon { font-size: 20px; color: var(--fulus-neon-teal); }
 
 /* ===== Section: Vision ===== */
-/* task-10-vision */
+#vision { padding-block: 0; } /* the band carries its own rhythm */
+.vision-band {
+  border-block: 1px solid var(--fulus-outline-variant); /* the "fence" — exactly one such band on the page */
+  padding-block: var(--fulus-space-3xl);
+  display: grid;
+  justify-items: center;
+  gap: var(--fulus-space-lg);
+  text-align: center;
+}
+.vision-band p { max-inline-size: 52ch; }
+.vision-band .portal--marker { opacity: 0.7; } /* distant, small — future tense */
 
 /* ===== Section: CTA ===== */
-/* task-10-cta */
+#cta {
+  position: relative;
+  overflow: clip;
+  background: var(--fulus-surface-container-lowest); /* darkest ramp step — climax band */
+  text-align: center;
+}
+.cta-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--fulus-space-xl);
+}
+.cta-pair { inline-size: min(50vw, 260px); opacity: 0.9; }
+#cta .waitlist-form { inline-size: 100%; max-inline-size: 480px; justify-content: center; }
+.cta-note { font-size: 13px; color: var(--fulus-on-surface-variant); max-inline-size: 46ch; }
 
 /* ===== Confirmation ===== */
-/* task-10-confirmation */
+/* Post-submit view — js/waitlist.js clones #confirmation-template into
+   #hero-panel; the same styles apply wherever it renders. */
+.confirmation {
+  display: grid;
+  gap: var(--fulus-space-lg);
+  inline-size: 100%;
+  max-inline-size: 480px;
+  background: var(--fulus-surface-container-low);
+  border: 1px solid var(--fulus-outline-variant);
+  border-radius: var(--fulus-radius-lg);
+  padding: var(--fulus-space-xl);
+  text-align: start;
+}
+.confirmation [data-confirm='position'] {
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fulus-cyan); /* queue rank is not monetary — no gradient here */
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.confirmation [data-confirm='count'] { font-variant-numeric: tabular-nums lining-nums; }
+.referral-box { display: flex; flex-wrap: wrap; gap: var(--fulus-space-sm); }
+.referral-box .input { flex: 1 1 200px; direction: ltr; font-size: 14px; } /* URLs stay LTR */
+.share-row { display: flex; flex-wrap: wrap; gap: var(--fulus-space-sm); }
+.profile-fieldset { border: 0; display: grid; gap: var(--fulus-space-sm); justify-items: start; }
+.profile-fieldset label {
+  display: flex;
+  align-items: center;
+  gap: var(--fulus-space-sm);
+  min-block-size: 44px;
+  color: var(--fulus-on-surface-variant);
+}
+.profile-fieldset select { min-block-size: 44px; }
 
 /* ===== Footer ===== */
-/* task-10-footer */
+#site-footer {
+  border-block-start: 1px solid var(--fulus-outline-variant);
+  padding-block: var(--fulus-space-2xl);
+  font-size: 13px;
+  color: var(--fulus-on-surface-variant);
+}
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fulus-space-lg);
+}
+.footer-logo img, .footer-logo svg { block-size: 22px; inline-size: auto; }
+.footer-links { display: flex; gap: var(--fulus-space-lg); }
+.footer-links a { min-block-size: 44px; display: inline-flex; align-items: center; }
+.footer-links a:hover { color: var(--fulus-cyan); }
+.footer-legal { flex-basis: 100%; max-inline-size: 640px; line-height: 1.7; }
+[lang='ar'] .footer-legal { line-height: 1.9; } /* MSA register — generous leading */
 
 /* ===== Privacy Page ===== */
-/* task-10-privacy */
+/* privacy.html shares this stylesheet; MSA (formal) Arabic register. */
+.privacy-main { padding-block: var(--fulus-space-3xl); }
+.privacy-main .container { max-inline-size: 720px; display: grid; gap: var(--fulus-space-lg); }
+.privacy-main h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; }
+.privacy-block { color: var(--fulus-on-surface-variant); line-height: 1.7; }
+.privacy-block h2 {
+  font-size: 20px;
+  letter-spacing: 0;
+  margin-block-start: var(--fulus-space-md);
+  color: var(--fulus-on-surface);
+}
+[lang='ar'] .privacy-block { line-height: 1.9; }
+.privacy-updated { font-size: 13px; color: var(--fulus-on-surface-variant); }
 
 /* ===== Utilities ===== */
 .visually-hidden {
