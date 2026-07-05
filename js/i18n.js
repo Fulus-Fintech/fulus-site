@@ -6,7 +6,11 @@ const STORAGE_KEY = 'fulus.lang';
 let dictionary = {};
 
 function detectInitialLang() {
-  const stored = localStorage.getItem(STORAGE_KEY);
+  // Some in-app webviews (WhatsApp/Instagram/X) throw a SecurityError on
+  // localStorage access entirely. Degrade to browser/default detection
+  // rather than letting the throw abort the whole i18n boot.
+  let stored = null;
+  try { stored = localStorage.getItem(STORAGE_KEY); } catch (_) { /* storage blocked */ }
   if (stored && SUPPORTED.includes(stored)) return stored;
   const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
   return SUPPORTED.includes(browser) ? browser : 'en';
@@ -39,7 +43,7 @@ export async function setLang(lang) {
   html.lang = lang;
   html.dir = lang === 'ar' ? 'rtl' : 'ltr';
   html.dataset.lang = lang;
-  localStorage.setItem(STORAGE_KEY, lang);
+  try { localStorage.setItem(STORAGE_KEY, lang); } catch (_) { /* storage blocked — skip persist */ }
   dictionary = await loadDictionary(lang);
   window.__fulusDict = dictionary;
   applyDictionary(dictionary);

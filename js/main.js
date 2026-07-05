@@ -13,7 +13,14 @@ document.documentElement.classList.add('js');
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. i18n boot — apply stored/detected lang before anything reads the dict.
-  await initI18n();
+  // Defense in depth: i18n.js already guards its own localStorage calls, but
+  // if it throws for any other reason (fetch failure, etc.) the page must
+  // still degrade to English and the waitlist form must still attach.
+  try {
+    await initI18n();
+  } catch (err) {
+    console.error('[fulus-site] i18n init failed; continuing with EN fallback.', err);
+  }
 
   // 2. Language toggle buttons (aria-pressed per the a11y law).
   function syncLangButtons() {

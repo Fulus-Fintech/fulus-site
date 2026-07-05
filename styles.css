@@ -303,7 +303,22 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
   gap: var(--fulus-space-md);
   min-block-size: 64px;
 }
-.header-logo img, .header-logo svg { block-size: 28px; inline-size: auto; }
+/* `.header-logo` is a flex item that gets shrunk on narrow mobile widths
+   (the nav/CTA content next to it doesn't have room to shrink further).
+   The old rule pinned block-size to a hard 28px while inline-size stayed
+   auto; once the reset's `img { max-inline-size: 100% }` clamped the
+   shrunk flex item's width, height no longer tracked it — the box
+   distorted (Lighthouse image-aspect-ratio: verified rendered 90x28 vs
+   intrinsic ~126x28, i.e. ratio 3.21 vs 4.50, at a 412px viewport).
+   Declaring the intrinsic aspect-ratio and capping block-size (rather
+   than fixing it) keeps height locked to width as both shrink together,
+   so the logo scales down without ever warping. */
+.header-logo img, .header-logo svg {
+  aspect-ratio: 1624 / 361;
+  inline-size: auto;
+  block-size: auto;
+  max-block-size: 28px;
+}
 .header-actions { display: flex; align-items: center; gap: var(--fulus-space-md); }
 .lang-btn {
   min-block-size: 44px;
@@ -387,6 +402,13 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
 /* Keep the dashboard legible behind the invitation light: soften the
    interior wash only when a window image is present (hero). */
 .portal--hero.is-invitation .portal-svg polygon { fill-opacity: 0.15; }
+/* ...and keep it legible once activated too — the generic .is-activated
+   rule fills the polygon fully opaque, which would bury the dashboard
+   image sitting beneath it (z-index 1). The activated state's extra
+   intensity should read through the glow/drop-shadow above, not through
+   an opaque fill. Scoped to --hero only: CTA/marker portals have no
+   image behind them and rely on the opaque fill for their glow. */
+.portal--hero.is-activated .portal-svg polygon { fill-opacity: 0.2; }
 
 /* ===== Section: Hero ===== */
 #hero {
