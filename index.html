@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title data-i18n="meta.title">Fulus – Group Investing Platform</title>
+  <title data-i18n="meta.title">Fulus — Where your circle invests</title>
   <meta name="description" data-i18n="meta.description" data-i18n-attr="content"
-        content="Fulus is an all-in-one mobile platform for group investing where people pool money, collaborate together, and invest under one web3 decentralized wallet.">
-  <meta name="theme-color" content="#04070D">
+        content="Fulus is the app for families and friends in Saudi Arabia and the Gulf who invest together — pooled contributions, recorded votes, exact ownership, clean settlements. Private beta, now onboarding.">
+  <meta name="theme-color" content="#020B18">
+  <link rel="canonical" href="https://fulus.sa/">
 
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16.png">
@@ -14,329 +15,322 @@
   <link rel="manifest" href="/site.webmanifest">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" data-i18n="meta.title" data-i18n-attr="content" content="Fulus – Group Investing Platform">
-  <meta property="og:description" data-i18n="meta.description" data-i18n-attr="content" content="Fulus is an all-in-one mobile platform for group investing where people pool money, collaborate together, and invest under one web3 decentralized wallet.">
-  <meta property="og:image" content="/assets/images/og-image.png">
-  <meta property="og:url" content="https://fulus.sa">
-
+  <meta property="og:site_name" content="Fulus">
+  <meta property="og:url" content="https://fulus.sa/">
+  <meta property="og:title" data-i18n="meta.title" data-i18n-attr="content" content="Fulus — Where your circle invests">
+  <meta property="og:description" data-i18n="meta.description" data-i18n-attr="content"
+        content="Fulus is the app for families and friends in Saudi Arabia and the Gulf who invest together — pooled contributions, recorded votes, exact ownership, clean settlements. Private beta, now onboarding.">
+  <meta property="og:image" content="https://fulus.sa/assets/images/og-image.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ar_SA">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="/assets/images/og-image.png">
+  <meta name="twitter:image" content="https://fulus.sa/assets/images/og-image.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-
+  <link rel="preload" href="/assets/fonts/readex-pro-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/readex-pro-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" integrity="sha384-HOvlOYPIs/zjoIkWUGXkVmXsjr8GuZLV+Q+rcPwmJOVZVpvTSXQChiN4t9Euv9Vc" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" integrity="sha384-P8VzCVnT9NBUkMrpcIZrJbA7EBjJvh/fJS6PmP+4nLIM284DtsImIv8D0fFjIkeh" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js" integrity="sha384-xb96EMJeax+NLXMC88ZBa1xAeAW+kn+horHh/zFlbMLG2UPWhMJJSlv7fi57hS+Q" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
   <a href="#main" class="skip-link" data-i18n="a11y.skip">Skip to content</a>
 
+  <svg hidden id="icon-sprite" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="portal-grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#00E5FF"/>
+        <stop offset="1" stop-color="#00FFB2"/>
+      </linearGradient>
+    </defs>
+    <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 11a3 3 0 1 0 0-6M22 20c0-2.5-2-4.5-4-5"/></symbol>
+    <symbol id="icon-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14h2"/></symbol>
+    <symbol id="icon-trending" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></symbol>
+    <symbol id="icon-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18l3-2 3 2 3-2 3 2 3-2V3zM8 8h8M8 12h8M8 16h5"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="icon-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="14" r="4"/><path d="M11 11l9-9M16 6l3 3M19 3l2 2"/></symbol>
+    <symbol id="icon-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="12" rx="1.5"/><circle cx="12" cy="13" r="2.5"/><path d="M5 10v6M19 10v6"/></symbol>
+  </svg>
+
   <header id="site-header">
     <div class="container header-inner">
-      <a href="#" class="logo" aria-label="Fulus">
-        <picture>
-          <source srcset="/assets/images/logo.webp" type="image/webp">
-          <img src="/assets/images/logo.png" alt="" width="32" height="32" decoding="async">
-        </picture>
-        <span class="logo-text">Fulus</span>
+      <a class="header-logo" href="/" aria-label="Fulus — home" data-i18n="a11y.home" data-i18n-attr="aria-label">
+        <img src="/assets/images/logo-horizontal-bilingual-white.png" alt="" width="180" height="40" decoding="async">
       </a>
-      <nav class="nav-desktop" aria-label="Primary">
-        <ul>
-          <li><a href="#benefits"     data-i18n="nav.benefits">Benefits</a></li>
-          <li><a href="#services"     data-i18n="nav.services">Services</a></li>
-          <li><a href="#features"     data-i18n="nav.features">Features</a></li>
-          <li><a href="#process"      data-i18n="nav.process">Process</a></li>
-          <li><a href="#stories"      data-i18n="nav.stories">Feedback</a></li>
-          <li><a href="#pricing"      data-i18n="nav.pricing">Pricing</a></li>
-          <li><a href="#faq"          data-i18n="nav.faq">FAQ</a></li>
-        </ul>
-      </nav>
-      <div class="lang-toggle" role="group" aria-label="Language">
-        <button type="button" class="lang-btn" data-lang="en" data-i18n="lang.en">EN</button>
-        <button type="button" class="lang-btn" data-lang="ar" data-i18n="lang.ar">عربي</button>
+      <div class="header-actions">
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n="a11y.lang" data-i18n-attr="aria-label">
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false" lang="en">English</button>
+          <button type="button" class="lang-btn" data-lang="ar" aria-pressed="false" lang="ar">العربية</button>
+        </div>
+        <a class="btn btn--outline" href="#hero" data-i18n="header.cta">Join the Waitlist</a>
       </div>
-      <button class="hamburger" type="button" aria-expanded="false" aria-controls="nav-mobile" aria-label="Open menu" data-i18n="a11y.menu.open" data-i18n-attr="aria-label">
-        <span></span><span></span><span></span>
-      </button>
     </div>
-    <nav id="nav-mobile" class="nav-mobile" hidden aria-label="Primary mobile">
-      <ul>
-        <li><a href="#benefits"     data-i18n="nav.benefits">Benefits</a></li>
-        <li><a href="#services"     data-i18n="nav.services">Services</a></li>
-        <li><a href="#features"     data-i18n="nav.features">Features</a></li>
-        <li><a href="#process"      data-i18n="nav.process">Process</a></li>
-        <li><a href="#stories"      data-i18n="nav.stories">Feedback</a></li>
-        <li><a href="#pricing"      data-i18n="nav.pricing">Pricing</a></li>
-        <li><a href="#faq"          data-i18n="nav.faq">FAQ</a></li>
-      </ul>
-      <div class="lang-toggle lang-toggle-mobile" role="group" aria-label="Language">
-        <button type="button" class="lang-btn" data-lang="en" data-i18n="lang.en">EN</button>
-        <button type="button" class="lang-btn" data-lang="ar" data-i18n="lang.ar">عربي</button>
-      </div>
-    </nav>
   </header>
 
   <main id="main">
     <section id="hero">
-      <div class="container hero-inner">
-        <h1 class="hero-headline">
-          <span class="word" data-i18n="hero.head.0">First</span>
-          <span class="word" data-i18n="hero.head.1">Web3,</span>
-          <span class="word" data-i18n="hero.head.2">Decentralized</span>
-          <br>
-          <span class="word hero-accent" data-i18n="hero.head.3">Group</span>
-          <span class="word hero-accent" data-i18n="hero.head.4">Investing</span>
-          <span class="word hero-accent" data-i18n="hero.head.5">Platform</span>
-        </h1>
-        <p class="hero-subhead subhead" data-i18n="hero.subhead">Fulus is an all-in-one mobile platform for group investing where people pool money, collaborate together, and invest under one web3 decentralized wallet.</p>
-        <div class="hero-cta">
-          <a href="#pricing" class="btn btn-primary" data-i18n="hero.cta.primary">Get Started Now</a>
-          <a href="#features" class="btn btn-secondary" data-i18n="hero.cta.secondary">See Features</a>
+      <div class="container hero-grid">
+        <div id="hero-panel">
+          <p class="hero-eyebrow" data-i18n="hero.beta">Private beta — now onboarding.</p>
+          <h1 class="hero-head" data-split data-i18n="hero.head">Where your circle invests.</h1>
+          <p class="hero-sub" data-i18n="hero.sub">Fulus runs the money side for families and friends who invest together in Saudi Arabia and the Gulf.</p>
+          <form class="waitlist-form" data-form="hero" novalidate>
+            <label class="visually-hidden" for="email-hero" data-i18n="a11y.email.label">Email address</label>
+            <input class="input" type="email" name="email" id="email-hero" autocomplete="email" inputmode="email" required dir="ltr" placeholder="name@email.com">
+            <button class="btn btn--hero" type="submit" data-i18n="form.cta">Save My Spot</button>
+            <p class="form-msg" aria-live="polite"></p>
+            <div class="turnstile-slot"></div>
+          </form>
+          <p class="hero-microcopy"><svg class="icon" aria-hidden="true"><use href="#icon-key"/></svg> <span data-i18n="hero.form.note">No spam — launch updates only.</span></p>
+          <noscript>
+            <p class="noscript-note">The waitlist form needs JavaScript. Email <a href="mailto:support@fulus.sa">support@fulus.sa</a> and we will add you by hand.</p>
+            <p class="noscript-note" lang="ar" dir="rtl">نموذج قائمة الانتظار يحتاج جافاسكربت. راسلنا على <a href="mailto:support@fulus.sa"><bdi>support@fulus.sa</bdi></a> ونضيفك يدويًا.</p>
+          </noscript>
         </div>
-        <div class="phone-mockup" aria-hidden="true">
-          <div class="phone-frame">
-            <div class="phone-notch"></div>
-            <div class="phone-screen">
-              <div class="phone-header">
-                <span class="phone-balance-label" data-i18n="phone.balance.label">Total Balance</span>
-                <span class="phone-balance-value" data-counter="125487.50" data-counter-prefix="$">$0.00</span>
-              </div>
-              <div class="phone-chart">
-                <svg viewBox="0 0 300 80" preserveAspectRatio="none">
-                  <path d="M0,60 L30,55 L60,40 L90,45 L120,30 L150,35 L180,20 L210,25 L240,15 L270,10 L300,5"
-                        fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <ul class="phone-tickers">
-                <li><span class="ticker-sym">AAPL</span><span class="ticker-px" data-counter="245.50" data-counter-prefix="$">$0.00</span></li>
-                <li><span class="ticker-sym">META</span><span class="ticker-px" data-counter="778.38" data-counter-prefix="$">$0.00</span></li>
-                <li><span class="ticker-sym">BTC</span><span class="ticker-px" data-counter="115943" data-counter-prefix="$">$0</span></li>
-                <li><span class="ticker-sym">ETH</span><span class="ticker-px" data-counter="3420.00" data-counter-prefix="$">$0.00</span></li>
-              </ul>
+        <div class="hero-visual">
+          <div class="hero-halo" aria-hidden="true"></div>
+          <div class="portal portal--hero is-invitation">
+            <svg class="portal-svg" viewBox="0 0 72.12 93.68" aria-hidden="true"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg>
+            <img class="portal-window"
+                 src="/assets/images/hero-dashboard.webp"
+                 srcset="/assets/images/hero-dashboard.webp 1x, /assets/images/hero-dashboard@2x.webp 2x"
+                 alt="The Fulus club dashboard seen through the Fulus portal — Noor Family Club, balances and a live vote"
+                 data-i18n="a11y.hero.alt" data-i18n-attr="alt"
+                 width="621" height="1344" loading="eager" fetchpriority="high" decoding="async">
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="problem">
+      <div class="container">
+        <header class="section-head" data-reveal-group>
+          <h2 data-i18n="problem.head">Someone always carries the books.</h2>
+          <p data-i18n="problem.p1">Every group has one: the member who owns the spreadsheet, chases the transfers, and stays up reconciling other people’s money.</p>
+          <p data-i18n="problem.p2">Votes happen in WhatsApp and evaporate. Numbers live in one person’s head. Trust does all the accounting — until it can’t.</p>
+        </header>
+        <div class="problem-grid">
+          <img class="char-figure" src="/assets/images/char-lone.webp"
+               alt="A lone silhouette figure surrounded by drifting spreadsheet fragments"
+               data-i18n="problem.alt" data-i18n-attr="alt"
+               width="640" height="1137" loading="lazy" decoding="async" data-reveal>
+          <ul class="fragments" data-reveal-group>
+            <li class="fragment" data-i18n="problem.frag.1">Who paid last cycle?</li>
+            <li class="fragment" data-i18n="problem.frag.2">Sheet2 — do not edit</li>
+            <li class="fragment" data-i18n="problem.frag.3">=SUM(B2:B14)</li>
+            <li class="fragment" data-i18n="problem.frag.4">screenshot-final-v3.jpg</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="product">
+      <div class="container">
+        <header class="section-head" data-reveal-group>
+          <h2 data-i18n="product.head">The product, shown.</h2>
+          <p data-i18n="product.sub">Real screens from the Fulus beta — this is the app your club gets today.</p>
+        </header>
+
+        <article class="chapter" data-chapter="01">
+          <div class="chapter-copy" data-reveal-group>
+            <p class="chapter-kicker">
+              <span class="portal portal--marker is-closed" aria-hidden="true"><svg class="portal-svg" viewBox="0 0 72.12 93.68"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg></span>
+              <svg class="icon" aria-hidden="true"><use href="#icon-cash"/></svg> 01
+            </p>
+            <h3 data-i18n="product.ch1.head">Pool the money, without the chasing.</h3>
+            <p data-i18n="product.ch1.body">Every member’s contribution lands in one shared record — who paid, when, and the receipt to prove it. No more screenshots forwarded three times.</p>
+          </div>
+          <div class="chapter-media" data-reveal>
+            <div class="screen-card">
+              <img src="/assets/images/screen-01-pool.webp"
+                   alt="Fulus beta screen showing a club’s pooled contributions"
+                   data-i18n="product.ch1.alt" data-i18n-attr="alt"
+                   width="621" height="1344" loading="lazy" decoding="async">
             </div>
           </div>
+        </article>
+
+        <article class="chapter" data-chapter="02">
+          <div class="chapter-copy" data-reveal-group>
+            <p class="chapter-kicker">
+              <span class="portal portal--marker is-invitation" aria-hidden="true"><svg class="portal-svg" viewBox="0 0 72.12 93.68"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg></span>
+              <svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg> 02
+            </p>
+            <h3 data-i18n="product.ch2.head">Decide together, on the record.</h3>
+            <p data-i18n="product.ch2.body">Proposals get a card, members get a vote, and the outcome is stored where everyone can see it — not buried in a group chat.</p>
+          </div>
+          <div class="chapter-media" data-reveal>
+            <div class="screen-card">
+              <img src="/assets/images/screen-02-decide.webp"
+                   alt="Fulus beta screen showing a club vote in progress"
+                   data-i18n="product.ch2.alt" data-i18n-attr="alt"
+                   width="621" height="1344" loading="lazy" decoding="async">
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter" data-chapter="03">
+          <div class="chapter-copy" data-reveal-group>
+            <p class="chapter-kicker">
+              <span class="portal portal--marker is-activated" aria-hidden="true"><svg class="portal-svg" viewBox="0 0 72.12 93.68"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg></span>
+              <svg class="icon" aria-hidden="true"><use href="#icon-trending"/></svg> 03
+            </p>
+            <h3 data-i18n="product.ch3.head">Every share, exact.</h3>
+            <p data-i18n="product.ch3.body">Fulus computes each member’s ownership from their actual contributions, every cycle. No estimates, no awkward conversations.</p>
+          </div>
+          <div class="chapter-media" data-reveal>
+            <div class="screen-card">
+              <img src="/assets/images/screen-03-shares.webp"
+                   alt="Fulus beta screen showing per-member ownership"
+                   data-i18n="product.ch3.alt" data-i18n-attr="alt"
+                   width="621" height="1344" loading="lazy" decoding="async">
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter" data-chapter="04">
+          <div class="chapter-copy" data-reveal-group>
+            <p class="chapter-kicker">
+              <span class="portal portal--marker is-activated" aria-hidden="true"><svg class="portal-svg" viewBox="0 0 72.12 93.68"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg></span>
+              <svg class="icon" aria-hidden="true"><use href="#icon-receipt"/></svg> 04
+            </p>
+            <h3 data-i18n="product.ch4.head">Settle a cycle in minutes.</h3>
+            <p data-i18n="product.ch4.body">Close the cycle and Fulus works out each member’s share of the results — pro-rata, auditable, done before the tea gets cold.</p>
+          </div>
+          <div class="chapter-media" data-reveal>
+            <div class="screen-card">
+              <img src="/assets/images/screen-04-settle.webp"
+                   alt="Fulus beta screen showing a cycle settlement summary"
+                   data-i18n="product.ch4.alt" data-i18n-attr="alt"
+                   width="621" height="1344" loading="lazy" decoding="async">
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="container">
+        <h2 data-i18n="how.head">How it works</h2>
+        <ol class="how-steps" data-reveal-group>
+          <li class="how-step">
+            <span class="step-index">1</span>
+            <svg class="icon" aria-hidden="true"><use href="#icon-wallet"/></svg>
+            <h3 data-i18n="how.s1.head">Create your club</h3>
+            <p data-i18n="how.s1.body">Name it, set the ground rules, and open the books in minutes.</p>
+          </li>
+          <li class="how-step">
+            <span class="step-index">2</span>
+            <svg class="icon" aria-hidden="true"><use href="#icon-users"/></svg>
+            <h3 data-i18n="how.s2.head">Invite your circle</h3>
+            <p data-i18n="how.s2.body">Members join with a link — family, friends, colleagues you already trust.</p>
+          </li>
+          <li class="how-step">
+            <span class="step-index">3</span>
+            <svg class="icon" aria-hidden="true"><use href="#icon-trending"/></svg>
+            <h3 data-i18n="how.s3.head">Invest and settle together</h3>
+            <p data-i18n="how.s3.body">Contribute, vote, and let Fulus keep every share exact through each cycle.</p>
+          </li>
+        </ol>
+        <div class="how-keyart" data-reveal>
+          <img src="/assets/images/char-group.webp"
+               alt="Silhouette figures walking together toward a glowing Fulus portal"
+               data-i18n="how.alt" data-i18n-attr="alt"
+               width="941" height="1672" loading="lazy" decoding="async">
         </div>
       </div>
     </section>
-    <section id="benefits">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="benefits.eyebrow">Why Investment Clubs?</span>
-          <h2 data-i18n="benefits.title">Everything you need to automate, optimize, and scale</h2>
-        </div>
-        <div class="grid-3">
-          <div class="card benefit-card"><h3 data-i18n="benefits.cards.0.title">Access to Exclusive Investments</h3><p data-i18n="benefits.cards.0.body">Invest in assets that are typically out of reach for individual investors.</p></div>
-          <div class="card benefit-card"><h3 data-i18n="benefits.cards.1.title">Reduced Risk</h3><p data-i18n="benefits.cards.1.body">Invest in a wider range of assets to diversify risk.</p></div>
-          <div class="card benefit-card"><h3 data-i18n="benefits.cards.2.title">Knowledge Sharing</h3><p data-i18n="benefits.cards.2.body">Leverage collective knowledge and resources to achieve better returns.</p></div>
-        </div>
-      </div>
-    </section>
-    <section id="services">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="services.eyebrow">Services</span>
-          <h2 data-i18n="services.title">Smarter Services, Built for Investment Clubs</h2>
-          <p class="subhead" data-i18n="services.subhead">Everything you need to simplify management, grow together, and stay in control.</p>
-        </div>
-        <div class="services-stack">
-          <div class="card service-card" data-service="0"><h3 data-i18n="services.cards.0.title">Launch Your Club with Ease</h3><p data-i18n="services.cards.0.body">Set up a new club in minutes — invite members, define rules, and start investing together.</p></div>
-          <div class="card service-card" data-service="1"><h3 data-i18n="services.cards.1.title">Manage Shared Funds</h3><p data-i18n="services.cards.1.body">Distribute profit, transfer funds, handle redemption and subscription — all from one dashboard.</p></div>
-          <div class="card service-card" data-service="2"><h3 data-i18n="services.cards.2.title">Track Portfolios in Real Time</h3><p data-i18n="services.cards.2.body">Live tickers and valuations across your club's holdings — equities, crypto, and tokenized assets.</p></div>
-          <div class="card service-card" data-service="3"><h3 data-i18n="services.cards.3.title">Automate Profit Distribution</h3><p data-i18n="services.cards.3.body">Pro-rata calculations across all members, every cycle — accurate, automatic, auditable.</p></div>
-          <div class="card service-card" data-service="4"><h3 data-i18n="services.cards.4.title">Generate Clear Reports Instantly</h3><p data-i18n="services.cards.4.body">Member-level statements, club-wide P&amp;L, transaction histories — exportable on demand.</p></div>
+
+    <section id="trust">
+      <div class="container trust-inner" data-reveal-group>
+        <h2 class="visually-hidden" data-i18n="trust.head">Trust, plainly.</h2>
+        <blockquote class="founder-note">
+          <p data-i18n="trust.note">I built Fulus because I was the one carrying my club’s books. Fulus is what I wished we had: one honest record that every member can see. We’re a small team in Saudi Arabia, we’re in private beta, and the clubs that join now shape what we build next.</p>
+          <footer class="founder-sig" data-i18n="trust.name">Ahmed — founder of Fulus</footer>
+        </blockquote>
+        <div class="trust-lines">
+          <p class="trust-line"><svg class="icon" aria-hidden="true"><use href="#icon-key"/></svg> <span data-i18n="trust.security">Your data is encrypted. We never share your email.</span></p>
+          <p class="trust-line"><svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg> <span data-i18n="trust.beta">Fulus is in private beta. Early clubs get direct access to the team — and shape the product.</span></p>
         </div>
       </div>
     </section>
-    <section id="features">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="features.eyebrow">Features</span>
-          <h2 data-i18n="features.title">All features in one place</h2>
-          <p class="subhead" data-i18n="features.subhead">Everything your club needs to manage, invest, and grow together with confidence.</p>
-        </div>
-        <ul class="feature-list">
-          <li data-i18n="features.items.0">Easy Club Creation &amp; Membership</li>
-          <li data-i18n="features.items.1">Transparent Contributions Tracking</li>
-          <li data-i18n="features.items.2">Real-Time Ownership &amp; Valuations</li>
-          <li data-i18n="features.items.3">Smarter Investment Management</li>
-          <li data-i18n="features.items.4">Clear Dashboards &amp; Reports</li>
-          <li data-i18n="features.items.5">Secure Collaboration &amp; Decisions</li>
-        </ul>
+
+    <section id="vision">
+      <div class="container vision-band" data-reveal-group>
+        <div class="portal portal--marker is-invitation vision-portal" data-state-target="is-invitation" aria-hidden="true"><svg class="portal-svg" viewBox="0 0 72.12 93.68"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg></div>
+        <p class="kicker" data-i18n="vision.kicker">The road ahead</p>
+        <h2 data-i18n="vision.head">Built for the future. Available today.</h2>
+        <p data-i18n="vision.body">We are building toward a treasury every member can verify for themselves — the same shared record, provable rather than promised. What you join today is the working product; the road ahead only deepens it.</p>
       </div>
     </section>
-    <section id="process">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="process.eyebrow">Process</span>
-          <h2 data-i18n="process.title">Our Simple &amp; Smart Process</h2>
-          <p class="subhead" data-i18n="process.subhead">Everything you need to create, invest, and grow together.</p>
-        </div>
-        <div class="process-grid">
-          <svg class="process-line" viewBox="0 0 1000 80" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M50,40 L950,40" stroke="var(--border-strong)" stroke-width="2" stroke-dasharray="6 6" fill="none"/>
-          </svg>
-          <div class="card process-card" data-step="1">
-            <span class="num" data-counter="1">0</span>
-            <h3 data-i18n="process.cards.0.title">Create or Join a Club</h3>
-            <p data-i18n="process.cards.0.body">Start your investment journey by forming a new club or joining an existing one with ease.</p>
-          </div>
-          <div class="card process-card" data-step="2">
-            <span class="num" data-counter="2">0</span>
-            <h3 data-i18n="process.cards.1.title">Contribute &amp; Collaborate</h3>
-            <p data-i18n="process.cards.1.body">Pool funds with members, propose investments, and decide together with transparent records.</p>
-          </div>
-          <div class="card process-card" data-step="3">
-            <span class="num" data-counter="3">0</span>
-            <h3 data-i18n="process.cards.2.title">Invest, Track, Distribute</h3>
-            <p data-i18n="process.cards.2.body">Buy and hold across asset classes; the platform handles ownership math and profit distribution.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-    <section id="stories">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="stories.eyebrow">Success Stories</span>
-          <h2 data-i18n="stories.title">Success Stories to Inspire</h2>
-          <p class="subhead" data-i18n="stories.subhead">Discover how clubs and users achieve results.</p>
-        </div>
-        <div class="stories-grid">
-          <div class="testimonial card" data-parallax="-5">
-            <p data-i18n="stories.cards.0.body">Alaa joined the club to learn about stocks, discover opportunities, and be part of a community. Over time, he gained confidence through knowledge sharing and saw real results — his portfolio grew by 23% in 2 years.</p>
-            <div class="author"><span class="author-name" data-i18n="stories.cards.0.name">Alaa</span><span class="author-role" data-i18n="stories.cards.0.role"> · TMSA Club Member</span></div>
-          </div>
-          <div class="testimonial card" data-parallax="0">
-            <p data-i18n="stories.cards.1.body">Adi started with no investing experience and wanted a safer way to learn. The club gave him confidence, access to the group's expertise, and a smoother path into investing. In just 2 years, his returns reached 21%, and he now describes his investing level as "moderate" compared to starting from zero.</p>
-            <div class="author"><span class="author-name" data-i18n="stories.cards.1.name">Adi</span><span class="author-role" data-i18n="stories.cards.1.role"> · TMSA Club Member</span></div>
-          </div>
-          <div class="testimonial card" data-parallax="5">
-            <p data-i18n="stories.cards.2.body">Osama joined mainly to learn and benefit from knowledge exchange. While he was skeptical about long-term success, he still recognized the personal growth he gained. His portfolio grew by 17% in 1.5 years, and he walked away with valuable investment knowledge he didn't have before.</p>
-            <div class="author"><span class="author-name" data-i18n="stories.cards.2.name">Osama</span><span class="author-role" data-i18n="stories.cards.2.role"> · TMSA Club Member</span></div>
-          </div>
-        </div>
-        <blockquote class="pull-quote" data-i18n="stories.pullquote">"They created a space where knowledge sharing was effortless, and the results on our portfolio spoke for themselves."</blockquote>
-      </div>
-    </section>
-    <section id="integrations">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="integrations.eyebrow">Integrations</span>
-          <h2 data-i18n="integrations.title">Seamless Integrations</h2>
-          <p class="subhead" data-i18n="integrations.subhead">Invest in all your favorite assets on-chain &amp; off-chain.</p>
-        </div>
-        <div class="orbit" aria-hidden="true">
-          <div class="orbit-ring orbit-ring-1">
-            <span class="orbit-icon" data-asset="btc"><svg width="36" height="36"><use href="/assets/icons/sprite.svg#btc"/></svg></span>
-            <span class="orbit-icon" data-asset="eth"><svg width="36" height="36"><use href="/assets/icons/sprite.svg#eth"/></svg></span>
-            <span class="orbit-icon" data-asset="aapl"><svg width="36" height="36"><use href="/assets/icons/sprite.svg#aapl"/></svg></span>
-            <span class="orbit-icon" data-asset="meta"><svg width="36" height="36"><use href="/assets/icons/sprite.svg#meta"/></svg></span>
-            <span class="orbit-icon" data-asset="sar"><svg width="36" height="36"><use href="/assets/icons/sprite.svg#sar"/></svg></span>
-            <span class="orbit-icon" data-asset="usd"><svg width="36" height="36"><use href="/assets/icons/sprite.svg#usd"/></svg></span>
-          </div>
-          <div class="orbit-center">
-            <img src="/assets/images/logo.png" alt="Fulus" width="64" height="64" loading="lazy" decoding="async">
-          </div>
-        </div>
-      </div>
-    </section>
-    <section id="pricing">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="pricing.eyebrow">Pricing</span>
-          <h2 data-i18n="pricing.title">Flexible Plans for Every Club</h2>
-        </div>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <div class="plan-name" data-i18n="pricing.free.name">Free</div>
-            <div class="price"><span data-counter="0" data-counter-prefix="$">$0</span></div>
-            <div class="price-suffix" data-i18n="pricing.suffix">per club / year</div>
-            <div class="members" data-i18n="pricing.free.members">Up to 10 members</div>
-            <a href="#" class="btn btn-secondary" data-i18n="pricing.cta">Get Started</a>
-          </div>
-          <div class="price-card popular">
-            <div class="plan-name" data-i18n="pricing.premium.name">Premium</div>
-            <div class="price"><span data-counter="99" data-counter-prefix="$">$99</span></div>
-            <div class="price-suffix" data-i18n="pricing.suffix">per club / year</div>
-            <div class="members" data-i18n="pricing.premium.members">Unlimited members</div>
-            <a href="#" class="btn btn-primary" data-i18n="pricing.cta">Get Started</a>
-          </div>
-        </div>
-      </div>
-    </section>
-    <section id="comparison">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="comparison.eyebrow">Comparison</span>
-          <h2 data-i18n="comparison.title">See How We Stand Out</h2>
-          <p class="subhead" data-i18n="comparison.subhead">How we outperform traditional clubs and solo investing.</p>
-        </div>
-        <ul class="compare-list">
-          <li><span class="check" aria-hidden="true">✓</span><span data-i18n="comparison.items.0">Collaborative investing with groups</span></li>
-          <li><span class="check" aria-hidden="true">✓</span><span data-i18n="comparison.items.1">Set your own rules and make decisions as a team</span></li>
-          <li><span class="check" aria-hidden="true">✓</span><span data-i18n="comparison.items.2">Real-time tracking &amp; dashboards</span></li>
-          <li><span class="check" aria-hidden="true">✓</span><span data-i18n="comparison.items.3">Wide investment options through tokenization</span></li>
-          <li><span class="check" aria-hidden="true">✓</span><span data-i18n="comparison.items.4">Collaborate securely with contracts and forums</span></li>
-        </ul>
-      </div>
-    </section>
-    <section id="faq">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow" data-i18n="faq.eyebrow">FAQ</span>
-          <h2 data-i18n="faq.title">Frequently Asked Questions</h2>
-        </div>
-        <div class="faq-list">
-          <details class="faq-item">
-            <summary><span data-i18n="faq.items.0.q">What is an Investment Club?</span><span class="plus" aria-hidden="true">+</span></summary>
-            <div class="answer" data-i18n="faq.items.0.a">A group of members pooling funds to invest together, share knowledge, and make joint decisions.</div>
-          </details>
-          <details class="faq-item">
-            <summary><span data-i18n="faq.items.1.q">How do I create or join a club?</span><span class="plus" aria-hidden="true">+</span></summary>
-            <div class="answer" data-i18n="faq.items.1.a">Sign up, then create a new club or join an existing one by accepting an invitation or sending a join request.</div>
-          </details>
-          <details class="faq-item">
-            <summary><span data-i18n="faq.items.2.q">Is my money safe on the platform?</span><span class="plus" aria-hidden="true">+</span></summary>
-            <div class="answer" data-i18n="faq.items.2.a">The platform currently tracks your investments and contributions, while funds are managed securely by club managers through their bank accounts. Future updates will include integrated digital wallets for added convenience and security.</div>
-          </details>
-          <details class="faq-item">
-            <summary><span data-i18n="faq.items.3.q">How are profits and losses shared?</span><span class="plus" aria-hidden="true">+</span></summary>
-            <div class="answer" data-i18n="faq.items.3.a">They are automatically calculated based on each member's contribution and ownership percentage.</div>
-          </details>
-          <details class="faq-item">
-            <summary><span data-i18n="faq.items.4.q">Do I need investing experience?</span><span class="plus" aria-hidden="true">+</span></summary>
-            <div class="answer" data-i18n="faq.items.4.a">No, clubs are designed for all experience levels, and members learn while investing.</div>
-          </details>
-        </div>
+
+    <section id="cta">
+      <div class="container cta-inner">
+        <div class="portal portal--cta is-activated" aria-hidden="true"><svg class="portal-svg" viewBox="0 0 72.12 93.68"><polygon points="72.12 0 0 26.48 0 93.68 72.12 67.2" fill="url(#portal-grad)"/></svg></div>
+        <img class="cta-pair" src="/assets/images/char-pair.webp" alt=""
+             width="1123" height="1401" loading="lazy" decoding="async">
+        <h2 data-i18n="cta.head">Your invite is on the other side.</h2>
+        <form class="waitlist-form" data-form="final" novalidate>
+          <label class="visually-hidden" for="email-final" data-i18n="a11y.email.label">Email address</label>
+          <input class="input" type="email" name="email" id="email-final" autocomplete="email" inputmode="email" required dir="ltr" placeholder="name@email.com">
+          <button class="btn btn--hero" type="submit" data-i18n="form.cta">Save My Spot</button>
+          <p class="form-msg" aria-live="polite"></p>
+          <div class="turnstile-slot"></div>
+        </form>
+        <p class="cta-note"><svg class="icon" aria-hidden="true"><use href="#icon-key"/></svg> <span data-i18n="cta.next">Invites go out in waves. Your email gets launch updates — nothing else.</span></p>
       </div>
     </section>
   </main>
 
   <footer id="site-footer">
     <div class="container footer-inner">
-      <div class="footer-brand">
-        <picture>
-          <source srcset="/assets/images/logo.webp" type="image/webp">
-          <img src="/assets/images/logo.png" alt="Fulus" width="32" height="32" loading="lazy" decoding="async">
-        </picture>
-        <span class="logo-text">Fulus</span>
-      </div>
-      <div class="footer-meta">
+      <span class="footer-logo">
+        <svg viewBox="0 0 73.69 87.23" role="img" aria-label="Fulus" fill="currentColor"><path d="M0,0h73.69v57.8h-35.59V20.61h-2.43v39.62h38.02v20.46h-38.02v6.54H0V0Z"/></svg>
+      </span>
+      <p class="footer-legal" data-i18n="footer.disclosure">Fulus is in private beta. Waitlist emails are stored with Fulus and never shared.</p>
+      <p class="footer-links">
+        <a href="/privacy.html" data-i18n="footer.privacy">Privacy</a>
         <span data-i18n="footer.copyright">© 2026 Fulus. All rights reserved.</span>
-      </div>
+      </p>
     </div>
   </footer>
 
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
-          integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt"
-          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
-          integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d"
-          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"
-          integrity="sha384-tKsJDT6PlUI0pSBt9/sBKJluKgA19/a6mBrDsZaXotLB4ZYfMGM6xt6/WgGpYhTm"
-          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <template id="confirmation-template">
+    <div class="confirmation">
+      <h1 data-confirm="title" data-i18n="confirm.title">You’re on the list.</h1>
+      <p data-confirm="position"></p>
+      <h3 data-i18n="confirm.referral.head">Bring your club.</h3>
+      <p data-i18n="confirm.referral.sub">Referrals move you into earlier invite waves.</p>
+      <div class="referral-box">
+        <label class="visually-hidden" for="referral-link" data-i18n="a11y.referral.label">Your referral link</label>
+        <input class="input" id="referral-link" type="text" readonly dir="ltr" data-confirm="link">
+        <button type="button" class="btn btn--outline" data-confirm="copy" data-i18n="confirm.copy">Copy Link</button>
+      </div>
+      <p data-confirm="count"></p>
+      <div class="share-row">
+        <a class="btn btn--outline" data-confirm="share" href="https://wa.me/?text=" target="_blank" rel="noopener">
+          <span data-i18n="confirm.share">Share on WhatsApp</span>
+          <svg class="icon" aria-hidden="true"><use href="#icon-arrow-right"/></svg>
+        </a>
+      </div>
+      <fieldset class="profile-fieldset" data-confirm="profile">
+        <legend data-i18n="confirm.profile.q1">Your club — existing or new?</legend>
+        <label><input type="radio" name="club_intent" value="existing"> <span data-i18n="confirm.profile.q1.existing">We already invest together</span></label>
+        <label><input type="radio" name="club_intent" value="new"> <span data-i18n="confirm.profile.q1.new">Starting fresh</span></label>
+        <label for="club-size" data-i18n="confirm.profile.q2">How many people?</label>
+        <select class="input" id="club-size" name="club_size">
+          <option value="" selected>—</option>
+          <option value="5">2–5</option>
+          <option value="10">6–10</option>
+          <option value="20">11–20</option>
+          <option value="21">20+</option>
+        </select>
+      </fieldset>
+      <p hidden data-confirm="profile-thanks" data-i18n="confirm.profile.thanks">Noted — thanks.</p>
+    </div>
+  </template>
 
   <script type="module" src="/js/main.js"></script>
 </body>

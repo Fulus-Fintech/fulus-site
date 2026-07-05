@@ -1,96 +1,91 @@
-# Deferred backlog
+# Backlog
 
-This file tracks items deferred during the 2026-05-03 → 2026-05-04 pixel-match
-rebuild engagement (specs at
-[`fulus repo`/docs/superpowers/specs/2026-05-03-fulus-site-pixel-match-design.md](https://github.com/Fulus-Fintech/fulus/blob/main/docs/superpowers/specs/2026-05-03-fulus-site-pixel-match-design.md)).
-The rebuild's code+docs work landed across 37 commits on `main`; what's below
-is the close-out punch list before public launch + a few items intentionally
-left for a later pass.
+Rewritten 2026-07 as part of the Threshold × Ledger rebuild
+(spec: Flutter repo `docs/superpowers/specs/2026-07-03-fulus-landing-page-redesign-design.md`).
+The 2026-05 pixel-match backlog is retired below where the rebuild deleted the surface it referred to.
 
-Last updated: 2026-05-04.
+## 1. Launch gates (founder-driven)
 
----
+- [x] **Turnstile production site key — DONE 2026-07-05.** `js/waitlist.js` `TURNSTILE_SITE_KEY`
+  now holds the founder's production widget `0x4AAAAAADU96nEHLV4GAe2V` (shared with the Fulus
+  app's CAPTCHA). **TWO prerequisites remain before launch:** (a) the widget's Cloudflare
+  **hostname allowlist MUST include `fulus.sa`** (add `localhost` too if testing locally) — the
+  app's widget may be scoped to the app domain only, and if `fulus.sa` is missing every captcha
+  fails there; (b) **set the join-waitlist edge-function secret** `TURNSTILE_SECRET_KEY` to THIS
+  widget's secret (Supabase dashboard → project `zainebbvseprgngrrovk` → Edge Functions → Secrets),
+  replacing the always-pass test secret. (The `api.js` `/v0/` URL bug was already fixed in `2ff07f9`.)
+- [x] **Native Arabic copy — founder accepted the drafts as-is (2026-07-05).** The founder reviewed
+  and kept the current `i18n/ar.json` strings. `docs/arabic-copy-review.md` remains as the record
+  if a fuller native pass is wanted later.
+- [ ] **Confirm `support@fulus.sa` exists and receives mail.** `privacy.html` and the waitlist form's
+  `<noscript>` fallback in `index.html` point users to this address (changed from `hello@` on
+  2026-07-05). Verify the mailbox is provisioned and monitored before launch — a dead mailto is a
+  silent support-channel failure.
+- [x] **Founder-note voice — founder accepted the draft as-is (2026-07-05).** The `#trust`
+  `blockquote.founder-note` copy (`trust.note` / `trust.name`) stands as written; the founder kept it.
+- [ ] **Enable Cloudflare Web Analytics** (cookieless — no cookie banner required). Dashboard →
+  Web Analytics → add site `fulus.sa` → copy the token, then paste this snippet immediately
+  before `</body>` in `index.html`, substituting the dashboard token:
+  `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "PASTE-DASHBOARD-TOKEN-HERE"}'></script>`
+  Re-verify transferred JS stays < 200 KB (DevTools Network) after adding the beacon.
+- [ ] **Plan the first invite wave within ~1 month of signups starting.** Research signal:
+  waitlist→activation roughly halves after a month idle. Decide beta wave cadence early.
 
-## 1. Ops (Ahmed-driven, gates public launch)
+## 2. Post-launch (kept from the 2026-05 backlog — still true)
 
-### Day 1 — DNS cutover
-- [ ] Cloudflare → fulus-site Worker → Domains: add `fulus.sa` + `www.fulus.sa`. Note the 2 assigned NS.
-- [ ] NS swap at `.sa` registrar (Hawsabah → Cloudflare). Runbook in Flutter repo: `audit/runbooks/h-2-7-cloudflare-pages-deploy.md`.
-- [ ] After NS propagation: Apple AASA validation tool reports valid; Google Digital Asset Links reports green.
-- [ ] iPhone fresh-install → tap a `https://fulus.sa/<route>` link → opens in app. (Android click-through deferred to internal-testing build per c-5 runbook.)
+- [ ] Verify the Cloudflare Bulk Redirect `www.fulus.sa/*` → `https://fulus.sa/$1` (301) is live.
+- [ ] Cancel the Framer Mini subscription if still active.
+- [ ] **FK Grotesk license → Latin display swap.** If/when a license is purchased: change the
+  single Latin-display `font-family` custom property in the tokens block of `styles.css`
+  (one-line change; Readex Pro remains the Arabic + fallback face). Until then, do not commit
+  any FK Grotesk binaries — the trials are unlicensed.
+- [ ] App-store links at launch: the footer/vision wiring point carries TestFlight / Play links
+  once C-5 (TestFlight verification) closes in the Flutter repo.
+- [ ] Spanish + German marketing copy (app already ships es/de) via the same dictionary mechanism.
+- [ ] Visual-regression CI (animation-disabled screenshot diff) if rebuild cadence picks up.
+- [ ] Page-speed monitoring / RUM (Cloudflare Web Vitals) to track LCP/CLS/INP in production.
+- [ ] Public signup counter — only once the number is non-embarrassing (spec non-goal at launch).
+- [ ] A-7 (`USING(true)` RLS hardening) — backend engagement candidate; lives in the Supabase repo.
 
-### Day 5 — sign-off + redirects
-- [ ] Visual sign-off review: open `https://fulus-site.ahmed-balkhair.workers.dev/` and `https://www.fulus.sa/` side-by-side at desktop (1440px) + mobile (<810px), in EN + AR. Walk each section.
-  - Document approval: `git -C "C:/Users/Administrator/Downloads/fulus-site" commit --allow-empty -m "chore: visual sign-off received from Ahmed YYYY-MM-DD"`.
-- [ ] Cloudflare Bulk Redirects → list `www.fulus.sa/*` → `https://fulus.sa/$1` (301). Attach at zone level. Verify www 301s to apex.
-- [ ] Run Lighthouse against the deployed URL: `npx lighthouse https://fulus-site.ahmed-balkhair.workers.dev/ --view --preset=desktop` and `--form-factor=mobile`. Target ≥95 across Performance / Accessibility / Best Practices / SEO.
-- [ ] Record Lighthouse scores in this README (per Phase 6 Task 6.1 step 5).
-- [ ] Cancel Framer Mini subscription.
+## 3. Engineering notes (found during the rebuild)
 
----
+- [ ] **`wrangler dev` infinite reload loop.** Local preview (`npx wrangler dev`) can enter an
+  infinite reload loop: `wrangler.jsonc`'s `assets.directory: "."` means the dev server watches
+  the whole repo root, including its own `.wrangler/state` SQLite cache — writes to that cache
+  trigger a reload, which writes to the cache again. Workarounds: run with
+  `--persist-to <dir outside the repo>`, or use `python -m http.server` for quick local visual
+  checks (no Worker-specific behavior needed for static-asset preview). Consider adding an
+  `.assetsignore` (exclude `.wrangler/`) or otherwise reconfiguring `assets.directory` as a
+  permanent fix.
+- [ ] **Riyal-glyph / dollar-sign inconsistency (founder call, not a bug to silently fix).** The
+  four product-chapter screenshots (`assets/images/screen-01-pool.webp` …
+  `screen-04-settle.webp`) are real Fulus beta screen renders and show `$` figures (the app's
+  current on-device currency formatting), while the hero composite (`assets/images/hero-dashboard.webp`)
+  uses the Saudi Riyal glyph (U+20C1, via `assets/fonts/riyal.woff2`). This is a minor visual
+  inconsistency, but it's honest — the chapter images are real screenshots, not mockups. Founder
+  decision needed: accept as-is, or commission Riyal-glyph composites of the chapter screens
+  later.
 
-## 2. Pre-launch polish — sandbox-doable (10-30 min each)
+## 4. Retired by the 2026-07 rebuild (do not resurrect)
 
-Pick up in any order before launch; none gate the cutover.
+These 2026-05-04 items referred to page surfaces the rebuild deleted or laws it now enforces:
 
-- **Touch targets below 44×44 WCAG/HIG minimum** — `.hamburger` is 36×36 (`styles.css:156`); `.lang-btn` is ~32px tall (`styles.css:154`). Bump padding.
-- **Add `<link rel="canonical" href="https://fulus.sa">`** in `<head>` (`index.html`).
-- **Header logo `href="#"`** → change to `href="/"` so it actually navigates home instead of scrolling to top + appending a `#` to the URL (`index.html:36`).
-- **`process-line { left: 0 }`** → `inset-inline-start: 0` for logical-property consistency (`styles.css:206`; cosmetic — the line is `aria-hidden`).
-- **`langchange` doesn't `ScrollTrigger.refresh()`** — services desktop scroll-pin direction stays stale until window resize when user toggles language. One-line fix in `js/main.js`: add `document.addEventListener('langchange', () => ScrollTrigger.refresh())`.
-- **Drop dead `stroke-dasharray="6 6"` HTML attribute** on the process line SVG path (`index.html` process section). The CSS `stroke-dasharray: 1900` overrides it and the line draws solid by design.
-- **Drop unused `isTablet` export** from `js/lib.js:5` (no animation module imports it; misleads future contributors).
-- **Drop empty placeholder rule** `.price-card.popular { /* set the label via JS in Phase 3 — gradient sweep + 'Popular' label */ }` from `styles.css:248` — the comment is stale (the label IS set via JS in Phase 2 Task 2.9; the gradient-sweep was simplified to a box-shadow pulse in Phase 3 Task 3.8).
-
-### Accessibility polish (drawer)
-- **Mobile drawer focus management** — on hamburger open, move focus to first nav link; on close (any path), return focus to hamburger.
-- **Escape-to-close** drawer.
-- **Dynamic `aria-label` toggle** between "Open menu" / "Close menu" via the existing `data-i18n-attr="aria-label"` mechanism (keys `a11y.menu.open` / `a11y.menu.close` already in both en/ar dictionaries from Phase 4 Task 4.1).
-
----
-
-## 3. Pre-launch polish — needs input/assets
-
-- **OG image re-export to 1200×630** — current `assets/images/og-image.png` is 1897×907 (ratio 2.09:1); Facebook/LinkedIn target 1.91:1 and will crop the sides. Re-export from source, replace PNG + WebP variants.
-- **Brand icon SVG paths in sprite** — `assets/icons/sprite.svg` ships simplified BTC/ETH/AAPL/META path data per the plan. For production faithfulness, fetch canonical paths from <https://simple-icons.org> and replace.
-- **Arabic testimonial copy review** — `stories.cards.{0,1,2}.body` in `i18n/ar.json` are AI first-pass per spec §9. Ahmed (or a professional translator) should review pre-launch — testimonial idiom translation is the area most likely to read awkwardly.
-- **Section illustration PNGs still hash-named on disk** (`LMV9IYKI2TkgMh5KmQhbeIV2A.png`, `rLihu4NmoRAKZVYcyV0i2F3lhoM.png`). The WebP variants are renamed to `section-1602.webp` / `section-1920.webp`. Rename the PNGs to match if/when these illustrations are placed in the page (currently not used in markup).
-
----
-
-## 4. Spec §4.2 features that didn't make Phase 3
-
-These were described in the spec but the Phase 3 plan delivered different / no implementation. Carry into a follow-up if they're load-bearing for visual parity:
-
-- **Header scroll-blur ramp** — spec §4.2 calls for `backdrop-filter` ramping from `blur(0)` to `blur(12px)` past 40px scroll. Currently static at `blur(12px)` (`styles.css:146`). No `header.js` animation module exists. Adding it = small new module + scroll listener.
-- **Integrations icons "pulse on hover"** — spec §4.2 mentions pulse on hover; Phase 3 Task 3.7 plan delivered orbit rotation + section reveal only.
-- **Pricing badge gradient sweep** — spec §4.2 calls for "slow gradient sweep on a 3s loop" on the popular badge. Phase 3 Task 3.8 plan delivered a box-shadow pulse instead. Probably acceptable; flagging only because the simplification is a deliberate scope decision worth confirming.
-
-### Animation timing observations
-- **Pricing pulse fires at page load** with no scroll trigger — animates an off-screen element until user scrolls into view.
-- **Process counters double-animate** under reduced-motion: hero.js used to sweep `[data-counter]` page-wide (since fixed in `ea2eee6` — scoped to `#hero [data-counter]`); the issue is now closed but worth knowing the history.
-- **Services desktop pin in RTL** — direction sign-flipped in Phase 4 Task 4.3, but in RTL the user sees DOM-order card 5 first. If sequence is meaningful, consider `flex-direction: row-reverse` on `.services-stack` under `[dir="rtl"]` (only inside the desktop pin layout, not the mobile stagger).
-
----
-
-## 5. Known limitations (acceptable as-is)
-
-- **WebP regression on small palette images** — `cwebp -q 85` produces output larger than the optimized PNG for `logo.png`, `section-1602.png`, `section-1920.png`. Only `og-image.webp` is meaningfully smaller (-48%). The `<picture>` element fetches WebP for browsers that support it, which is a tiny perf regression for the logo on modern browsers. Decision: ship as-is per plan; total impact is ~2KB on the wire, dwarfed by the ~100KB CDN library load.
-- **`reducedMotion` is a static snapshot** in `js/lib.js:3` — evaluated once at module load, not reactive to mid-session OS preference changes. Marketing site, very low risk.
-- **Hardcoded RGBA accent-tint values** at three call sites (`styles.css` `.process-card .num`, `.price-card.popular`, `.compare-list .check`) using slightly different alphas (0.10, 0.08, 0.12) — could be tokenized as `--accent-soft-*` if more sites accumulate. Acceptable for v1.
-- **`gsap` and `ScrollTrigger` are CDN globals**, not ES module imports. Standard pattern for this stack; main.js guards `typeof gsap === 'undefined'` before calling animation modules.
-- **Single-line card markup** in benefits / services / comparison sections is dense but readable for short cards. If card copy grows substantially, expand to multi-line.
-
----
-
-## 6. Forward-looking (post-launch, separate engagement)
-
-These are out of scope per the spec but worth keeping visible:
-
-- **CTA destinations** — header + hero + pricing CTAs are placeholder `href="#"`. Wire to TestFlight / Play / contact-form once those exist; gated on C-5 (TestFlight verification) and on a hosted Privacy URL per `c-1-11-pdpl-legal-handoff` (Flutter repo runbook).
-- **Spanish + German marketing copy** — Flutter app supports `es`/`de`; add to fulus-site as a translation-strings PR via the same dictionary mechanism.
-- **Analytics + cookie banner** — once tracking is needed: Plausible or Cloudflare Web Analytics + a PDPL-compliant cookie banner.
-- **Visual-regression CI** — automated screenshot diff with animation-disabled snapshots, if frequent rebuilds become common.
-- **Page Speed monitoring** — Cloudflare Web Vitals or RUM service to track LCP/CLS/INP in production.
-- **Form-driven contact flow** — replace placeholder "Get Started" anchors with a real form (Cloudflare Forms / Tally), gated on a hosted Privacy URL.
-- **A-7 (RLS `USING(true)`)** — backend hardening engagement candidate. Filed during h-2.7 design as the proper-fix layer to h-2.7's client-side IDOR mitigation. Lives in the Supabase repo.
+- `.hamburger` / `.lang-btn` touch-target bumps — old header + drawer deleted; ≥44 px targets are law.
+- `<link rel="canonical">` — carried into the rebuilt `<head>`.
+- Header logo `href="#"` → `/` — rebuilt.
+- `process-line { left: 0 }` + dead `stroke-dasharray` attribute — process section deleted.
+- `langchange` missing `ScrollTrigger.refresh()` — now required by the motion law; implemented in `js/main.js`.
+- Unused `isTablet` export — `js/lib.js` deleted.
+- `.price-card.popular` placeholder rule — pricing section deleted.
+- Drawer focus management / Escape-to-close / dynamic menu `aria-label` — no drawer exists.
+- OG image re-export to 1200×630 — the rebuild's `og-image.png` is exported at 1200×630.
+- Simple-icons sprite paths (BTC/ETH/AAPL/META) — integrations orbit deleted.
+- Arabic testimonial copy review — testimonials deleted (honesty bar); superseded by the
+  page-wide native-AR sign-off gate above.
+- Hash-named section illustration PNGs — deleted with the old assets.
+- Spec-§4.2 leftovers (header scroll-blur ramp, integrations hover pulse, pricing badge gradient
+  sweep) + animation-timing observations — sections deleted.
+- Old known-limitations list (WebP regression on palette images, static `reducedMotion` snapshot
+  in `js/lib.js`, RGBA accent tints, single-line card markup) — superseded stack.
+- "Analytics + cookie banner" — superseded by the cookieless Cloudflare Web Analytics gate above.
+- Placeholder CTA destinations / form-driven contact flow — superseded by the waitlist form.

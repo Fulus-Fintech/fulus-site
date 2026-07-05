@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="privacy.title">Privacy — Fulus</title>
+  <meta name="description" content="What the fulus.sa waitlist stores, why, and how to be removed.">
+  <meta name="theme-color" content="#020B18">
+  <link rel="canonical" href="https://fulus.sa/privacy.html">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16.png">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/readex-pro-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/readex-pro-arabic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a href="#main" class="skip-link" data-i18n="a11y.skip">Skip to content</a>
+
+  <header id="site-header">
+    <div class="container header-inner">
+      <a class="header-logo" href="/" aria-label="Fulus — home" data-i18n="a11y.home" data-i18n-attr="aria-label">
+        <img src="/assets/images/logo-horizontal-bilingual-white.png" alt="" width="180" height="40" decoding="async">
+      </a>
+      <div class="header-actions">
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n="a11y.lang" data-i18n-attr="aria-label">
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false" lang="en">English</button>
+          <button type="button" class="lang-btn" data-lang="ar" aria-pressed="false" lang="ar">العربية</button>
+        </div>
+        <a class="btn btn--outline" href="/" data-i18n="privacy.back">Back to fulus.sa</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="privacy-main">
+    <div class="container">
+      <h1 data-i18n="privacy.head">Privacy</h1>
+      <p data-i18n="privacy.intro">This page covers the fulus.sa waitlist. Plain language, short on purpose.</p>
+      <section class="privacy-block">
+        <h2 data-i18n="privacy.store.head">What we store</h2>
+        <p data-i18n="privacy.store.body">Your email address, your language preference, and — if you answer the optional questions — whether you have a club and how big it is. That’s the whole list.</p>
+      </section>
+      <section class="privacy-block">
+        <h2 data-i18n="privacy.why.head">Why we store it</h2>
+        <p data-i18n="privacy.why.body">To hold your place in line, to send you launch updates, and to invite you when your wave opens. Your email is never sold or shared with anyone.</p>
+      </section>
+      <section class="privacy-block">
+        <h2 data-i18n="privacy.removal.head">Want off the list?</h2>
+        <p><span data-i18n="privacy.removal.body">Send an email from the address you signed up with and we’ll delete your record. Reach us at</span> <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+      </section>
+      <p class="privacy-updated" data-i18n="privacy.pdpl">We handle this data in line with the principles of Saudi Arabia’s Personal Data Protection Law (PDPL).</p>
+    </div>
+  </main>
+
+  <footer id="site-footer">
+    <div class="container footer-inner">
+      <span data-i18n="footer.copyright">© 2026 Fulus. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initI18n, setLang } from '/js/i18n.js';
+    const syncPressed = () => {
+      const lang = document.documentElement.lang;
+      document.querySelectorAll('.lang-btn').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.lang === lang));
+      });
+    };
+    document.addEventListener('langchange', syncPressed);
+    document.querySelectorAll('.lang-btn').forEach((btn) => {
+      btn.addEventListener('click', () => setLang(btn.dataset.lang));
+    });
+    await initI18n();
+    syncPressed();
+  </script>
+</body>
+</html>
