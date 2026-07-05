@@ -13,10 +13,10 @@ const API_URL = 'https://zainebbvseprgngrrovk.supabase.co/functions/v1/join-wait
 // Cloudflare's always-pass INVISIBLE test site key (the `…BB` dummy issues a
 // token with no visible challenge; `…AA` is the VISIBLE variant — wrong here).
 // Invisibility comes from the sitekey's widget type, not a render param.
-// The Rollout task at the end of this plan (pre-merge cutover, "swap the
-// Turnstile key" step) replaces it with the founder's production fulus.sa key
-// (which must be created as the invisible widget type).
-const TURNSTILE_SITE_KEY = '1x00000000000000000000BB';
+// PRODUCTION KEY (2026-07-05): the founder's Turnstile widget, shared with the
+// Fulus app's CAPTCHA. Its Cloudflare hostname allowlist MUST include fulus.sa,
+// and the matching secret MUST be set as the join-waitlist TURNSTILE_SECRET_KEY.
+const TURNSTILE_SITE_KEY = '0x4AAAAAADU96nEHLV4GAe2V';
 
 const LS_WAITLIST = 'fulus.waitlist'; // JSON {"position":n,"referral_code":s}
 const LS_REF = 'fulus.ref';           // captured ?ref= value

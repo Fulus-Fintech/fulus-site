@@ -6,26 +6,23 @@ The 2026-05 pixel-match backlog is retired below where the rebuild deleted the s
 
 ## 1. Launch gates (founder-driven)
 
-- [ ] **Swap the Turnstile production site key.** `js/waitlist.js` top-of-file constant
-  `TURNSTILE_SITE_KEY` currently holds Cloudflare's always-pass **invisible** test key
-  `1x00000000000000000000BB`. Create a Turnstile widget for `fulus.sa` in the Cloudflare
-  dashboard **as the invisible widget type**, replace the constant with the production site
-  key, and update the edge-function secret per the waitlist backend plan's Turnstile step
-  (`2026-07-04-waitlist-backend.md`, Flutter repo). One-line diff + one secret command; commit
-  the js change alone. (Note: the `js/api.js` `/v0/` URL bug was already fixed in commit
-  `2ff07f9` — no longer a blocker.)
-- [ ] **Native Saudi Arabic copy review sign-off (ship gate).** Every `i18n/ar.json` string is a
-  working draft until a native Saudi speaker signs off. Record it:
-  `git commit --allow-empty -m "docs: native Saudi Arabic copy sign-off received YYYY-MM-DD"`.
-- [ ] **Confirm `hello@fulus.sa` exists and receives mail.** `privacy.html` and the waitlist form's
-  `<noscript>` fallback in `index.html` both point users to this address (`mailto:hello@fulus.sa`,
-  EN + AR strings). Verify the mailbox is provisioned and monitored before launch — a dead mailto
-  is a silent support-channel failure.
-- [ ] **Founder-note voice edit in `#trust`.** `index.html`'s `#trust` section carries an inline
-  `<!-- FOUNDER-EDIT -->` comment: the `blockquote.founder-note` copy (`trust.note` / `trust.name`
-  in `i18n/en.json` + `i18n/ar.json`) is a working-draft placeholder written in Ahmed's voice by
-  the rebuild, not his actual words. Needs a real founder pass (spec §3 row 5) before this reads
-  as authentic rather than copywriting.
+- [x] **Turnstile production site key — DONE 2026-07-05.** `js/waitlist.js` `TURNSTILE_SITE_KEY`
+  now holds the founder's production widget `0x4AAAAAADU96nEHLV4GAe2V` (shared with the Fulus
+  app's CAPTCHA). **TWO prerequisites remain before launch:** (a) the widget's Cloudflare
+  **hostname allowlist MUST include `fulus.sa`** (add `localhost` too if testing locally) — the
+  app's widget may be scoped to the app domain only, and if `fulus.sa` is missing every captcha
+  fails there; (b) **set the join-waitlist edge-function secret** `TURNSTILE_SECRET_KEY` to THIS
+  widget's secret (Supabase dashboard → project `zainebbvseprgngrrovk` → Edge Functions → Secrets),
+  replacing the always-pass test secret. (The `api.js` `/v0/` URL bug was already fixed in `2ff07f9`.)
+- [x] **Native Arabic copy — founder accepted the drafts as-is (2026-07-05).** The founder reviewed
+  and kept the current `i18n/ar.json` strings. `docs/arabic-copy-review.md` remains as the record
+  if a fuller native pass is wanted later.
+- [ ] **Confirm `support@fulus.sa` exists and receives mail.** `privacy.html` and the waitlist form's
+  `<noscript>` fallback in `index.html` point users to this address (changed from `hello@` on
+  2026-07-05). Verify the mailbox is provisioned and monitored before launch — a dead mailto is a
+  silent support-channel failure.
+- [x] **Founder-note voice — founder accepted the draft as-is (2026-07-05).** The `#trust`
+  `blockquote.founder-note` copy (`trust.note` / `trust.name`) stands as written; the founder kept it.
 - [ ] **Enable Cloudflare Web Analytics** (cookieless — no cookie banner required). Dashboard →
   Web Analytics → add site `fulus.sa` → copy the token, then paste this snippet immediately
   before `</body>` in `index.html`, substituting the dashboard token:

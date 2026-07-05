@@ -24,7 +24,7 @@ The page posts to the `join-waitlist` Supabase edge function
 actions `join` / `status` / `profile`). Contract and backend source of truth live in the Flutter repo:
 `docs/superpowers/specs/2026-07-03-fulus-landing-page-redesign-design.md` §7 and the companion
 waitlist backend plan (`2026-07-04-waitlist-backend.md`). The Cloudflare Turnstile site key is the
-`TURNSTILE_SITE_KEY` constant at the top of `js/waitlist.js` (see BACKLOG for the production-key swap).
+`TURNSTILE_SITE_KEY` constant at the top of `js/waitlist.js` (production key set 2026-07-05 — the widget's Cloudflare hostname allowlist must include `fulus.sa`, and its secret must be set as the join-waitlist `TURNSTILE_SECRET_KEY`; see BACKLOG).
 
 ## Fonts & licensing
 
