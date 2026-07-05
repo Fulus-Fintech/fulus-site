@@ -312,7 +312,17 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
    intrinsic ~126x28, i.e. ratio 3.21 vs 4.50, at a 412px viewport).
    Declaring the intrinsic aspect-ratio and capping block-size (rather
    than fixing it) keeps height locked to width as both shrink together,
-   so the logo scales down without ever warping. */
+   so the logo scales down without ever warping.
+   Bug hunt 2026-07-03: aspect-ratio alone still let `.header-actions`'
+   min-content floor (two 44px lang buttons + the outline CTA, all
+   `white-space: nowrap`) win the flex fight below ~460px, squeezing the
+   logo to literal 0 width at 320px. `flex-shrink: 0` below takes the logo
+   out of that fight entirely; the max-width media query trims the actions
+   floor back down so it still fits next to a full-size logo on every
+   phone width. */
+.header-logo {
+  flex-shrink: 0;
+}
 .header-logo img, .header-logo svg {
   aspect-ratio: 1624 / 361;
   inline-size: auto;
@@ -333,6 +343,14 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
 /* Header anchor CTA is the outline variant (the Main gradient stays
    exclusive to the two Save My Spot buttons); compact 44px height here. */
 #site-header .btn--outline { min-block-size: 44px; min-inline-size: 0; }
+/* Below phone width, drop the header CTA — its text is `white-space:
+   nowrap` so it can't shrink, and the hero waitlist form directly below
+   the fold makes it redundant here. Keeps the lang toggle at full size
+   next to a full, undistorted logo instead of both fighting the CTA for
+   the same sliver of space. */
+@media (max-width: 500px) {
+  #site-header .btn--outline { display: none; }
+}
 
 /* ===== Portal System ===== */
 /* One vector source: logo-mark.svg polygon 72.12 0 / 0 26.48 / 0 93.68 /
@@ -660,6 +678,14 @@ input[type='email'] { direction: ltr; text-align: start; } /* emails stay LTR in
   padding: var(--fulus-space-xl);
   text-align: start;
 }
+/* The confirmation heading is an `<h1>` (bug hunt 2026-07-03: the template
+   replaces `#hero-panel`, which holds the page's only other `<h1>` — so the
+   document must never be left with zero top-level headings). It carries no
+   class, so it'd otherwise fall back to the UA default `h1` size; pin it to
+   the same visual size the old bare `h2` rule gave it (line ~193) so the
+   confirmation card is pixel-identical to before. */
+.confirmation h1 { font-size: clamp(28px, 4vw, 45px); line-height: 1.15; letter-spacing: -0.01em; }
+[lang='ar'] .confirmation h1 { font-size: clamp(26px, 4vw, 42px); line-height: 1.4; }
 .confirmation [data-confirm='position'] {
   font-size: clamp(40px, 6vw, 64px);
   font-weight: 600;

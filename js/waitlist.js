@@ -96,6 +96,9 @@ function safeGet(key) {
 function safeSet(key, value) {
   try { localStorage.setItem(key, value); } catch (_) { /* storage disabled */ }
 }
+function safeRemove(key) {
+  try { localStorage.removeItem(key); } catch (_) { /* storage disabled */ }
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -179,6 +182,31 @@ function getTurnstileToken(entry) {
 // ------------------------------------------------------------------ forms
 
 const forms = []; // { form, kind, email, button, msg, slot, widgetId, pendingToken, lastMsgKey }
+
+// Wires one `form.waitlist-form` element: builds its entry, registers the
+// submit handler, and fires the Turnstile mount. Used both at init time (for
+// the forms present in the initial markup) and by the invalid-referral-code
+// fallback in bootFromCache(), which restores a fresh hero form into
+// #hero-panel and needs it wired the same way.
+function wireForm(form) {
+  const entry = {
+    form,
+    kind: form.getAttribute('data-form'), // 'hero' | 'final'
+    email: form.querySelector('input[type="email"][name="email"]'),
+    button: form.querySelector('button[type="submit"]'),
+    msg: form.querySelector('.form-msg'),
+    slot: form.querySelector('.turnstile-slot'),
+    widgetId: null,
+    pendingToken: null,
+    lastMsgKey: null,
+  };
+  if (!entry.email || !entry.button || !entry.msg) return null;
+  forms.push(entry);
+  form.setAttribute('novalidate', ''); // our localized messages, not the UA bubble
+  form.addEventListener('submit', (e) => { onJoinSubmit(entry, e); });
+  mountTurnstile(entry); // fire-and-forget; retried inside submit if needed
+  return entry;
+}
 
 function setMsg(entry, key) {
   entry.lastMsgKey = key || null;
@@ -290,7 +318,10 @@ function renderConfirmation(data, opts) {
   wireConfirmation(panel);
   fillConfirmation(panel);
   if (opts && opts.focus) {
-    const target = panel.querySelector('[data-confirm="position"]');
+    // Focus the heading (not the position paragraph) so a screen reader
+    // announces the state change with context ("You're on the list.")
+    // rather than a bare number.
+    const target = panel.querySelector('[data-confirm="title"]');
     if (target) {
       target.setAttribute('tabindex', '-1');
       target.focus();
@@ -430,6 +461,12 @@ async function bootFromCache() {
   let cached;
   try { cached = JSON.parse(raw); } catch (_) { return; }
   if (!cached || cached.position == null || !cached.referral_code) return;
+  const panel = document.getElementById('hero-panel');
+  // Snapshot the plain hero markup before the optimistic render below
+  // replaces it, so an invalid_code response (the cached referral row no
+  // longer exists server-side) can fall back to it instead of leaving a
+  // stale confirmation on screen.
+  const originalPanelHTML = panel ? panel.innerHTML : null;
   // 1) Instant render from cache…
   renderConfirmation({
     position: cached.position,
@@ -444,7 +481,21 @@ async function bootFromCache() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'status', referral_code: cached.referral_code }),
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      let errData = {};
+      try { errData = await res.json(); } catch (_) { /* non-JSON error body */ }
+      if (errData && errData.error === 'invalid_code') {
+        safeRemove(LS_WAITLIST);
+        safeRemove(LS_REF);
+        confirmState = null;
+        if (panel && originalPanelHTML != null) {
+          panel.innerHTML = originalPanelHTML;
+          const restoredForm = panel.querySelector('form.waitlist-form');
+          if (restoredForm) wireForm(restoredForm);
+        }
+      }
+      return; // other failures: keep the stale cache/confirmation standing
+    }
     const data = await res.json(); // {position, referral_count}
     confirmState.position = data.position;
     confirmState.referral_count = data.referral_count || 0;
@@ -452,7 +503,6 @@ async function bootFromCache() {
       position: data.position,
       referral_code: cached.referral_code,
     }));
-    const panel = document.getElementById('hero-panel');
     if (panel) fillConfirmation(panel);
   } catch (_) { /* offline return visit — cached values stand */ }
 }
@@ -460,24 +510,7 @@ async function bootFromCache() {
 // -------------------------------------------------------------------- init
 
 export function initWaitlist() {
-  document.querySelectorAll('form.waitlist-form').forEach((form) => {
-    const entry = {
-      form,
-      kind: form.getAttribute('data-form'), // 'hero' | 'final'
-      email: form.querySelector('input[type="email"][name="email"]'),
-      button: form.querySelector('button[type="submit"]'),
-      msg: form.querySelector('.form-msg'),
-      slot: form.querySelector('.turnstile-slot'),
-      widgetId: null,
-      pendingToken: null,
-      lastMsgKey: null,
-    };
-    if (!entry.email || !entry.button || !entry.msg) return;
-    forms.push(entry);
-    form.setAttribute('novalidate', ''); // our localized messages, not the UA bubble
-    form.addEventListener('submit', (e) => { onJoinSubmit(entry, e); });
-    mountTurnstile(entry); // fire-and-forget; retried inside submit if needed
-  });
+  document.querySelectorAll('form.waitlist-form').forEach(wireForm);
 
   bootFromCache();
 
