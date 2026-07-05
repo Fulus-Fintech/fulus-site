@@ -1,23 +1,21 @@
-// js/main.js — entry; wires i18n, Lenis, animations.
+// js/main.js — entry: html.js flag, i18n boot, lang buttons, waitlist,
+// GSAP matchMedia motion, langchange plumbing. No Lenis — native scroll.
 
-import { reducedMotion } from './lib.js';
-import { initI18n } from './i18n.js';
-import { initHero } from './animations/hero.js';
-import { initBenefits } from './animations/benefits.js';
-import { initServices } from './animations/services.js';
-import { initFeatures } from './animations/features.js';
-import { initProcess } from './animations/process.js';
-import { initStories } from './animations/stories.js';
-import { initIntegrations } from './animations/integrations.js';
-import { initPricing } from './animations/pricing.js';
-import { initComparison } from './animations/comparison.js';
-import { initFaq } from './animations/faq.js';
+import { initI18n, setLang, getLang } from './i18n.js';
+import { initWaitlist } from './waitlist.js';
+import { initHero, resplitHero } from './animations/hero.js';
+import { initPortals } from './animations/portals.js';
+import { initReveals } from './animations/reveals.js';
+
+// First executed statement (the imports above are hoisted declarations):
+// mark JS-on. CSS/animations may only hide content under `html.js`.
+document.documentElement.classList.add('js');
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. i18n boot — apply stored/detected lang before paint.
+  // 1. i18n boot — apply stored/detected lang before anything reads the dict.
   await initI18n();
 
-  const { setLang, getLang } = await import('./i18n.js');
+  // 2. Language toggle buttons (aria-pressed per the a11y law).
   function syncLangButtons() {
     const cur = getLang();
     document.querySelectorAll('.lang-btn').forEach((b) => {
@@ -32,77 +30,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     b.addEventListener('click', () => setLang(b.dataset.lang));
   });
 
-  function syncPopularLabel() {
-    const dict = window.__fulusDict || {};
-    const label = dict['pricing.popular'] || 'Popular';
-    document.querySelectorAll('.price-card.popular').forEach((c) => c.setAttribute('data-popular-label', label));
-  }
-  syncPopularLabel();
-  document.addEventListener('langchange', syncPopularLabel);
+  // 3. Waitlist forms — independent of GSAP; must work even if the CDN fails.
+  initWaitlist();
 
-  const hamburger = document.querySelector('.hamburger');
-  const navMobile = document.getElementById('nav-mobile');
-  if (hamburger && navMobile) {
-    function closeDrawer() {
-      hamburger.setAttribute('aria-expanded', 'false');
-      navMobile.hidden = true;
-    }
-    hamburger.addEventListener('click', () => {
-      const open = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!open));
-      navMobile.hidden = open;
-    });
-    navMobile.querySelectorAll('a').forEach((a) => a.addEventListener('click', closeDrawer));
-    // Reset stale ARIA when viewport widens past the hamburger breakpoint.
-    const desktopMq = window.matchMedia('(min-width: 810px)');
-    desktopMq.addEventListener('change', (e) => { if (e.matches) closeDrawer(); });
-  }
-
-  // 2. GSAP + ScrollTrigger setup (loaded via CDN; available on window).
-  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-    console.error('[fulus-site] GSAP or ScrollTrigger missing; animations skipped.');
+  // 4. Motion. CDN-loaded globals; if any script failed, the page stays
+  // complete and static (visible-by-default law).
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined'
+      || typeof SplitText === 'undefined') {
+    console.error('[fulus-site] GSAP/ScrollTrigger/SplitText missing; static page shown.');
     return;
   }
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, SplitText);
 
-  // 3. Lenis smooth scroll. Skipped under reduced-motion.
-  let lenis = null;
-  if (!reducedMotion && typeof Lenis !== 'undefined') {
-    lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      smoothTouch: false,
-    });
-    lenis.on('scroll', ScrollTrigger.update);
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
+  const mm = gsap.matchMedia();
 
-    // Anchor links use Lenis.
-    document.querySelectorAll('a[href^="#"]').forEach((a) => {
-      a.addEventListener('click', (e) => {
-        const id = a.getAttribute('href').slice(1);
-        const target = document.getElementById(id);
-        if (target) {
-          e.preventDefault();
-          lenis.scrollTo(target, { duration: 1.2 });
-        }
-      });
-    });
-  }
+  // Reduced-motion branch: registered explicitly and calls NOTHING —
+  // the page is complete statically. Keep it empty forever.
+  mm.add('(prefers-reduced-motion: reduce)', () => {});
 
-  // 4. Per-section animation modules. Each handles its own reduced-motion / mobile gating.
-  initHero(lenis);
-  initBenefits();
-  initServices(lenis);
-  initFeatures();
-  initProcess();
-  initStories();
-  initIntegrations();
-  initPricing();
-  initComparison();
-  initFaq();
+  // Desktop / mobile tuning seams — intentionally empty today (the three
+  // modules are breakpoint-agnostic); device-specific overrides land here
+  // without re-plumbing.
+  mm.add('(min-width: 810px)', () => {});
+  mm.add('(max-width: 809.98px)', () => {});
+
+  // Each module registers its own '(prefers-reduced-motion: no-preference)'
+  // work on the shared matchMedia instance.
+  initHero(mm);
+  initPortals(mm);
+  initReveals(mm);
+
+  // 5. Language/direction changed (i18n.js dispatches on document AFTER the
+  // dict is applied): re-split the hero headline, then re-measure every
+  // ScrollTrigger for the new text metrics + RTL flip (spec §6).
+  document.addEventListener('langchange', () => {
+    resplitHero();
+    ScrollTrigger.refresh();
+  });
 });
