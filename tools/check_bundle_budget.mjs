@@ -1,23 +1,34 @@
-// tools/check_bundle_budget.mjs — CI gate: gzipped critical-payload budget.
+// tools/check_bundle_budget.mjs — CI gate: transfer-size budgets (spec §6).
 //
-// "Critical payload" (spec §8) = the built entry HTML + every CSS/JS file it
-// references (stylesheets, scripts, modulepreload chunks) + the Latin text
-// font + the light-engine dynamic chunk (it always loads on the motion rung,
-// so it is critical spend even though no <link>/<script> references it).
-// Budget: 350 KB gzipped, total (spec §6: Three.js included).
+// Default mode — the CRITICAL payload every motion-rung visitor downloads:
+//   dist/index.html + EVERY .js/.css under dist/assets + the Latin font.
+//   All dist JS counts because the world chunk is a true dynamic import the
+//   HTML never references, yet it always loads on the motion rung — counting
+//   everything makes chunk-name drift impossible (the light-engine lesson
+//   from v2: a rename silently uncounted a third of the payload).
+//   Budget: 350 KB gzipped, Three.js included.
 //
-// Usage:
-//   node tools/check_bundle_budget.mjs             gate (exit 0 pass / 1 over / 2 setup error)
-//   node tools/check_bundle_budget.mjs --measure   print the per-file breakdown
+// --poster mode — the POSTER-EDITION total (no-WebGL / reduced-motion /
+//   save-data visitors): dist/index.html + only the CSS/JS the HTML
+//   references (the world chunk never loads for them) + the Latin font +
+//   the poster hero image (worst of avif/webp — old browsers fetch the
+//   bigger webp). Budget: 700 KB transfer (text gzipped, images raw —
+//   servers do not gzip images).
 //
-// Bump-deliberately rule: if the payload grows on purpose, raise
-// MAX_GZIP_BYTES below in the SAME commit and justify it in the commit message.
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+// --measure prints the per-file breakdown in either mode.
+//
+// Bump-deliberately rule: if a payload grows on purpose, raise the constant
+// below in the SAME commit and justify it in the commit message.
+import { readFileSync, statSync, existsSync, readdirSync } from 'node:fs';
+import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-const MAX_GZIP_BYTES = 350 * 1024;
+const CRITICAL_MAX_GZIP = 350 * 1024; // JS+CSS+HTML gz, Three.js included
+const POSTER_MAX_BYTES = 700 * 1024; // poster-edition total transfer
+
+const posterMode = process.argv.includes('--poster');
+const measure = process.argv.includes('--measure');
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
@@ -27,98 +38,81 @@ if (!existsSync(join(dist, 'index.html'))) {
   process.exit(2);
 }
 
-const html = readFileSync(join(dist, 'index.html'), 'utf8');
-
-// Local CSS/JS the entry HTML references. modulepreload chunks load before
-// first interaction, so they count as critical.
-const refs = new Set();
-for (const m of html.matchAll(/<script[^>]+src\s*=\s*"([^"]+)"/g)) refs.add(m[1]);
-for (const m of html.matchAll(/<link[^>]+>/g)) {
-  const rel = (m[0].match(/rel\s*=\s*"([^"]+)"/) || [])[1] || '';
-  const href = (m[0].match(/href\s*=\s*"([^"]+)"/) || [])[1] || '';
-  if (href && (rel === 'stylesheet' || rel === 'modulepreload')) refs.add(href);
-}
-
-// The Latin text font, hashed by Vite somewhere under dist/assets/. The
-// Arabic subset is not shipped (English-only site); riyal.woff2 is a tiny
-// lazy subset — both excluded from "critical" by spec §8.
-function findLatinFont(dir) {
-  if (!existsSync(dir)) return null;
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const p = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      const hit = findLatinFont(p);
-      if (hit) return hit;
-    } else if (/readex-pro-latin.*\.woff2$/.test(entry.name)) {
-      return p;
-    }
+function walk(dir, out = []) {
+  if (!existsSync(dir)) return out;
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) walk(p, out);
+    else out.push(p);
   }
-  return null;
+  return out;
 }
 
-const files = [{ label: 'index.html', path: join(dist, 'index.html') }];
-for (const ref of refs) {
-  if (/^(https?:|data:)/i.test(ref)) continue; // external — not our payload
-  const rel = ref.replace(/^\//, '').split(/[?#]/)[0];
-  const p = join(dist, rel);
-  if (!existsSync(p)) {
-    console.error(`FAIL: dist/index.html references "${ref}" but dist/${rel} does not exist.`);
+const all = walk(join(dist, 'assets'));
+const font = all.find((p) => /readex-pro-latin.*\.woff2$/.test(p));
+if (!font) {
+  console.error('FAIL: no readex-pro-latin*.woff2 under dist/assets — font not counted.');
+  process.exit(2);
+}
+
+const files = [join(dist, 'index.html'), font];
+
+if (posterMode) {
+  const html = readFileSync(join(dist, 'index.html'), 'utf8');
+  const refs = new Set();
+  for (const m of html.matchAll(/<script[^>]+src\s*=\s*"([^"]+)"/g)) refs.add(m[1]);
+  for (const m of html.matchAll(/<link[^>]+>/g)) {
+    const rel = (m[0].match(/rel\s*=\s*"([^"]+)"/) || [])[1] || '';
+    const href = (m[0].match(/href\s*=\s*"([^"]+)"/) || [])[1] || '';
+    if (href && (rel === 'stylesheet' || rel === 'modulepreload')) refs.add(href);
+  }
+  for (const ref of refs) {
+    if (/^(https?:|data:)/i.test(ref)) continue; // external — not our payload
+    const p = join(dist, ref.replace(/^\//, '').split(/[?#]/)[0]);
+    if (!existsSync(p)) {
+      console.error(`FAIL: dist/index.html references "${ref}" but it does not exist in dist/.`);
+      process.exit(2);
+    }
+    files.push(p);
+  }
+  const avif = join(dist, 'assets', 'images', 'poster-hero.avif');
+  const webp = join(dist, 'assets', 'images', 'poster-hero.webp');
+  if (!existsSync(avif) || !existsSync(webp)) {
+    console.error('FAIL: poster-hero.avif/.webp missing under dist/assets/images — run tools/make_poster.mjs and rebuild.');
     process.exit(2);
   }
-  files.push({ label: rel, path: p });
-}
-const font = findLatinFont(join(dist, 'assets'));
-if (font) {
-  files.push({ label: font.slice(dist.length + 1).replaceAll('\\', '/'), path: font });
+  files.push(statSync(avif).size >= statSync(webp).size ? avif : webp);
 } else {
-  console.warn('WARN: no readex-pro-latin*.woff2 under dist/assets — font not counted.');
+  for (const p of all) if (/\.(js|css)$/.test(p)) files.push(p);
 }
 
-// The world chunk (Three.js + src/world/*) loads as a TRUE dynamic import
-// (no modulepreload link), so the HTML scrape above never sees it — but it
-// always loads on the WebGL rung, so it is critical spend (spec: <= 350KB gz
-// INCLUDING Three.js). Chunk names drift with the module graph; counting
-// EVERY .js under dist/assets is drift-proof and strictly conservative.
-function findAllJs(dir) {
-  const hits = [];
-  if (!existsSync(dir)) return hits;
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const p = join(dir, entry.name);
-    if (entry.isDirectory()) hits.push(...findAllJs(p));
-    else if (/\.js$/.test(entry.name)) hits.push(p);
-  }
-  return hits;
-}
-const counted = new Set(files.map((f) => f.path));
-for (const chunk of findAllJs(join(dist, 'assets'))) {
-  if (!counted.has(chunk)) {
-    files.push({ label: chunk.slice(dist.length + 1).replaceAll('\\', '/'), path: chunk });
-  }
-}
-
+const gzExt = new Set(['.html', '.css', '.js', '.svg', '.json']);
 let total = 0;
-const rows = files.map(({ label, path }) => {
-  const gz = gzipSync(readFileSync(path), { level: 9 }).length;
-  total += gz;
-  return { label, gz };
+const rows = [...new Set(files)].map((p) => {
+  const buf = readFileSync(p);
+  const bytes = gzExt.has(extname(p)) ? gzipSync(buf, { level: 9 }).length : buf.length;
+  total += bytes;
+  return { label: p.slice(dist.length + 1).replaceAll('\\', '/'), bytes };
 });
 
-if (process.argv.includes('--measure')) {
-  for (const { label, gz } of rows.sort((a, b) => b.gz - a.gz)) {
-    console.log(`${String(gz).padStart(9)} gz  ${label}`);
+const MAX = posterMode ? POSTER_MAX_BYTES : CRITICAL_MAX_GZIP;
+const name = posterMode ? 'poster-edition total' : 'critical payload';
+
+if (measure) {
+  for (const { label, bytes } of rows.sort((a, b) => b.bytes - a.bytes)) {
+    console.log(`${String(bytes).padStart(9)}  ${label}`);
   }
-  const pct = ((total / MAX_GZIP_BYTES) * 100).toFixed(1);
-  console.log(`total: ${total} gz bytes of ${MAX_GZIP_BYTES} budget (${pct}%)`);
+  console.log(`total: ${total} bytes of ${MAX} budget (${((total / MAX) * 100).toFixed(1)}%)`);
   process.exit(0);
 }
 
-if (total > MAX_GZIP_BYTES) {
+if (total > MAX) {
   console.error(
-    `FAIL: critical payload ${total} gz bytes exceeds ${MAX_GZIP_BYTES} (350 KB).\n` +
-      'Run "node tools/check_bundle_budget.mjs --measure" for the breakdown. If the\n' +
-      'growth is deliberate, raise MAX_GZIP_BYTES in tools/check_bundle_budget.mjs\n' +
-      'in the same commit and justify it in the commit message.'
+    `FAIL: ${name} ${total} bytes exceeds ${MAX}.\n` +
+      'Run with --measure for the breakdown. If the growth is deliberate, raise\n' +
+      'the constant in tools/check_bundle_budget.mjs in the same commit and\n' +
+      'justify it in the commit message.'
   );
   process.exit(1);
 }
-console.log(`OK: critical payload ${total} gz bytes <= ${MAX_GZIP_BYTES} (350 KB).`);
+console.log(`OK: ${name} ${total} bytes <= ${MAX}.`);

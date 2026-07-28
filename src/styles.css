@@ -129,7 +129,13 @@ html[data-doors="pre"] .doors-note {
   font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .22em;
   color: var(--text-quiet);
 }
-html[data-doors="pre"] .badge { opacity: .45; }
+/* .45 (axe-flagged, Task 8): compositing the badge's own text alpha through a
+   second opacity multiply on near-black dropped the badge label text to
+   ~2.5:1/4.2:1 against the canvas — below the AA floor. .75 is the lowest
+   round value that clears 4.5:1 for both badge lines with headroom (measured
+   via @axe-core/playwright, not just modelled) while still reading as
+   visibly dimmed pre-launch chrome. */
+html[data-doors="pre"] .badge { opacity: .75; }
 
 /* ---- world mode: while the canvas carries data-world (main.ts sets it on
    boot; the governor's poster shed removes it), the acts re-stage from flow
@@ -159,3 +165,25 @@ html:has(#gl[data-world]) #walk-in { bottom: 12%; }
 .legal p + p { margin-top: 8px; }
 .legal a { color: var(--text-quiet); }
 .tm { letter-spacing: .04em; }
+
+/*
+ * AA contrast law (spec §6) — all text sits on Deep Ocean Night #020B18.
+ *   --text:       #F2F5F8  body/heading      (18.0:1 on #020B18)
+ *   --text-quiet: #93A1B0  quiet/mono FLOOR  (7.5:1 on #020B18)
+ * These are Task 2's existing custom properties, defined once at the top of
+ * this sheet — reuse them; never introduce duplicate names for the same
+ * values. #93A1B0 is the darkest any text may go on this canvas. Any new
+ * text colour must measure >= 4.5:1 against #020B18 (>= 3:1 only for large
+ * text).
+ */
+
+/* Focus answers with light, never movement (spec §6). No outline suppression
+   without this replacement ring. */
+a:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #020B18,
+    0 0 0 4px #00E5FF,
+    0 0 18px rgba(0, 229, 255, 0.35);
+}

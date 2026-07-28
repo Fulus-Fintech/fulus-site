@@ -6,9 +6,10 @@ on:
 
 jobs:
   gates:
-    # WebGL frames are review artifacts, eyeballed, never pixel-gated in CI
-    # (spec §7 — the SwiftShader lesson stands). Windows runner matches the
-    # dev machine so any future deterministic baselines compare like-for-like.
+    # Visual baselines are committed for chromium-win32; CI stays on Windows
+    # so toHaveScreenshot compares against them (governance note at the top
+    # of tests/e2e/visual.spec.ts — baselines change only with a
+    # founder-approval reference in the commit message).
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,14 +19,16 @@ jobs:
           cache: npm
       - name: install
         run: npm ci
+      - name: typecheck
+        run: npm run typecheck
       - name: build
         run: npm run build
-      - name: typecheck
-        run: npx tsc --noEmit
       - name: unit tests (vitest)
         run: npx vitest run
-      - name: bundle budget (350 KB gz critical payload, Three.js included)
+      - name: bundle budget — critical 350 KB gz (Three.js included)
         run: node tools/check_bundle_budget.mjs
+      - name: bundle budget — poster edition 700 KB
+        run: node tools/check_bundle_budget.mjs --poster
       - name: html-validate (built output)
         run: npx html-validate dist/index.html dist/privacy.html
       - name: internal links + asset existence (built output)
@@ -34,10 +37,12 @@ jobs:
         run: node tools/check_wellknown.mjs
       - name: install playwright chromium
         run: npx playwright install --with-deps chromium
-      # --pass-with-no-tests keeps the gate green until Task 2 lands the first
-      # e2e spec; it is harmless afterwards.
+      # Runs document/copy-lock, redirects, a11y, keyboard, and the
+      # poster-edition visual baselines. WebGL frame quality is NEVER
+      # pixel-gated here (spec §7 — SwiftShader lesson); it is reviewed by
+      # eye via tools/qa_shots.mjs and at the founder gates.
       - name: e2e (playwright)
-        run: npx playwright test --pass-with-no-tests
+        run: npx playwright test
       - name: upload playwright artifacts
         if: failure()
         uses: actions/upload-artifact@v4
