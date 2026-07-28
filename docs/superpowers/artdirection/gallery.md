@@ -87,3 +87,31 @@ The two assent items presented at this checkpoint (transitions boundary
 Verdict: APPROVED (founder verbatim: "G1 approved").
 Evidence: production build at cacf1f6, live preview :4174, comparison set g1-0p{0,5,62,8,97}.png vs prototype frames 01-03 (companion gate-g1.html).
 Flag-items presented without objection (treated accepted, revisitable): legibility vignette; pre-live badge dim .75 (AA); footer ships without TERMS link pending founder content; hero ink-settle once per session.
+
+## G2 — Cast in the world (per-figure verdicts, spec §8.2)
+
+Frames: `frames/night-crossing-g2/g2-*.png` (stops 0.15/0.3/0.42/0.55/0.72,
+production build e30267a) + live LAN preview.
+Law: figures that read as pasted fail the gate. Verdicts are PER FIGURE.
+
+Implementer self-check (spec §8.1 — nothing reaches the founder unexamined),
+zoomed crops on every figure's feet/contact region, both at normal exposure
+and brightened to confirm the mechanism (not just eyeballed at a glance):
+
+| Figure | Position (world) | Self-check (feet contact / halo edges / reflection) | Founder verdict |
+|---|---|---|---|
+| fig-pair | (-3.2, 0, -6) | Halo: clean at 3-5x zoom, no rectangular ghost/bright fringe. Feet: legs run down to the dark floor; a faint wavy reflection (matching leg shapes) is visible beneath at normal exposure, confirmed unmistakably present when brightened — grounded, not floating. Orientation: 3/4 view facing the path, never edge-on. Watch item: the black radial "pool" decal is essentially invisible against the near-black pre-crossing floor (black-on-black); the reflection decal is doing the actual visible grounding work. | PENDING |
+| fig-lone | (2.8, 0, -9.5) | Halo: clean at 5x zoom (`halo-lone-head` crop), smooth alpha falloff, no bounded-plane artifact. Feet: reflection streak clearly visible at normal exposure immediately below/behind the feet, fading with distance — the clearest "water remembering the figure" read of the three. Orientation: seen from behind at some flight stops (camera has passed him, facing back toward the approach) — a valid full view, not edge-on. | PENDING |
+| fig-group | (-2.5, 0, -12) | Halo: clean, no fringe/ghost (`halo-group-full` crop). Feet: same wavy-reflection grounding cue as fig-pair, subtle but present at normal exposure. Partial clipping at the frame's left edge at later stops (0.55/0.72) is normal FOV framing of the single wide plane, not a defect. Same pool-contrast watch item as fig-pair. | PENDING |
+
+Note on stop 0.72: at prog ~0.72 the crossing wash is at/near its peak
+(calibrated in Task 5's carry-forward: wash peaks ~prog 0.71), so the frame
+is a near-white wash with no figures legible — expected/by-design, not
+diagnostic for this gate. Figure QA judgment rests on stops 0.15/0.3/0.42/0.55.
+
+Question to ask, per figure: "does this figure stand in the night, or does
+it read as pasted?"
+
+### Gate G2 — cast in the world (2026-07-28)
+Verdict: REWORK, all three figures (founder verbatim: "all failed. the images look so bad, unlike the original key arts.")
+Diagnosis opened: texture fidelity vs source art — suspects: ACES tone mapping regrading texture colors (v2 film figures were never tone-mapped), source cutout resolution, texture filtering.
