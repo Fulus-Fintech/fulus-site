@@ -5,8 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fulus &mdash; It&rsquo;s open.</title>
   <meta name="description" content="Fulus is group investing for you and your friends. Everyone sees everything. On the App Store and Google Play.">
+  <meta property="og:title" content="Fulus &mdash; It&rsquo;s open.">
+  <meta property="og:description" content="Fulus is group investing for you and your friends. Everyone sees everything. On the App Store and Google Play.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fulus.sa/">
+  <link rel="canonical" href="https://fulus.sa/">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16.png">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/readex-pro-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
-  <!-- Task 2 replaces this stub with the full document-first page (the copy lock). -->
+  <!-- Poster edition floor: paints first, always. The world (canvas) is an
+       enhancement that fades in over it — never a black hold, never a loader. -->
+  <picture class="poster">
+    <img src="/assets/images/poster.webp" width="1440" height="900" alt="" decoding="async" fetchpriority="high">
+  </picture>
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <div id="wash" aria-hidden="true"></div>
+
+  <header class="nav">
+    <p class="wordmark">FULUS</p>
+    <div class="meter">
+      <span class="meter-label">THE WAY IN</span>
+      <div class="meter-bar"><div class="meter-fill" id="mfill"></div></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="act" id="beat-hero">
+      <h1>The group chat, now invested.</h1>
+      <p class="sub">Group investing for the circle you already have.</p>
+      <p class="hint">SCROLL</p>
+    </section>
+
+    <section class="act" id="beat-mid">
+      <p class="waypoint">One pot. Real votes. Everyone sees everything.</p>
+    </section>
+
+    <section class="act" id="beat-open">
+      <p class="door-line">It&rsquo;s open.</p>
+    </section>
+
+    <section class="act" id="walk-in">
+      <h2>Walk in.</h2>
+      <div class="badges">
+        <a class="badge" href="/app/ios" aria-label="Download Fulus on the App Store">
+          <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true" focusable="false"><path d="M17.05 12.54c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.8 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.29-1.27 3.15-2.53.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.75-4.13zM14.46 4.9c.72-.87 1.2-2.08 1.07-3.28-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 2-1.09 3.18 1.15.09 2.32-.58 3.04-1.45z"/></svg>
+          <span class="badge-text"><small>Download on the</small><strong>App Store</strong></span>
+        </a>
+        <a class="badge" href="/app/android" aria-label="Get Fulus on Google Play">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="#00E5FF" d="M3 2.5v19l10-9.5z"/><path fill="#00FFB2" d="M3 2.5l13 6.5-3 3z"/><path fill="#F2F5F8" d="M3 21.5l13-6.5-3-3z" opacity=".85"/><path fill="#93A1B0" d="M16 9l4.2 2.1c.9.45.9 1.35 0 1.8L16 15l-3-3z"/></svg>
+          <span class="badge-text"><small>GET IT ON</small><strong>Google Play</strong></span>
+        </a>
+      </div>
+      <p class="sig">The group chat, now invested.</p>
+      <p class="doors-note">Doors at midnight.</p>
+      <!-- Time-free fallback swap (spec §6, pre-written): if launch slips past
+           midnight, replace the line above with this sibling — one-line swap:
+      <p class="doors-note">Doors opening.</p>
+      -->
+    </section>
+  </main>
+
+  <footer class="legal">
+    <p class="folio">FULUS &mdash; 01.08.2026</p>
+    <p class="legal-line"><a href="/privacy.html">PRIVACY</a> &middot; &copy; 2026 FULUS</p>
+    <p class="tm">App Store is a trademark of Apple Inc. &middot; Google Play and the Google Play logo are trademarks of Google LLC.</p>
+  </footer>
 </body>
 </html>

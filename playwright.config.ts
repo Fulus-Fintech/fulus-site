@@ -19,8 +19,21 @@ export default defineConfig({
   },
   projects: [
     {
+      // world/e2e specs; document.spec.ts runs JS-off in its own project below
       name: 'chromium',
+      testIgnore: /document\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
+    {
+      // The copy lock runs with page JavaScript DISABLED: the document must be
+      // complete with JS off (spec §6 document-first floor).
+      name: 'nojs-document',
+      testMatch: /document\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        javaScriptEnabled: false,
+      },
     },
   ],
   webServer: {

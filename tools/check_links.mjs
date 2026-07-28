@@ -36,6 +36,10 @@ for (const page of pages) {
     }
     const clean = ref.split(/[?#]/)[0];
     if (clean === '' || clean === '/') continue;
+    // Worker routes (src/worker.ts): /app, /app/ios, /app/android are 302s
+    // served at the edge, never files in dist. The redirect contract is
+    // tested in tests/unit/worker.test.ts + tests/e2e/redirects.spec.ts.
+    if (/^\/app(\/|$)/.test(clean)) continue;
     const rel = clean.startsWith('/') ? clean.slice(1) : clean;
     if (!existsSync(join(root, rel))) failures.push(`${page}: missing file for "${ref}"`);
   }
