@@ -37,6 +37,9 @@ export default defineConfig({
         index: fromRoot('./index.html'),
         privacy: fromRoot('./privacy.html'),
       },
+      output: {
+        manualChunks: { three: ['three'] },
+      },
     },
   },
   plugins: [copyStaticPassthrough()],

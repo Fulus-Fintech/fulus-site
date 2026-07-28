@@ -119,6 +119,24 @@ html[data-doors="pre"] .doors-note {
 }
 html[data-doors="pre"] .badge { opacity: .45; }
 
+/* ---- world mode: while the canvas carries data-world (main.ts sets it on
+   boot; the governor's poster shed removes it), the acts re-stage from flow
+   sections into fixed beats that fade in place — mirroring the prototype's
+   .beat rules. The poster edition never matches this selector, so its
+   document flow is untouched. ---- */
+html:has(#gl[data-world]) main { height: 680vh; } /* prototype scrollspace: the flow height collapses when the acts go fixed */
+html:has(#gl[data-world]) .act {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  min-height: 0; padding: 0;
+  opacity: 0; transition: opacity .5s ease; pointer-events: none;
+}
+html:has(#gl[data-world]) .act.on { opacity: 1; pointer-events: auto; }
+/* per-beat offsets verbatim from the prototype .beat rules */
+html:has(#gl[data-world]) #beat-hero { top: 16%; }
+html:has(#gl[data-world]) #beat-mid { top: 20%; }
+html:has(#gl[data-world]) #beat-open { top: 14%; }
+html:has(#gl[data-world]) #walk-in { bottom: 12%; }
+
 /* ---- legal ---- */
 .legal {
   position: relative; z-index: 5; text-align: center;

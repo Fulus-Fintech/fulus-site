@@ -19,9 +19,11 @@ export default defineConfig({
   },
   projects: [
     {
-      // world/e2e specs; document.spec.ts runs JS-off in its own project below
+      // default project: static-page specs (redirects, visual baselines).
+      // world.spec runs in its own SwiftShader projects below; document.spec
+      // runs JS-off in nojs-document.
       name: 'chromium',
-      testIgnore: /document\.spec\.ts/,
+      testIgnore: [/world\.spec\.ts/, /document\.spec\.ts/],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
     {
@@ -34,6 +36,19 @@ export default defineConfig({
         viewport: { width: 1280, height: 800 },
         javaScriptEnabled: false,
       },
+    },
+    {
+      // World boot smoke — real WebGL2 under SwiftShader (same flag qa_shots
+      // uses for headless WebGL2).
+      name: 'world',
+      testMatch: /world\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], launchOptions: { args: ['--enable-unsafe-swiftshader'] } },
+    },
+    {
+      // Reduced-motion contract: poster edition only, zero three.js bytes.
+      name: 'reduced-motion',
+      testMatch: /world\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], contextOptions: { reducedMotion: 'reduce' } },
     },
   ],
   webServer: {
