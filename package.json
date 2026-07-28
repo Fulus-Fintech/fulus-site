@@ -19,7 +19,7 @@
   "devDependencies": {
     "@playwright/test": "^1.53.0",
     "@types/node": "^22.15.0",
-    "@types/three": "^0.185.1",
+    "@types/three": "0.160.0",
     "html-validate": "^9.5.3",
     "jsdom": "^26.1.0",
     "sharp": "^0.35.3",
