@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fulus &mdash; It&rsquo;s open.</title>
   <meta name="description" content="Fulus is group investing for you and your friends. Everyone sees everything. On the App Store and Google Play.">
-  <meta property="og:title" content="Fulus &mdash; It&rsquo;s open.">
-  <meta property="og:description" content="Fulus is group investing for you and your friends. Everyone sees everything. On the App Store and Google Play.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://fulus.sa/">
   <link rel="canonical" href="https://fulus.sa/">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16.png">
@@ -16,12 +12,27 @@
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/readex-pro-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./src/styles.css">
+  <link rel="preload" as="image" href="/assets/images/poster-hero.avif" type="image/avif" fetchpriority="high">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fulus.sa/">
+  <meta property="og:title" content="Fulus — It’s open.">
+  <meta property="og:description" content="Fulus is group investing for you and your friends. Everyone sees everything. On the App Store and Google Play.">
+  <meta property="og:image" content="https://fulus.sa/assets/images/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fulus — It’s open.">
+  <meta name="twitter:description" content="Fulus is group investing for you and your friends. Everyone sees everything. On the App Store and Google Play.">
+  <meta name="twitter:image" content="https://fulus.sa/assets/images/og.jpg">
 </head>
 <body>
-  <!-- Poster edition floor: paints first, always. The world (canvas) is an
-       enhancement that fades in over it — never a black hold, never a loader. -->
-  <picture class="poster">
-    <img src="/assets/images/poster.webp" width="1440" height="900" alt="" decoding="async" fetchpriority="high">
+  <!-- Poster layer: first paint for everyone; the world canvas fades in over it
+       (600ms opacity, src/main.ts). aria-hidden + empty alt — the copy is real
+       DOM elsewhere on the page; this is scenery. -->
+  <picture id="poster" aria-hidden="true">
+    <source srcset="/assets/images/poster-hero.avif" type="image/avif">
+    <img src="/assets/images/poster-hero.webp" alt="" width="1440" height="900" fetchpriority="high" decoding="async">
   </picture>
   <canvas id="gl" aria-hidden="true"></canvas>
   <div id="wash" aria-hidden="true"></div>

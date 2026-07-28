@@ -30,8 +30,20 @@ body {
 }
 
 /* ---- fixed world layers (inert until the world boots) ---- */
-.poster { position: fixed; inset: 0; z-index: 0; }
-.poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Poster layer — universal first paint; z-index 0 sits under the copy layers
+   and under the world canvas when it fades in. */
+#poster {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #020B18;
+}
+#poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 #gl { position: fixed; inset: 0; z-index: 1; opacity: 0; transition: opacity 600ms ease; }
 /* Legibility scrim: the poster is fixed (spec §6 poster floor) so its
    brightest point (the portal core) sits behind every vertically-centered
