@@ -5,6 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { createPortal, type PortalHandles } from './portal';
 import { createRibbon, type RibbonHandles } from './ribbon';
+import { createCast } from './cast';
 
 export interface WorldHandles {
   renderer: THREE.WebGLRenderer;
@@ -19,6 +20,7 @@ export interface WorldHandles {
   dust: THREE.Points;
   portal: PortalHandles;
   ribbon: RibbonHandles;
+  cast: THREE.Group;
   setSize(w: number, h: number): void;
   dispose(): void;
 }
@@ -120,6 +122,10 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   );
   scene.add(dust);
 
+  // the canon cast, standing in the night (spec §5.1)
+  const cast = createCast();
+  scene.add(cast);
+
   // post: ACES render + UnrealBloom (.85 strength = flight formula at prog 0; radius .55, threshold .82)
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -127,7 +133,7 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   composer.addPass(bloom);
 
   return {
-    renderer, scene, camera, composer, bloom, mirror, veil, beyond, beyondRef, dust, portal, ribbon,
+    renderer, scene, camera, composer, bloom, mirror, veil, beyond, beyondRef, dust, portal, ribbon, cast,
     setSize(w: number, h: number): void {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -148,6 +154,12 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
         const mat = mesh.material as THREE.Material | THREE.Material[] | undefined;
         if (Array.isArray(mat)) mat.forEach(disposeMaterial);
         else if (mat) disposeMaterial(mat);
+      });
+      cast.traverse((o) => {
+        if (o instanceof THREE.Mesh) {
+          o.geometry.dispose();
+          (o.material as THREE.Material).dispose();
+        }
       });
       beyondTex.dispose();
       mirror.dispose(); // releases the Reflector render target
