@@ -80,3 +80,10 @@ founder's request; rework to be taken up in a fresh session (see
 The two assent items presented at this checkpoint (transitions boundary
 `console.warn` plan deviation; meta/share-card copy options) remain
 **unanswered** — re-ask when the rework returns for verdict.
+
+## v3 — Night Crossing gates
+
+### Gate G1 — world parity (2026-07-28)
+Verdict: APPROVED (founder verbatim: "G1 approved").
+Evidence: production build at cacf1f6, live preview :4174, comparison set g1-0p{0,5,62,8,97}.png vs prototype frames 01-03 (companion gate-g1.html).
+Flag-items presented without objection (treated accepted, revisitable): legibility vignette; pre-live badge dim .75 (AA); footer ships without TERMS link pending founder content; hero ink-settle once per session.
