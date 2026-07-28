@@ -122,9 +122,8 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   );
   scene.add(dust);
 
-  // the canon cast, standing in the night (spec §5.1) — anisotropic filtering
-  // keeps the art's edges crisp at the oblique angles the flight path creates
-  const cast = createCast(renderer.capabilities.getMaxAnisotropy());
+  // the canon cast, standing in the night (spec §5.1)
+  const cast = createCast();
   scene.add(cast);
 
   // post: ACES render + UnrealBloom (.85 strength = flight formula at prog 0; radius .55, threshold .82)

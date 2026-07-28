@@ -4,12 +4,10 @@
 // if left un-mocked. None of the postprocessing/Reflector addon constructors
 // this module uses (EffectComposer, UnrealBloomPass, RenderPass, Reflector)
 // touch the renderer's GL context at construction time — only
-// `renderer.getPixelRatio()` / `renderer.getSize()` / `renderer.capabilities.
-// getMaxAnisotropy()` are read (verified against three@0.160.0's addon
-// source, plus scene.ts's own createCast(maxAnisotropy) wiring) — so
-// replacing just WebGLRenderer with a minimal stub lets the REAL
-// createWorld()/dispose() run end-to-end, letting this test cover the actual
-// code path, not a re-implemented one.
+// `renderer.getPixelRatio()` / `renderer.getSize()` are read (verified
+// against three@0.160.0's addon source) — so replacing just WebGLRenderer
+// with a minimal stub lets the REAL createWorld()/dispose() run end-to-end,
+// letting this test cover the actual code path, not a re-implemented one.
 import { describe, it, expect, vi } from 'vitest';
 import * as THREE from 'three';
 
@@ -20,7 +18,6 @@ vi.mock('three', async (importOriginal) => {
     domElement: HTMLCanvasElement;
     toneMapping = 0;
     toneMappingExposure = 1;
-    capabilities = { getMaxAnisotropy: () => 1 };
     private _pixelRatio = 1;
     private _width = 800;
     private _height = 600;
