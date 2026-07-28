@@ -1,8 +1,39 @@
 # Backlog
 
-Rewritten 2026-07 for the "WHO'S IN?" spectacle rebuild
-(spec: `docs/superpowers/specs/2026-07-11-whos-in-spectacle-rebuild-design.md`).
-The manual pre-launch gate lives in `docs/launch-checklist.md`.
+Refreshed 2026-07-28 for the Night Crossing rebuild (v3)
+(spec: `docs/superpowers/specs/2026-07-28-night-crossing-design.md`).
+The ops + device launch gates live in `docs/launch-checklist.md`.
+
+## 0. Deferred by the v3 Night Crossing rebuild
+
+Each item ships only through its own founder gate; the site is complete
+without all of them (spec §5).
+
+- [ ] **Sound** (spec §5.4) — opt-in deep-water room tone + crossing swell.
+  Off by default, never autoplay. Founder taste gate.
+- [ ] **Interactive moments** (spec §5.3) — product-truth moments (the pot
+  lighting, the vote) staged as objects in the night, light responding to
+  touch — never UI cards floating in space. One founder gate per moment.
+- [ ] **Film slot** (spec §5.5) — a quiet `Watch the film` waypoint in Act I
+  opening the launch film as an overlay, only once the film clears its own
+  gates. The site never waits on the film.
+- [ ] **Terms page** — content pending from founder/legal (spec §10.4).
+  Until it exists the footer carries NO Terms link (flagged at Gate G1); add
+  the link and the page together when content arrives.
+- [ ] **OG type compositing** — `og.jpg` ships as the plain approach frame;
+  compositing "It's open." onto it waits on the founder's display-face
+  decision (FK Grotesk licence vs Readex Pro, spec §10.3). The generation
+  recipe lives in `tools/make_poster.mjs`.
+- [ ] **Flight scrub telemetry** (spec §7) — `tools/measure_scrub.mjs` (v2)
+  is not restored and its CI step is dropped; retargeting it to the v3
+  flight is a DELIBERATE deferral, not a silent drop. Until then, flight
+  frame-time feel is judged on real GPUs at the device gate
+  (`docs/launch-checklist.md` §4), never SwiftShader.
+
+> Everything below this line predates the v3 rebuild. The §1 waitlist ops
+> gates are retired (the waitlist itself is retired, spec §9 — do not
+> resurrect). Still-true items — the www redirect check, the FK Grotesk
+> licence call, RUM monitoring — carry forward.
 
 ## 1. Launch gates (spec §10 ops gates — all pre-launch)
 

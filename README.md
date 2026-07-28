@@ -1,51 +1,33 @@
 # fulus-site
 
-Public web presence for Fulus (https://fulus.sa) — the "WHO'S IN?" scroll-film
-landing page (rebuilt 2026-07). Spec (source of truth for copy, scenes,
-mechanics, budgets): `docs/superpowers/specs/2026-07-11-whos-in-spectacle-rebuild-design.md`.
+Public web presence for Fulus (https://fulus.sa) — **The Night Crossing**
+(v3, rebuilt 2026-07-28). One unbroken WebGL journey through a deep-ocean
+night: scroll flies the camera past the ribbon of light, through the glowing
+portal, and inside, where the store badges wait. Binding spec:
+`docs/superpowers/specs/2026-07-28-night-crossing-design.md`; normative
+visual reference: `docs/superpowers/prototypes/night-crossing/prototype.html`
+(where words and prototype disagree about look, the prototype wins).
 
-A scroll-scrubbed film in seven pinned scenes introduces group investing and
-funnels into the waitlist. `index.html` is a complete semantic document —
-every scene's copy and end-state is real DOM; the film is an enhancement
-layer. English only (founder decision; `privacy.html` keeps its bilingual
-legal text).
+The site's one action is **download** (App Store / Google Play via the
+`/app/*` edge redirects; `DOORS` var flips pre → open at launch).
+`index.html` is a complete semantic page under the canvas — every word real
+DOM, badges real links, fully usable with JS off. No-WebGL / reduced-motion
+/ save-data visitors get the **poster edition** (captured approach frame +
+the same copy), a complete page, not a fallback apology. English only
+(`privacy.html` keeps its bilingual legal text).
 
 ## Stack
 
-Vite + vanilla TypeScript. GSAP core + ScrollTrigger + Flip + MotionPathPlugin
-(npm). Two render layers: an OGL (WebGL2) **light engine** on `#light-canvas`
-(a dynamic `light-engine-*.js` chunk — ocean fog, the thread as a glowing
-ribbon, emissive bodies, floor reflections, seeded dust; sheds tiers with the
-governor, absent under reduced-motion / no-WebGL2 / `?fulus-light=off`), and
-the in-house seeded canvas-2D particle engine on `#film-canvas` (typing dots,
-glyph-ash, the submit firework, the lantern). No framework, no Three.js.
-Readex Pro variable (Latin subset) + `riyal.woff2` (U+20C1 only).
-
-## Layout
-
-- `index.html` — the semantic document; sections `#hero #math #pot #vote
-  #shares #payday #door` + `#site-footer`, `<canvas id="film-canvas">`.
-- `privacy.html` + `privacy.css` — standalone bilingual privacy page.
-- `src/main.ts` — boot: styles, GSAP plugin registration, `?ref=` capture,
-  reduced-motion gate. `src/film.ts` — scene registry + shared FilmContext +
-  `normalizeScroll` (disabled while the Door's email field is focused).
-- `src/engine/` — the OGL light engine: `store.ts` (scroll/anchor/route/tier
-  state), `passes/` (atmosphere, ribbon, emissive, dust), `light-engine.ts`
-  (dynamic entry; `?fulus-light=off` disables it, `?fulus-freeze=1` freezes
-  sim time for deterministic captures — see `tools/capture_frames.mjs` and
-  `tools/measure_scrub.mjs`).
-- `src/scenes/` — one module per scene, `init<Name>(ctx)` each.
-- `src/systems/` — particles, hold grammar, reversible/seekTo, sound,
-  governor, thread, lantern, portal states.
-- `src/phone/` — the three demo app screens, rendered from `src/demo-data.ts`
-  (`DEMO_DATA` + `largestRemainder()` drive every number in the film).
-- `src/waitlist/` — join/status/profile API, invisible Turnstile, confirmation,
-  founding-card generator. localStorage keys `fulus.waitlist` / `fulus.ref`.
-- `styles/` — tokens (canvas `#020B18`, cyan `#00E5FF`, teal `#00FFB2`,
-  crimson `#EE4540`), base, per-scene sheets.
-- `assets/` — fonts, silhouettes, favicons. Beta screenshots are design
-  reference only.
-- `.well-known/` — deep-link verification artifacts (law below).
+Vite + vanilla TypeScript + Three.js 0.160 (pinned): UnrealBloom, Reflector
+floor, ACES tone mapping. `src/world/` (scene, portal, ribbon, flight,
+governor) renders the night; `src/ui/beats.ts` maps scroll progress to the
+copy beats; `src/main.ts` boots poster-first and dynamic-imports the world;
+`src/worker.ts` is the Cloudflare Worker (asset serving with `data-doors`
+stamping, `/app/*` store redirects, two-event cookieless analytics via
+`POST /e`). Budgets (CI-enforced, bump-deliberately): critical JS+CSS+HTML
+≤ 350 KB gz, poster edition ≤ 700 KB. Readex Pro (Latin subset),
+self-hosted. Visual QA harness: `tools/qa_shots.mjs`; poster/OG generation:
+`tools/make_poster.mjs`.
 
 ## Develop / build / test
 
@@ -56,7 +38,8 @@ Readex Pro variable (Latin subset) + `riyal.woff2` (U+20C1 only).
     npx vitest run                           # unit tests (vitest + jsdom)
     npx playwright install chromium          # once
     npx playwright test                      # e2e vs the built site
-    node tools/check_bundle_budget.mjs       # 300 KB gz critical-payload gate
+    node tools/check_bundle_budget.mjs           # 350 KB gz critical gate
+    node tools/check_bundle_budget.mjs --poster  # 700 KB poster-edition gate
     node tools/check_links.mjs --root dist   # link/asset existence on dist
     node tools/check_wellknown.mjs           # deep-link artifact integrity
     npx html-validate dist/index.html dist/privacy.html
@@ -72,17 +55,6 @@ Cloudflare Workers Builds runs `npm ci && npm run build` and deploys `dist/`
 (`wrangler.jsonc` `assets.directory: "./dist"`). Pushing to `main` is the
 trigger; expect ~1–2 min with the build in the path. Local Worker preview:
 `npm run build && npx wrangler dev`.
-
-## Waitlist API
-
-The Door posts to the `join-waitlist` Supabase edge function
-(`https://zainebbvseprgngrrovk.supabase.co/functions/v1/join-waitlist`, POST
-JSON, actions `join` / `status` / `profile`). Contract source of truth: the
-Flutter repo's waitlist backend plan. The Cloudflare Turnstile production site
-key is the constant in `src/waitlist/form.ts`; the widget must be
-invisible-type, its hostname allowlist must include `fulus.sa`, and its secret
-must be the edge function's `TURNSTILE_SECRET_KEY` (see BACKLOG + launch
-checklist).
 
 ## Fonts & licensing
 
