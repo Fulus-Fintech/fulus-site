@@ -50,7 +50,7 @@ function reflectionMask(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(c);
 }
 
-export function createCast(): THREE.Group {
+export function createCast(maxAnisotropy = 1): THREE.Group {
   const cast = new THREE.Group();
   cast.name = 'cast';
   const loader = new THREE.TextureLoader();
@@ -66,7 +66,12 @@ export function createCast(): THREE.Group {
     // opacity starts at 0: THREE.MeshBasicMaterial defaults to opaque white,
     // so without this an untextured plane would flash as a solid white box
     // until the async texture load below resolves (revealed on success).
-    const figMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+    // toneMapped: false + fog: false — the figures are the founder's key art;
+    // ACES regrades colour (cyan rims gray out, blacks lift) and FogExp2 mixes
+    // in ~10-20% of the night colour at these distances. Neither is true to
+    // the source file. The world around them keeps tone-mapping/fog; only the
+    // art itself renders raw, the way it did as a DOM <img> in the approved v2.
+    const figMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, toneMapped: false, fog: false });
     const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), figMat);
     plane.name = 'figure';
     plane.scale.set(spec.height, spec.height, 1); // width corrected on texture load
@@ -94,6 +99,8 @@ export function createCast(): THREE.Group {
       opacity: 0,
       alphaMap: maskTex,
       depthWrite: false,
+      toneMapped: false, // same regrade reasoning as figMat above
+      fog: false,
     });
     const reflection = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), refMat);
     reflection.name = 'reflection';
@@ -111,6 +118,7 @@ export function createCast(): THREE.Group {
       spec.url,
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = maxAnisotropy; // crisp edges at oblique angles; mips/Linear filters stay default
         const aspect = tex.image.width / tex.image.height;
         const w = spec.height * aspect;
         figMat.map = tex;
@@ -121,6 +129,7 @@ export function createCast(): THREE.Group {
         const rtex = tex.clone();
         rtex.repeat.y = -1;
         rtex.offset.y = 1;
+        rtex.anisotropy = maxAnisotropy;
         rtex.needsUpdate = true;
         refMat.map = rtex;
         refMat.opacity = 0.18;
