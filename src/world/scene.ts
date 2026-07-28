@@ -135,15 +135,26 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
       composer.setSize(w, h);
     },
     dispose(): void {
+      // Material.dispose() does NOT cascade to its `map` texture (e.g. the
+      // portal halo's / beyond's CanvasTexture) — free it explicitly or it
+      // leaks every dispose() cycle.
+      const disposeMaterial = (m: THREE.Material): void => {
+        (m as THREE.Material & { map?: THREE.Texture | null }).map?.dispose();
+        m.dispose();
+      };
       scene.traverse((obj) => {
         const mesh = obj as THREE.Mesh;
         if (mesh.geometry) mesh.geometry.dispose();
         const mat = mesh.material as THREE.Material | THREE.Material[] | undefined;
-        if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
-        else mat?.dispose();
+        if (Array.isArray(mat)) mat.forEach(disposeMaterial);
+        else if (mat) disposeMaterial(mat);
       });
       beyondTex.dispose();
       mirror.dispose(); // releases the Reflector render target
+      // EffectComposer.dispose() only frees its own render targets + copyPass
+      // — it never iterates passes, so UnrealBloomPass's render targets,
+      // materials, and fsQuad would leak without disposing each pass too.
+      composer.passes.forEach((p) => p.dispose());
       composer.dispose();
       renderer.dispose();
     },
