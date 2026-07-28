@@ -115,3 +115,6 @@ it read as pasted?"
 ### Gate G2 — cast in the world (2026-07-28)
 Verdict: REWORK, all three figures (founder verbatim: "all failed. the images look so bad, unlike the original key arts.")
 Diagnosis opened: texture fidelity vs source art — suspects: ACES tone mapping regrading texture colors (v2 film figures were never tone-mapped), source cutout resolution, texture filtering.
+
+Gate G2 round 2 verdict (founder verbatim): "it has nothing to do with the tone-mapping or atmospheric fog, the issue is from the images themselves, the characters are completely different from the key arts. return the previous version, it was better, then let's work on fixing/building characters with HiggsField MCP to fit the website and our original art style better."
+Actions: 3f9f1d7 reverted (previous rendering restored); character assets to be rebuilt via the sanctioned Higgsfield pipeline (Soul IDs + archetype canon) with founder in the loop.
