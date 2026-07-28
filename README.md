@@ -1,58 +1,101 @@
 # fulus-site
 
-Public web presence for Fulus (https://fulus.sa) — the "Threshold × Ledger" waitlist landing page (rebuilt 2026-07).
+Public web presence for Fulus (https://fulus.sa) — the "WHO'S IN?" scroll-film
+landing page (rebuilt 2026-07). Spec (source of truth for copy, scenes,
+mechanics, budgets): `docs/superpowers/specs/2026-07-11-whos-in-spectacle-rebuild-design.md`.
 
-Served by the `fulus-site` Cloudflare Worker (static assets, `wrangler.jsonc`); pushing to `main` auto-deploys in ~30 s. **No build step** — what is committed is what is served. Local preview: `npx wrangler dev` → http://localhost:8787.
+A scroll-scrubbed film in seven pinned scenes introduces group investing and
+funnels into the waitlist. `index.html` is a complete semantic document —
+every scene's copy and end-state is real DOM; the film is an enhancement
+layer. English only (founder decision; `privacy.html` keeps its bilingual
+legal text).
 
-## What's here
+## Stack
 
-- `index.html` — the landing page. Inline SVG icon sprite at the top of `<body>`, header (EN/AR switch + outline anchor CTA), eight sections in order: `#hero`, `#problem`, `#product`, `#how`, `#trust`, `#vision`, `#cta`, `footer#site-footer`, plus the waitlist confirmation `<template id="confirmation-template">`.
-- `privacy.html` — minimal bilingual privacy page; shares `styles.css`.
-- `styles.css` — single stylesheet, section-header comments. The tokens block adapts the `--fulus-*` custom properties from the brand repo (`fulus-brand/spec/tokens.css`); no hand-invented hex anywhere else.
-- `js/` — ES modules, no framework: `main.js` (boot, `html.js` flag, `langchange` → `ScrollTrigger.refresh()`), `i18n.js` (dictionary swap, `localStorage['fulus.lang']`), `waitlist.js` (forms → waitlist API, Turnstile, confirmation panel, `localStorage['fulus.waitlist']`/`['fulus.ref']`), `animations/` (`hero.js`, `portals.js`, `reveals.js` — GSAP, play-once, reduced-motion-complete).
-- `i18n/en.json` + `i18n/ar.json` — flat key→string dictionaries. Namespaces: `hero.*`, `problem.*`, `product.*`, `how.*`, `trust.*`, `vision.*`, `cta.*`, `footer.*`, `a11y.*`, `meta.*`, plus the **fixed JS-consumed sets** `form.*` and `confirm.*` (exact keys are API for `js/waitlist.js` — do not rename them without changing `waitlist.js` in the same commit; CI enforces en/ar parity).
-- `assets/fonts/` — self-hosted Readex Pro variable woff2 (Latin + Arabic subsets) and `riyal.woff2` (Saudi Riyal symbol U+20C1 subset).
-- `assets/images/`, `assets/favicons/` — hero/product composites, silhouette characters, OG image, favicons.
-- `.well-known/` — Universal Link / App Link verification artifacts (see below).
-- `_headers` — Content-Type/Cache-Control rules for `.well-known` + i18n + asset caching.
-- `tools/` + `.github/workflows/checks.yml` — CI gates: i18n key parity, local `js/` byte budget (`tools/js-budget.json`), `.well-known` integrity, internal link/asset existence, `html-validate`.
+Vite + vanilla TypeScript. GSAP core + ScrollTrigger + Flip + MotionPathPlugin
+(npm). Two render layers: an OGL (WebGL2) **light engine** on `#light-canvas`
+(a dynamic `light-engine-*.js` chunk — ocean fog, the thread as a glowing
+ribbon, emissive bodies, floor reflections, seeded dust; sheds tiers with the
+governor, absent under reduced-motion / no-WebGL2 / `?fulus-light=off`), and
+the in-house seeded canvas-2D particle engine on `#film-canvas` (typing dots,
+glyph-ash, the submit firework, the lantern). No framework, no Three.js.
+Readex Pro variable (Latin subset) + `riyal.woff2` (U+20C1 only).
+
+## Layout
+
+- `index.html` — the semantic document; sections `#hero #math #pot #vote
+  #shares #payday #door` + `#site-footer`, `<canvas id="film-canvas">`.
+- `privacy.html` + `privacy.css` — standalone bilingual privacy page.
+- `src/main.ts` — boot: styles, GSAP plugin registration, `?ref=` capture,
+  reduced-motion gate. `src/film.ts` — scene registry + shared FilmContext +
+  `normalizeScroll` (disabled while the Door's email field is focused).
+- `src/engine/` — the OGL light engine: `store.ts` (scroll/anchor/route/tier
+  state), `passes/` (atmosphere, ribbon, emissive, dust), `light-engine.ts`
+  (dynamic entry; `?fulus-light=off` disables it, `?fulus-freeze=1` freezes
+  sim time for deterministic captures — see `tools/capture_frames.mjs` and
+  `tools/measure_scrub.mjs`).
+- `src/scenes/` — one module per scene, `init<Name>(ctx)` each.
+- `src/systems/` — particles, hold grammar, reversible/seekTo, sound,
+  governor, thread, lantern, portal states.
+- `src/phone/` — the three demo app screens, rendered from `src/demo-data.ts`
+  (`DEMO_DATA` + `largestRemainder()` drive every number in the film).
+- `src/waitlist/` — join/status/profile API, invisible Turnstile, confirmation,
+  founding-card generator. localStorage keys `fulus.waitlist` / `fulus.ref`.
+- `styles/` — tokens (canvas `#020B18`, cyan `#00E5FF`, teal `#00FFB2`,
+  crimson `#EE4540`), base, per-scene sheets.
+- `assets/` — fonts, silhouettes, favicons. Beta screenshots are design
+  reference only.
+- `.well-known/` — deep-link verification artifacts (law below).
+
+## Develop / build / test
+
+    npm ci                                   # install
+    npm run dev                              # dev server (http://localhost:5173)
+    npm run build                            # -> dist/
+    npm run preview                          # serve dist/ (http://localhost:4173)
+    npx vitest run                           # unit tests (vitest + jsdom)
+    npx playwright install chromium          # once
+    npx playwright test                      # e2e vs the built site
+    node tools/check_bundle_budget.mjs       # 300 KB gz critical-payload gate
+    node tools/check_links.mjs --root dist   # link/asset existence on dist
+    node tools/check_wellknown.mjs           # deep-link artifact integrity
+    npx html-validate dist/index.html dist/privacy.html
+
+CI (`.github/workflows/checks.yml`, node 20) runs all of the above on every
+push/PR. Visual-regression baselines live in
+`tests/e2e/visual.spec.ts-snapshots/` — the update workflow is documented at
+the top of `tests/e2e/visual.spec.ts`.
+
+## Deploy
+
+Cloudflare Workers Builds runs `npm ci && npm run build` and deploys `dist/`
+(`wrangler.jsonc` `assets.directory: "./dist"`). Pushing to `main` is the
+trigger; expect ~1–2 min with the build in the path. Local Worker preview:
+`npm run build && npx wrangler dev`.
 
 ## Waitlist API
 
-The page posts to the `join-waitlist` Supabase edge function
-(`https://zainebbvseprgngrrovk.supabase.co/functions/v1/join-waitlist`, POST JSON, no auth header;
-actions `join` / `status` / `profile`). Contract and backend source of truth live in the Flutter repo:
-`docs/superpowers/specs/2026-07-03-fulus-landing-page-redesign-design.md` §7 and the companion
-waitlist backend plan (`2026-07-04-waitlist-backend.md`). The Cloudflare Turnstile site key is the
-`TURNSTILE_SITE_KEY` constant at the top of `js/waitlist.js` (production key set 2026-07-05 — the widget's Cloudflare hostname allowlist must include `fulus.sa`, and its secret must be set as the join-waitlist `TURNSTILE_SECRET_KEY`; see BACKLOG).
+The Door posts to the `join-waitlist` Supabase edge function
+(`https://zainebbvseprgngrrovk.supabase.co/functions/v1/join-waitlist`, POST
+JSON, actions `join` / `status` / `profile`). Contract source of truth: the
+Flutter repo's waitlist backend plan. The Cloudflare Turnstile production site
+key is the constant in `src/waitlist/form.ts`; the widget must be
+invisible-type, its hostname allowlist must include `fulus.sa`, and its secret
+must be the edge function's `TURNSTILE_SECRET_KEY` (see BACKLOG + launch
+checklist).
 
 ## Fonts & licensing
 
-- **Readex Pro** (SIL OFL) is the only text family, self-hosted — no Google Fonts requests.
-- **FK Grotesk is NOT shipped** (available binaries are unlicensed trials). If a license is purchased
-  later, swap the Latin display face via the single `font-family` custom property in the tokens block
-  of `styles.css` — nothing else changes.
-- `riyal.woff2` carries only U+20C1 (Saudi Riyal symbol), `unicode-range`-scoped, falling back to Readex Pro.
-
-## CI
-
-Runs on every push/PR (`.github/workflows/checks.yml`, node 20). Run locally from the repo root:
-
-    node tools/check_i18n_parity.mjs
-    node tools/check_js_budget.mjs
-    node tools/check_wellknown.mjs
-    node tools/check_links.mjs
-    npx --yes html-validate@8 index.html privacy.html
-
-If `js/` grows intentionally: `node tools/check_js_budget.mjs --measure` and bump
-`tools/js-budget.json` in the same commit.
+Readex Pro (SIL OFL), self-hosted, Latin subset only — no Google Fonts
+requests. `riyal.woff2` carries only U+20C1, `unicode-range`-scoped.
 
 ## Editing the verification artifacts
 
-**Don't edit the `.well-known/` files in this repo directly.** They are committed reference copies of
-the source files in the Flutter repo at `audit/runbooks/h-2-7-fulus-site-files/`. The Flutter repo's
-sentinel test (`test/prod_readiness/h_2_7_link_assets_smoke_test.dart`) keeps the AASA whitelist in
-sync with the app's route table. To update:
+**Don't edit the `.well-known/` files in this repo directly.** They are
+committed reference copies of the source files in the Flutter repo at
+`audit/runbooks/h-2-7-fulus-site-files/`. The Flutter repo's sentinel test
+(`test/prod_readiness/h_2_7_link_assets_smoke_test.dart`) keeps the AASA
+whitelist in sync with the app's route table. To update:
 
 1. Edit the source in the Flutter repo at `audit/runbooks/h-2-7-fulus-site-files/`.
 2. Run the sentinel locally to confirm consistency.
@@ -61,18 +104,12 @@ sync with the app's route table. To update:
 
 ## www redirect
 
-`www.fulus.sa` → `fulus.sa` is configured at the Cloudflare dashboard level (Bulk Redirects / zone
-rule that 301s `www.fulus.sa/*` to `https://fulus.sa/$1`), not in a `_redirects` file — Cloudflare's
-validator (code 10021) rejects host-based redirects there.
+`www.fulus.sa` → `fulus.sa` is configured at the Cloudflare dashboard level
+(Bulk Redirects / zone rule that 301s `www.fulus.sa/*` to
+`https://fulus.sa/$1`), not in a `_redirects` file — Cloudflare's validator
+(code 10021) rejects host-based redirects there.
 
-## Backlog
+## Launch & backlog
 
-Launch gates and deferred items: [`BACKLOG.md`](BACKLOG.md).
-
-## See also
-
-- Flutter repo: https://github.com/Fulus-Fintech/fulus
-- Landing-page spec: `docs/superpowers/specs/2026-07-03-fulus-landing-page-redesign-design.md` (Flutter repo)
-- Waitlist backend plan: `2026-07-04-waitlist-backend.md` (Flutter repo, docs/superpowers)
-- Brand truth: `fulus-brand` repo (`spec/tokens.css`, logos, characters, screens)
-- Deep-link runbooks: `audit/runbooks/h-2-7-*` (Flutter repo)
+Pre-launch gates: [`docs/launch-checklist.md`](docs/launch-checklist.md).
+Deferred items: [`BACKLOG.md`](BACKLOG.md).

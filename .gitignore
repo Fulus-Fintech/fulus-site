@@ -21,3 +21,15 @@ _scratch/
 tmp-fontwork/
 tmp-images/
 node_modules/
+
+# Claude worktrees
+.claude/worktrees/
+
+# build output
+dist/
+
+# test artifacts
+# playwright run artifacts (baselines in *-snapshots/ ARE committed)
+test-results/
+playwright-report/
+tmp-e2e/

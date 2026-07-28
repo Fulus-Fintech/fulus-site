@@ -1,11 +1,17 @@
 // tools/check_links.mjs — CI gate: every internal href/src/srcset target and
 // in-page #anchor in index.html + privacy.html resolves.
-// Usage: node tools/check_links.mjs   (exit 0 = pass, 1 = fail)
+// Usage:
+//   node tools/check_links.mjs                check the repo-root HTML (authoring copy)
+//   node tools/check_links.mjs --root dist    check the built output (what CI does)
+// Exit 0 = pass, 1 = fail.
 import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const rootFlag = process.argv.indexOf('--root');
+const root = rootFlag !== -1 && process.argv[rootFlag + 1]
+  ? resolve(process.cwd(), process.argv[rootFlag + 1])
+  : join(dirname(fileURLToPath(import.meta.url)), '..');
 const pages = ['index.html', 'privacy.html'];
 const failures = [];
 let checked = 0;

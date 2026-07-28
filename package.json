@@ -1,0 +1,33 @@
+{
+  "name": "fulus-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "fulus.sa — The Night Crossing",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run build && npm run typecheck && npm run test && html-validate \"dist/index.html\" \"dist/privacy.html\""
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "@types/node": "^22.15.0",
+    "@types/three": "^0.185.1",
+    "html-validate": "^9.5.3",
+    "jsdom": "^26.1.0",
+    "sharp": "^0.35.3",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "three": "0.160.0"
+  }
+}

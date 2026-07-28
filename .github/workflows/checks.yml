@@ -6,19 +6,44 @@ on:
 
 jobs:
   gates:
-    runs-on: ubuntu-latest
+    # WebGL frames are review artifacts, eyeballed, never pixel-gated in CI
+    # (spec §7 — the SwiftShader lesson stands). Windows runner matches the
+    # dev machine so any future deterministic baselines compare like-for-like.
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: i18n key parity + no empty values
-        run: node tools/check_i18n_parity.mjs
-      - name: local js/ byte budget
-        run: node tools/check_js_budget.mjs
+          cache: npm
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run build
+      - name: typecheck
+        run: npx tsc --noEmit
+      - name: unit tests (vitest)
+        run: npx vitest run
+      - name: bundle budget (350 KB gz critical payload, Three.js included)
+        run: node tools/check_bundle_budget.mjs
+      - name: html-validate (built output)
+        run: npx html-validate dist/index.html dist/privacy.html
+      - name: internal links + asset existence (built output)
+        run: node tools/check_links.mjs --root dist
       - name: .well-known integrity
         run: node tools/check_wellknown.mjs
-      - name: internal links + asset existence
-        run: node tools/check_links.mjs
-      - name: html-validate
-        run: npx --yes html-validate@8 index.html privacy.html
+      - name: install playwright chromium
+        run: npx playwright install --with-deps chromium
+      # --pass-with-no-tests keeps the gate green until Task 2 lands the first
+      # e2e spec; it is harmless afterwards.
+      - name: e2e (playwright)
+        run: npx playwright test --pass-with-no-tests
+      - name: upload playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

@@ -6,11 +6,33 @@
   Content-Type: application/json
   Cache-Control: public, max-age=300
 
-/i18n/*.json
+# Vite's hashed build output (/assets/<name>-<hash>.js|css) is content-addressed —
+# a change always produces a new filename, so caching it forever is safe.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# copyStaticPassthrough (vite.config.ts) also copies these dirs into dist/assets/
+# byte-for-byte, UNHASHED, at stable URLs (favicons, the OG image, the SVG icon
+# sprite, and fonts referenced by <link preload> in index.html). A year of
+# immutable caching on those means a replaced file never reaches returning
+# visitors, so give them a revalidatable policy instead.
+#
+# Cloudflare _headers merges rules that match a path, and the LAST matching
+# rule wins for a duplicated header name — so these more-specific rules MUST
+# stay below the general /assets/* rule above to override its Cache-Control
+# for just these subdirectories. Do not reorder above the /assets/* rule.
+#
+# readex-pro-latin.woff2 in particular has been regenerated once already in
+# this project, so /assets/fonts/* gets the same short-lived policy, not
+# immutable, even though fonts are normally a classic "cache forever" asset.
+/assets/images/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/assets/favicons/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /assets/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
-/assets/images/*
+/assets/icons/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
