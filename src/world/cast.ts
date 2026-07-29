@@ -63,7 +63,10 @@ export function createCast(): THREE.Group {
     fig.position.set(...spec.position);
 
     // --- the figure plane: feet at local y=0, top at spec.height ---
-    const figMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false });
+    // opacity starts at 0: THREE.MeshBasicMaterial defaults to opaque white,
+    // so without this an untextured plane would flash as a solid white box
+    // until the async texture load below resolves (revealed on success).
+    const figMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
     const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), figMat);
     plane.name = 'figure';
     plane.scale.set(spec.height, spec.height, 1); // width corrected on texture load
@@ -84,9 +87,11 @@ export function createCast(): THREE.Group {
 
     // --- fake floor reflection: mirrored decal lying on the water, fading
     //     away from the feet (persists when the governor sheds the Reflector) ---
+    // opacity starts at 0 for the same reason as figMat above: hide the
+    // reflection decal until its (cloned, flipped) texture is assigned.
     const refMat = new THREE.MeshBasicMaterial({
       transparent: true,
-      opacity: 0.18,
+      opacity: 0,
       alphaMap: maskTex,
       depthWrite: false,
     });
@@ -109,6 +114,7 @@ export function createCast(): THREE.Group {
         const aspect = tex.image.width / tex.image.height;
         const w = spec.height * aspect;
         figMat.map = tex;
+        figMat.opacity = 1;
         figMat.needsUpdate = true;
         plane.scale.set(w, spec.height, 1);
         // vertically flipped copy for the reflection: feet meet feet
@@ -117,6 +123,7 @@ export function createCast(): THREE.Group {
         rtex.offset.y = 1;
         rtex.needsUpdate = true;
         refMat.map = rtex;
+        refMat.opacity = 0.18;
         refMat.needsUpdate = true;
         reflection.scale.set(w, spec.height, 1);
         pool.scale.set(w * 1.15, spec.height * 0.45 * (w / spec.height) + 0.45, 1);
