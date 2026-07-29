@@ -23,6 +23,38 @@
 // interior regions ISNet leaves semi-transparent on the faintest figure
 // while leaving its soft edges feathered.
 //
+// MATTE REFINEMENT ROUND 1 (adversarial QA of the teal composites found
+// systematic residue classes; all fixed deterministically here, in the
+// sharp step, so the slow ISNet pass never re-runs):
+//   - DARK-PIXEL RESCUE: ISNet erodes thin floor-contact structures
+//     (stiletto heel spikes) to ghosts because they blend with floor
+//     reflections. In the source the spikes are near-black (lum < 32)
+//     against a floor that never drops that dark next to them (>= 43),
+//     so narrow TALL src-dark components touching the solid body inside
+//     the floor zone are restored to near-opaque with source RGB.
+//     Measured: visionary right spike, connector right spike, strategist
+//     left heel edge. Wide-short dark smears (contact shadows) share the
+//     darkness but not the shape — the width/height gates exclude them.
+//   - FLOOR-SHADOW TRIM: everything below the lowest near-opaque row is
+//     dropped, and inside the bottom band semi-transparent pixels that
+//     do not hug the solid body (Chebyshev distance > 2) are dropped —
+//     kills contact-shadow smears, heel-tip reflections and arch-gap
+//     haze while keeping a <=2px contact feather under the soles.
+//   - HAZE KILL: semi-opaque portal-glow pockets in silhouette notches
+//     (neck notch, trouser-hem gap) are BRIGHT (lum >= 90) unlike any
+//     genuine unlit edge; bright semi pixels farther than 3px from the
+//     solid body are cleared. Thin rim-light edges live within 3px of
+//     the body and are untouched.
+//   - GHOST CULL: leftover connected components that contain no
+//     near-opaque pixel at all (floating shadow/fog wisps) are cleared.
+//   - POCKET FILL: tiny (<=150px) fully-enclosed sub-opaque pockets
+//     inside the near-opaque body (alpha pinholes in the shoes) are
+//     solidified regardless of brightness — at that size they are matte
+//     artifacts, never genuine see-throughs (the real windows measure
+//     694-2310px). The pre-existing enclosed-interior fill now skips the
+//     floor zone, where "enclosure" is usually a shadow smear sealing a
+//     genuine arch gap (that skip is what un-fills the strategist arch).
+//
 // Usage: node tools/process_figures.mjs
 
 import sharp from 'sharp';
@@ -32,7 +64,7 @@ import { fileURLToPath } from 'node:url';
 // NOTE: no @imgly import here — onnxruntime and libvips segfault when
 // loaded in one process on this machine. Run `node tools/isnet_matte.mjs`
 // FIRST (writes cast-src/matted/*-matted.png); this script only does
-// alpha gain + geometry + webp with sharp.
+// alpha gain + refinement + geometry + webp with sharp.
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC_DIR = join(root, 'assets', 'images', 'cast-src');
@@ -44,12 +76,12 @@ const OUT_DIR = join(root, 'assets', 'images', 'cast');
 // ruler-annotated crops of each matte; alpha is zeroed below it with a
 // short feather. The other four mattes already end at the feet.
 const MAPPING = [
-  { src: 'matted/walker-matted.png', out: 'walker.webp' },
-  { src: 'matted/connector-matted.png', out: 'connector.webp' },
-  { src: 'matted/operator-matted.png', out: 'operator.webp', floorY: 1177 },
-  { src: 'matted/strategist-matted.png', out: 'strategist.webp', floorY: 1201 },
-  { src: 'matted/anchor-matted.png', out: 'anchor.webp' },
-  { src: 'matted/visionary-matted.png', out: 'visionary.webp' },
+  { src: 'matted/walker-matted.png', orig: 'walker.png', out: 'walker.webp' },
+  { src: 'matted/connector-matted.png', orig: 'connector.png', out: 'connector.webp' },
+  { src: 'matted/operator-matted.png', orig: 'operator.png', out: 'operator.webp', floorY: 1177 },
+  { src: 'matted/strategist-matted.png', orig: 'strategist.png', out: 'strategist.webp', floorY: 1201 },
+  { src: 'matted/anchor-matted.png', orig: 'anchor.png', out: 'anchor.webp' },
+  { src: 'matted/visionary-matted.png', orig: 'visionary.png', out: 'visionary.webp' },
 ];
 
 const LONG_SIDE = 1000;   // final long side, px
@@ -60,18 +92,73 @@ const ALPHA_GAIN = 1.3;   // solidifies ISNet's semi-transparent dark
                           // already near 0 stay near 0)
 const PATCH = 24;         // corner-check sample size on the FINAL output
 
-function idx(x, y, w) { return y * w + x; }
+// refinement constants (all measured on the six mattes — see the
+// refinement notes above)
+const SOLID_A = 217;      // alpha >= this is "near-opaque body" (0.85)
+const ZONE_H = 75;        // floor zone: rows above the last solid row
+const RESCUE_SRC_LUM = 32;  // source lum below this = real dark structure
+const RESCUE_MIN_H = 12;    // rescued comps are narrow and TALL
+const RESCUE_MAX_W = 20;
+const RESCUE_MAX_SIZE = 800;
+const BAND_H = 55;        // floor-shadow trim band above the last solid row
+const BAND_CORE_A = 240;  // in-band "true body" bar: the densest contact
+                          // shadows reach alpha 192-239 (measured under the
+                          // strategist sole), genuine soles/heels are >=240
+const BAND_KEEP_DIST = 2; // in-band feather allowance around the body, px
+const HAZE_MIN_LUM = 90;  // glow haze is bright; unlit edges are 17-65
+const HAZE_KEEP_DIST = 3; // rim-light lives within 3px of the body
+const CULL_MAX_SIZE = 2000; // never cull anything bigger (safety)
+const POCKET_MAX = 150;   // interior pinhole fill cap, px
 
-async function processOne({ src, out, floorY }) {
+function idx(x, y, w) { return y * w + x; }
+const lumOf = (buf, q) => 0.2126 * buf[q] + 0.7152 * buf[q + 1] + 0.0722 * buf[q + 2];
+
+// Chebyshev dilation of a 0/1 mask by `r` px (r iterations of 8-neighbour
+// growth). Returns a new mask.
+function dilate(mask, w, h, r) {
+  let cur = Uint8Array.from(mask);
+  for (let it = 0; it < r; it++) {
+    const next = Uint8Array.from(cur);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = idx(x, y, w);
+      if (cur[i]) continue;
+      const x0 = x > 0 ? x - 1 : 0, x1 = x < w - 1 ? x + 1 : w - 1;
+      const y0 = y > 0 ? y - 1 : 0, y1 = y < h - 1 ? y + 1 : h - 1;
+      let hit = 0;
+      for (let yy = y0; yy <= y1 && !hit; yy++)
+        for (let xx = x0; xx <= x1 && !hit; xx++) if (cur[idx(xx, yy, w)]) hit = 1;
+      if (hit) next[i] = 1;
+    }
+    cur = next;
+  }
+  return cur;
+}
+
+function solidMask(rgba, n) {
+  const m = new Uint8Array(n);
+  for (let i = 0; i < n; i++) m[i] = rgba[i * 4 + 3] >= SOLID_A ? 1 : 0;
+  return m;
+}
+
+function lastSolidRowOf(solid, w, h) {
+  for (let y = h - 1; y >= 0; y--)
+    for (let x = 0; x < w; x++) if (solid[idx(x, y, w)]) return y;
+  return -1;
+}
+
+async function processOne({ src, orig, out, floorY }) {
   const srcPath = join(SRC_DIR, src);
 
-  // 1. load the pre-matted PNG (from tools/isnet_matte.mjs)
+  // 1. load the pre-matted PNG (from tools/isnet_matte.mjs) + the original
+  //    scene (source RGB drives the dark-pixel rescue)
   const { data, info } = await sharp(srcPath)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
   const { width: w, height: h } = info;
   const n = w * h;
+  const srcRgb = (await sharp(join(SRC_DIR, orig)).removeAlpha().raw()
+    .toBuffer({ resolveWithObject: true })).data; // RGB, same geometry
 
   // 2. alpha gain
   const rgba = Buffer.from(data); // RGBA
@@ -92,6 +179,13 @@ async function processOne({ src, out, floorY }) {
     }
   }
 
+  // floor zone reference line: the lowest near-opaque row at this point.
+  // (Recomputed after the rescue for the trim; the two agree because the
+  // rescue never writes below this line.)
+  let solid = solidMask(rgba, n);
+  const lastSolidRow0 = lastSolidRowOf(solid, w, h);
+  const zoneTop = lastSolidRow0 - ZONE_H;
+
   // 3. enclosed-interior fill: ISNet traces the RIM outlines confidently
   //    but leaves some dark body interiors semi/fully transparent. Those
   //    interiors are ENCLOSED by the rim alpha, while genuine gaps
@@ -100,12 +194,12 @@ async function processOne({ src, out, floorY }) {
   //    the flood can't reach. (Small enclosed loops like a hand-on-hip
   //    arm triangle fill too — solid dark inside an arm bend reads
   //    correctly for silhouette art; hollow chests do not.)
-  const solid = new Uint8Array(n);          // 1 = alpha above floor
-  for (let i = 0; i < n; i++) solid[i] = rgba[i * 4 + 3] > 24 ? 1 : 0;
+  const solidLoose = new Uint8Array(n);      // 1 = alpha above floor
+  for (let i = 0; i < n; i++) solidLoose[i] = rgba[i * 4 + 3] > 24 ? 1 : 0;
   const reached = new Uint8Array(n);
   const queue = new Int32Array(n);
   let qh = 0, qt = 0;
-  const push = (i) => { if (!solid[i] && !reached[i]) { reached[i] = 1; queue[qt++] = i; } };
+  const push = (i) => { if (!solidLoose[i] && !reached[i]) { reached[i] = 1; queue[qt++] = i; } };
   for (let x = 0; x < w; x++) { push(idx(x, 0, w)); push(idx(x, h - 1, w)); }
   for (let y = 0; y < h; y++) { push(idx(0, y, w)); push(idx(w - 1, y, w)); }
   while (qh < qt) {
@@ -129,6 +223,12 @@ async function processOne({ src, out, floorY }) {
   // regions have mean luminance 108-119+, unlit body pinholes 60-65 —
   // MAX_FILL_LUM=90 splits them cleanly. Dark enclosed interiors (unlit
   // body left semi-transparent by ISNet) still solidify as before.
+  //
+  // AND never in the floor zone: down there "enclosed" is almost always a
+  // contact-shadow smear sealing the bottom of a genuine heel-arch gap
+  // (measured on strategist: three dark cores inside the arch were being
+  // solidified into a blue-grey blob). The trim opens those gaps; real
+  // in-zone pinholes are handled by the POCKET FILL afterwards.
   const MAX_FILL_FRAC = 0.02;
   const MAX_FILL_LUM = 90;
   const maxFill = Math.round(n * MAX_FILL_FRAC);
@@ -136,25 +236,221 @@ async function processOne({ src, out, floorY }) {
   let filled = 0, figCount = 0, nextLabel = 0;
   const comp = new Int32Array(n);
   for (let s = 0; s < n; s++) {
-    if (solid[s] || reached[s] || label[s]) continue;
+    if (solidLoose[s] || reached[s] || label[s]) continue;
     nextLabel++;
-    let ch = 0, ct = 0, sumLum = 0;
+    let ch = 0, ct = 0, sumLum = 0, maxCY = 0;
     comp[ct++] = s; label[s] = nextLabel;
     while (ch < ct) {
       const i = comp[ch++];
       const x = i % w, y = (i / w) | 0;
-      sumLum += 0.2126 * rgba[i * 4] + 0.7152 * rgba[i * 4 + 1] + 0.0722 * rgba[i * 4 + 2];
+      if (y > maxCY) maxCY = y;
+      sumLum += lumOf(rgba, i * 4);
       for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1]) {
-        if (j >= 0 && !solid[j] && !reached[j] && !label[j]) { label[j] = nextLabel; comp[ct++] = j; }
+        if (j >= 0 && !solidLoose[j] && !reached[j] && !label[j]) { label[j] = nextLabel; comp[ct++] = j; }
       }
     }
-    if (ct <= maxFill && sumLum / ct < MAX_FILL_LUM) {
+    if (ct <= maxFill && sumLum / ct < MAX_FILL_LUM && maxCY <= zoneTop) {
       for (let k = 0; k < ct; k++) {
         const q = comp[k] * 4 + 3;
         if (rgba[q] < 235) { rgba[q] = 235; filled++; }
       }
     }
   }
+
+  // 4. DARK-PIXEL RESCUE (floor zone): restore eroded thin dark structures
+  //    (stiletto heel spikes). Candidates: sub-opaque pixels in the floor
+  //    zone whose SOURCE luminance is near-black. 8-connected candidate
+  //    components qualify when they touch the near-opaque body and are
+  //    narrow + tall (contact shadows are wide + short). Qualifying pixels
+  //    become near-opaque with their source RGB (faithful to the scene).
+  let rescued = 0;
+  {
+    const cand = new Uint8Array(n);
+    for (let y = Math.max(0, zoneTop); y <= lastSolidRow0; y++) for (let x = 0; x < w; x++) {
+      const i = idx(x, y, w);
+      if (rgba[i * 4 + 3] >= SOLID_A) continue;
+      if (lumOf(srcRgb, i * 3) < RESCUE_SRC_LUM) cand[i] = 1;
+    }
+    const seen = new Uint8Array(n);
+    const stack = new Int32Array(n);
+    for (let s = 0; s < n; s++) {
+      if (!cand[s] || seen[s]) continue;
+      let sp = 0, ct = 0, mnX = w, mxX = 0, mnY = h, mxY = 0, touches = 0;
+      stack[sp++] = s; seen[s] = 1;
+      while (sp) {
+        const i = stack[--sp];
+        const x = i % w, y = (i / w) | 0;
+        comp[ct++] = i;
+        if (x < mnX) mnX = x; if (x > mxX) mxX = x;
+        if (y < mnY) mnY = y; if (y > mxY) mxY = y;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const j = idx(nx, ny, w);
+          if (solid[j]) touches = 1;
+          if (cand[j] && !seen[j]) { seen[j] = 1; stack[sp++] = j; }
+        }
+      }
+      const cw = mxX - mnX + 1, chh = mxY - mnY + 1;
+      if (touches && ct <= RESCUE_MAX_SIZE && chh >= RESCUE_MIN_H &&
+          cw <= RESCUE_MAX_W && chh >= 1.2 * cw) {
+        // vertical-continuity clamp: a heel spike is column-continuous top
+        // to bottom, while its contact shadow flares SIDEWAYS at the floor.
+        // Pixels in the lower half may only be restored in columns (+-1)
+        // the upper half also occupies — the flare stays semi and is then
+        // removed by the floor trim.
+        const midY = mnY + (chh >> 1);
+        const upperCols = new Uint8Array(w);
+        for (let k = 0; k < ct; k++) {
+          const i = comp[k];
+          if (((i / w) | 0) <= midY) upperCols[i % w] = 1;
+        }
+        let kept = 0;
+        for (let k = 0; k < ct; k++) {
+          const i = comp[k], x = i % w, y = (i / w) | 0;
+          if (y > midY && !upperCols[x] && !(x > 0 && upperCols[x - 1]) &&
+              !(x < w - 1 && upperCols[x + 1])) continue;
+          const q = i * 4, sq = i * 3;
+          rgba[q] = srcRgb[sq]; rgba[q + 1] = srcRgb[sq + 1]; rgba[q + 2] = srcRgb[sq + 2];
+          rgba[q + 3] = 250;
+          kept++;
+        }
+        rescued += kept;
+        console.log(`  rescue ${out}: ${kept}/${ct}px x${mnX}-${mxX} y${mnY}-${mxY}`);
+      }
+    }
+  }
+
+  // masks for the trim + haze passes (post-rescue body)
+  solid = solidMask(rgba, n);
+  const lastSolidRow = lastSolidRowOf(solid, w, h);
+  const near3 = dilate(solid, w, h, HAZE_KEEP_DIST);
+  // in-band protection halo grows from the DENSE body core: the thickest
+  // contact shadows reach alpha 192-239, so near-opaque-but-not-core
+  // pixels in the band are shadow unless they hug the true sole/heel.
+  const core = new Uint8Array(n);
+  for (let i = 0; i < n; i++) core[i] = rgba[i * 4 + 3] >= BAND_CORE_A ? 1 : 0;
+  const nearCore = dilate(core, w, h, BAND_KEEP_DIST);
+
+  // 5. FLOOR-SHADOW TRIM: nothing lives below the lowest near-opaque row
+  //    (heel-tip reflections, under-sole shadow tails), and inside the
+  //    bottom band sub-core pixels that do not hug the dense body are
+  //    contact-shadow / arch-haze remnants, not figure edges.
+  let trimmed = 0;
+  for (let y = Math.max(0, lastSolidRow - BAND_H); y < h; y++) for (let x = 0; x < w; x++) {
+    const i = idx(x, y, w), q = i * 4 + 3;
+    if (rgba[q] === 0) continue;
+    if (y > lastSolidRow) { rgba[q] = 0; trimmed++; continue; }
+    if (rgba[q] < BAND_CORE_A && !nearCore[i]) { rgba[q] = 0; trimmed++; }
+  }
+
+  // 5b. NICK HEAL: the stricter in-band bar can bite small notches into a
+  //     sole edge where dense shadow chunks alternate with sub-core pixels.
+  //     A sub-solid pixel with near-opaque body within 2px to the LEFT,
+  //     RIGHT and ABOVE is a downward-open slit in the sole, not a genuine
+  //     gap (arch mouths have open space above) — refill it from the
+  //     source scene. Self-limiting: slits wider than ~4px keep their
+  //     centres and stay open.
+  let healed = 0;
+  for (let it = 0; it < 2; it++) {
+    for (let y = Math.max(2, lastSolidRow - BAND_H); y <= Math.min(h - 1, lastSolidRow); y++) {
+      for (let x = 2; x < w - 2; x++) {
+        const i = idx(x, y, w);
+        if (rgba[i * 4 + 3] >= SOLID_A) continue;
+        const S = (xx, yy) => rgba[idx(xx, yy, w) * 4 + 3] >= SOLID_A;
+        const left = S(x - 1, y) || S(x - 2, y);
+        const right = S(x + 1, y) || S(x + 2, y);
+        const up = S(x, y - 1) || S(x, y - 2);
+        if (left && right && up) {
+          const q = i * 4, sq = i * 3;
+          rgba[q] = srcRgb[sq]; rgba[q + 1] = srcRgb[sq + 1]; rgba[q + 2] = srcRgb[sq + 2];
+          rgba[q + 3] = 245;
+          healed++;
+        }
+      }
+    }
+  }
+
+  // 6. HAZE KILL: bright semi-opaque fog/glow pockets in open notches.
+  //    Genuine unlit edges measure lum 17-65; portal haze measures 135-190.
+  //    Rim light is bright too but hugs the body — the 3px halo keeps it.
+  let hazed = 0;
+  for (let i = 0; i < n; i++) {
+    const q = i * 4;
+    const a = rgba[q + 3];
+    if (a > 8 && a < SOLID_A && !near3[i] && lumOf(rgba, q) >= HAZE_MIN_LUM) {
+      rgba[q + 3] = 0; hazed++;
+    }
+  }
+
+  // 7. GHOST CULL: any remaining connected alpha component with no
+  //    near-opaque pixel at all is a floating shadow/fog wisp.
+  let culled = 0;
+  {
+    const seen = new Uint8Array(n);
+    const stack = new Int32Array(n);
+    for (let s = 0; s < n; s++) {
+      if (seen[s] || rgba[s * 4 + 3] <= 8) continue;
+      let sp = 0, ct = 0, hasSolid = 0;
+      stack[sp++] = s; seen[s] = 1;
+      while (sp) {
+        const i = stack[--sp];
+        const x = i % w, y = (i / w) | 0;
+        comp[ct++] = i;
+        if (rgba[i * 4 + 3] >= SOLID_A) hasSolid = 1;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const j = idx(nx, ny, w);
+          if (!seen[j] && rgba[j * 4 + 3] > 8) { seen[j] = 1; stack[sp++] = j; }
+        }
+      }
+      if (!hasSolid && ct <= CULL_MAX_SIZE) {
+        for (let k = 0; k < ct; k++) rgba[comp[k] * 4 + 3] = 0;
+        culled += ct;
+      }
+    }
+  }
+
+  // 8. POCKET FILL: tiny sub-opaque pockets fully enclosed by the
+  //    near-opaque body (alpha pinholes punched through the shoes) go
+  //    opaque, whatever their brightness — the source RGB there is the
+  //    shoe surface (often a glow glint), which is the filmed look.
+  let pocketed = 0;
+  {
+    solid = solidMask(rgba, n);
+    const reach2 = new Uint8Array(n);
+    qh = 0; qt = 0;
+    const push2 = (i) => { if (!solid[i] && !reach2[i]) { reach2[i] = 1; queue[qt++] = i; } };
+    for (let x = 0; x < w; x++) { push2(idx(x, 0, w)); push2(idx(x, h - 1, w)); }
+    for (let y = 0; y < h; y++) { push2(idx(0, y, w)); push2(idx(w - 1, y, w)); }
+    while (qh < qt) {
+      const i = queue[qh++];
+      const x = i % w, y = (i / w) | 0;
+      if (x > 0) push2(i - 1);
+      if (x < w - 1) push2(i + 1);
+      if (y > 0) push2(i - w);
+      if (y < h - 1) push2(i + w);
+    }
+    const seen = new Uint8Array(n);
+    for (let s = 0; s < n; s++) {
+      if (solid[s] || reach2[s] || seen[s]) continue;
+      let ch = 0, ct = 0;
+      comp[ct++] = s; seen[s] = 1;
+      while (ch < ct) {
+        const i = comp[ch++];
+        const x = i % w, y = (i / w) | 0;
+        for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1]) {
+          if (j >= 0 && !solid[j] && !reach2[j] && !seen[j]) { seen[j] = 1; comp[ct++] = j; }
+        }
+      }
+      if (ct <= POCKET_MAX) {
+        for (let k = 0; k < ct; k++) rgba[comp[k] * 4 + 3] = 255;
+        pocketed += ct;
+      }
+    }
+  }
+
   for (let i = 0; i < n; i++) if (rgba[i * 4 + 3] > 32) figCount++;
   // alpha bbox (alpha > 8)
   let minX = w, minY = h, maxX = -1, maxY = -1;
@@ -196,8 +492,9 @@ async function processOne({ src, out, floorY }) {
 
   const covPct = (100 * figCount / n).toFixed(1);
   console.log(
-    `${out}: ${fw}x${fh}  coverage=${covPct}%  ` +
-    `cornersAlpha=[${corners.map(c => c.toFixed(1)).join(', ')}]  ${pass ? 'PASS' : 'FAIL'}`
+    `${out}: ${fw}x${fh}  coverage=${covPct}%  bbox=x${minX}-${maxX},y${minY}-${maxY}  scale=${scale.toFixed(4)}\n` +
+    `  refine: rescued=${rescued} trimmed=${trimmed} healed=${healed} hazed=${hazed} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
+    `  cornersAlpha=[${corners.map(c => c.toFixed(1)).join(', ')}]  ${pass ? 'PASS' : 'FAIL'}`
   );
   return pass;
 }
