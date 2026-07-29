@@ -55,6 +55,39 @@
 //     floor zone, where "enclosure" is usually a shadow smear sealing a
 //     genuine arch gap (that skip is what un-fills the strategist arch).
 //
+// MATTE REFINEMENT ROUND 2 (adversarial QA of the round-1 composites):
+//   - DENSE floor bar: round 1 used alpha>=240 as the in-band "true body"
+//     core, but the anchor's densest contact shadow reaches 235-238
+//     post-gain (pre-gain ~183), which made shadow rows core, dragged the
+//     floor line down, and let a ragged 10-40% smear survive under both
+//     shoes. Measured across all six mattes: genuine soles/heels are
+//     >=245 post-gain (pre-gain >=197) and below the last >=245 row NO
+//     pixel exceeds 238 — so the floor reference line and the in-band
+//     core both move to DENSE_A=245, the keep halo tightens to 1px, and
+//     everything below the last dense row is dropped.
+//   - BAKED-GLOW KILL: ISNet baked a patch of portal glow at FULL alpha
+//     into the connector's thumb-finger gap (src lum 90-220, cyan). The
+//     round-1 haze kill only handled semi pixels (a < 217), so it
+//     survived. Genuine figure pixels are near-black; genuine rim light
+//     is bright but hugs the dark silhouette within ~2px. So: bright
+//     (src lum >= 90) pixels of ANY alpha farther than 2px from the
+//     eroded dark body core are background glow and are cleared.
+//   - DARK-FRINGE KILL: dark (src lum < 90) sub-dense (a < 245) pixels
+//     farther than 2px from the eroded solid core are blur/shadow, not
+//     edge feather, and are cleared; the 1-2px feather adjacent to the
+//     body survives, bright rim light is exempt.
+//   - BRIGHT-SEMI REMAP: the anchor's shoulder tops carried a glow-bloom
+//     tail — bright semi pixels ramping 9-10px along the shallow edge
+//     while staying 1-3px from the body vertically, out of reach of any
+//     proximity rule that spares rim light. Smoothstep on bright semi
+//     alpha (kill < 0.45, keep >= 0.85) shortens every bloom tail while
+//     the near-solid rim feather keeps partial alpha; dark feather is
+//     untouched.
+//   - Pocket-fill guard: bright pockets (mean src lum >= 90) only refill
+//     inside the floor zone (shoe-glint pinholes); above it a bright
+//     enclosed pocket is portal show-through (e.g. the cleared thumb
+//     gap) and must stay transparent.
+//
 // Usage: node tools/process_figures.mjs
 
 import sharp from 'sharp';
@@ -100,13 +133,16 @@ const RESCUE_SRC_LUM = 32;  // source lum below this = real dark structure
 const RESCUE_MIN_H = 12;    // rescued comps are narrow and TALL
 const RESCUE_MAX_W = 20;
 const RESCUE_MAX_SIZE = 800;
-const BAND_H = 55;        // floor-shadow trim band above the last solid row
-const BAND_CORE_A = 240;  // in-band "true body" bar: the densest contact
-                          // shadows reach alpha 192-239 (measured under the
-                          // strategist sole), genuine soles/heels are >=240
-const BAND_KEEP_DIST = 2; // in-band feather allowance around the body, px
+const BAND_H = 55;        // floor-shadow trim band above the last dense row
+const DENSE_A = 245;      // "true sole/heel" bar (round 2): genuine soles are
+                          // >=245 post-gain, the densest contact shadow
+                          // measures 235-238 — and below the last >=245 row
+                          // no pixel on any of the six mattes exceeds 238
+const BAND_KEEP_DIST = 1; // in-band contact-feather allowance, px
 const HAZE_MIN_LUM = 90;  // glow haze is bright; unlit edges are 17-65
-const HAZE_KEEP_DIST = 3; // rim-light lives within 3px of the body
+const HAZE_KEEP_DIST = 3; // semi rim-light lives within 3px of the body
+const GLOW_KEEP_DIST = 2; // baked (near-opaque) rim hugs the dark core <=2px
+const FRINGE_KEEP_DIST = 2; // dark edge feather allowance around the body
 const CULL_MAX_SIZE = 2000; // never cull anything bigger (safety)
 const POCKET_MAX = 150;   // interior pinhole fill cap, px
 
@@ -132,6 +168,25 @@ function dilate(mask, w, h, r) {
     cur = next;
   }
   return cur;
+}
+
+// single-step erosion: a set pixel survives only with >= 5 of its 8
+// neighbours set. Strips isolated specks and 1px strands so they cannot
+// anchor a keep-halo, while any body >= 2px thick keeps its full outline.
+function erode8(mask, w, h) {
+  const out = new Uint8Array(mask.length);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = idx(x, y, w);
+    if (!mask[i]) continue;
+    let c = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && ny >= 0 && nx < w && ny < h && mask[idx(nx, ny, w)]) c++;
+    }
+    if (c >= 5) out[i] = 1;
+  }
+  return out;
 }
 
 function solidMask(rgba, n) {
@@ -321,27 +376,27 @@ async function processOne({ src, orig, out, floorY }) {
     }
   }
 
-  // masks for the trim + haze passes (post-rescue body)
-  solid = solidMask(rgba, n);
-  const lastSolidRow = lastSolidRowOf(solid, w, h);
-  const near3 = dilate(solid, w, h, HAZE_KEEP_DIST);
-  // in-band protection halo grows from the DENSE body core: the thickest
-  // contact shadows reach alpha 192-239, so near-opaque-but-not-core
-  // pixels in the band are shadow unless they hug the true sole/heel.
-  const core = new Uint8Array(n);
-  for (let i = 0; i < n; i++) core[i] = rgba[i * 4 + 3] >= BAND_CORE_A ? 1 : 0;
-  const nearCore = dilate(core, w, h, BAND_KEEP_DIST);
+  // masks for the trim pass (post-rescue body). The floor reference line
+  // and the in-band core both use the DENSE bar: the densest contact
+  // shadow measures 235-238 post-gain, genuine soles/heels >= 245, so a
+  // 240 bar (round 1) let shadow qualify as body under the anchor.
+  const dense = new Uint8Array(n);
+  for (let i = 0; i < n; i++) dense[i] = rgba[i * 4 + 3] >= DENSE_A ? 1 : 0;
+  let lastDenseRow = -1;
+  for (let y = h - 1; y >= 0 && lastDenseRow < 0; y--)
+    for (let x = 0; x < w; x++) if (dense[idx(x, y, w)]) { lastDenseRow = y; break; }
+  const nearDense = dilate(dense, w, h, BAND_KEEP_DIST);
 
-  // 5. FLOOR-SHADOW TRIM: nothing lives below the lowest near-opaque row
+  // 5. FLOOR-SHADOW TRIM: nothing lives below the lowest dense row
   //    (heel-tip reflections, under-sole shadow tails), and inside the
-  //    bottom band sub-core pixels that do not hug the dense body are
+  //    bottom band sub-dense pixels that do not hug the dense body are
   //    contact-shadow / arch-haze remnants, not figure edges.
   let trimmed = 0;
-  for (let y = Math.max(0, lastSolidRow - BAND_H); y < h; y++) for (let x = 0; x < w; x++) {
+  for (let y = Math.max(0, lastDenseRow - BAND_H); y < h; y++) for (let x = 0; x < w; x++) {
     const i = idx(x, y, w), q = i * 4 + 3;
     if (rgba[q] === 0) continue;
-    if (y > lastSolidRow) { rgba[q] = 0; trimmed++; continue; }
-    if (rgba[q] < BAND_CORE_A && !nearCore[i]) { rgba[q] = 0; trimmed++; }
+    if (y > lastDenseRow) { rgba[q] = 0; trimmed++; continue; }
+    if (rgba[q] < DENSE_A && !nearDense[i]) { rgba[q] = 0; trimmed++; }
   }
 
   // 5b. NICK HEAL: the stricter in-band bar can bite small notches into a
@@ -353,7 +408,7 @@ async function processOne({ src, orig, out, floorY }) {
   //     centres and stay open.
   let healed = 0;
   for (let it = 0; it < 2; it++) {
-    for (let y = Math.max(2, lastSolidRow - BAND_H); y <= Math.min(h - 1, lastSolidRow); y++) {
+    for (let y = Math.max(2, lastDenseRow - BAND_H); y <= Math.min(h - 1, lastDenseRow); y++) {
       for (let x = 2; x < w - 2; x++) {
         const i = idx(x, y, w);
         if (rgba[i * 4 + 3] >= SOLID_A) continue;
@@ -371,15 +426,81 @@ async function processOne({ src, orig, out, floorY }) {
     }
   }
 
-  // 6. HAZE KILL: bright semi-opaque fog/glow pockets in open notches.
-  //    Genuine unlit edges measure lum 17-65; portal haze measures 135-190.
-  //    Rim light is bright too but hugs the body — the 3px halo keeps it.
+  // 6a. BAKED-GLOW KILL: portal glow baked at NEAR-OPAQUE alpha into a
+  //     silhouette gap (connector thumb-finger gap: src lum 90-220 cyan
+  //     at a255). Genuine near-opaque bright pixels are rim light, and
+  //     rim hugs the DARK body core within ~2px; a bright near-opaque
+  //     pixel farther out is background glow. The dark core is eroded so
+  //     an isolated dark speck inside a glow pocket cannot shelter it.
+  let glowKilled = 0;
+  {
+    solid = solidMask(rgba, n);
+    const darkCore = new Uint8Array(n);
+    for (let i = 0; i < n; i++)
+      darkCore[i] = solid[i] && lumOf(srcRgb, i * 3) < HAZE_MIN_LUM ? 1 : 0;
+    const nearDark = dilate(erode8(darkCore, w, h), w, h, GLOW_KEEP_DIST);
+    for (let i = 0; i < n; i++) {
+      const q = i * 4;
+      if (rgba[q + 3] >= SOLID_A && !nearDark[i] && lumOf(srcRgb, i * 3) >= HAZE_MIN_LUM) {
+        rgba[q + 3] = 0; glowKilled++;
+      }
+    }
+  }
+
+  // 6b. HAZE KILL: bright semi-opaque fog/glow pockets in open notches.
+  //     Genuine unlit edges measure lum 17-65; portal haze measures
+  //     135-190. Rim light is bright too but hugs the body — the 3px halo
+  //     keeps it. (Solid is recomputed after 6a so a dead glow blob no
+  //     longer anchors its own semi fringe.)
   let hazed = 0;
+  solid = solidMask(rgba, n);
+  const near3 = dilate(solid, w, h, HAZE_KEEP_DIST);
   for (let i = 0; i < n; i++) {
     const q = i * 4;
     const a = rgba[q + 3];
-    if (a > 8 && a < SOLID_A && !near3[i] && lumOf(rgba, q) >= HAZE_MIN_LUM) {
+    if (a > 8 && a < SOLID_A && !near3[i] && lumOf(srcRgb, i * 3) >= HAZE_MIN_LUM) {
       rgba[q + 3] = 0; hazed++;
+    }
+  }
+
+  // 6c. DARK-FRINGE KILL: dark defocus fringe off the silhouette (anchor
+  //     shoulder tops: dark semi pixels ramping 9-10px where the spec is
+  //     1-3px). A dark sub-dense pixel farther than 2px from the eroded
+  //     solid core is blur/shadow, not edge feather; the 1-2px feather
+  //     adjacent to the body survives and bright rim light is exempt.
+  //     (Sole contact feather survives too: it sits within 1px of the
+  //     dense sole, whose outline the erosion preserves.)
+  let fringed = 0;
+  {
+    const nearCore2 = dilate(erode8(solid, w, h), w, h, FRINGE_KEEP_DIST);
+    for (let i = 0; i < n; i++) {
+      const q = i * 4;
+      const a = rgba[q + 3];
+      if (a > 8 && a < DENSE_A && !nearCore2[i] && lumOf(srcRgb, i * 3) < HAZE_MIN_LUM) {
+        rgba[q + 3] = 0; fringed++;
+      }
+    }
+  }
+
+  // 6d. BRIGHT-SEMI REMAP: glow-bloom tails ride the silhouette within the
+  //     distance halos (the anchor's shoulder tops: a shallow edge whose
+  //     bright semi tail stretches 9-10px horizontally while staying 1-3px
+  //     from the body vertically, so no proximity rule can catch it without
+  //     eating rim light everywhere). Smoothstep the BRIGHT semi alpha:
+  //     kill below 0.45, keep 0.85+, ease between — the faint bloom tail
+  //     dies, the near-solid rim feather stays partial, dark feather is
+  //     untouched. Also clears the low-alpha glow residue that 6a's halo
+  //     leaves along the walls of a glow-killed gap.
+  let remapped = 0;
+  {
+    const LO = 115, HI = SOLID_A; // 0.45 / 0.85
+    for (let i = 0; i < n; i++) {
+      const q = i * 4;
+      const a = rgba[q + 3];
+      if (a <= 8 || a >= HI || lumOf(srcRgb, i * 3) < HAZE_MIN_LUM) continue;
+      const t = (a - LO) / (HI - LO);
+      const a2 = t <= 0 ? 0 : Math.round(HI * t * t * (3 - 2 * t));
+      if (a2 !== a) { rgba[q + 3] = a2; remapped++; }
     }
   }
 
@@ -435,16 +556,22 @@ async function processOne({ src, orig, out, floorY }) {
     const seen = new Uint8Array(n);
     for (let s = 0; s < n; s++) {
       if (solid[s] || reach2[s] || seen[s]) continue;
-      let ch = 0, ct = 0;
+      let ch = 0, ct = 0, sumLum = 0, maxCY = 0;
       comp[ct++] = s; seen[s] = 1;
       while (ch < ct) {
         const i = comp[ch++];
         const x = i % w, y = (i / w) | 0;
+        if (y > maxCY) maxCY = y;
+        sumLum += lumOf(srcRgb, i * 3);
         for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1]) {
           if (j >= 0 && !solid[j] && !reach2[j] && !seen[j]) { seen[j] = 1; comp[ct++] = j; }
         }
       }
-      if (ct <= POCKET_MAX) {
+      // bright pockets only refill in the floor zone (shoe-glint pinholes);
+      // higher up a bright enclosed pocket is portal show-through (e.g. the
+      // glow-killed thumb gap) and must stay open. Dark pockets fill as in
+      // round 1.
+      if (ct <= POCKET_MAX && (sumLum / ct < HAZE_MIN_LUM || maxCY > zoneTop)) {
         for (let k = 0; k < ct; k++) rgba[comp[k] * 4 + 3] = 255;
         pocketed += ct;
       }
@@ -493,7 +620,7 @@ async function processOne({ src, orig, out, floorY }) {
   const covPct = (100 * figCount / n).toFixed(1);
   console.log(
     `${out}: ${fw}x${fh}  coverage=${covPct}%  bbox=x${minX}-${maxX},y${minY}-${maxY}  scale=${scale.toFixed(4)}\n` +
-    `  refine: rescued=${rescued} trimmed=${trimmed} healed=${healed} hazed=${hazed} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
+    `  refine: rescued=${rescued} trimmed=${trimmed} healed=${healed} glowKilled=${glowKilled} hazed=${hazed} fringed=${fringed} remapped=${remapped} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
     `  cornersAlpha=[${corners.map(c => c.toFixed(1)).join(', ')}]  ${pass ? 'PASS' : 'FAIL'}`
   );
   return pass;
