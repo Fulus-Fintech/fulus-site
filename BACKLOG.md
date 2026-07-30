@@ -32,8 +32,11 @@ without all of them (spec §5).
 
 > Everything below this line predates the v3 rebuild. The §1 waitlist ops
 > gates are retired (the waitlist itself is retired, spec §9 — do not
-> resurrect). Still-true items — the www redirect check, the FK Grotesk
-> licence call, RUM monitoring — carry forward.
+> resurrect). The Cloudflare Web Analytics beacon gate is retired too:
+> analytics ship first-party through `POST /e` in `src/worker.ts`, and
+> `privacy.html` promises no trackers belonging to other companies — never
+> paste a third-party beacon into `index.html`. Still-true items — the www
+> redirect check, the FK Grotesk licence call, RUM monitoring — carry forward.
 
 ## 1. Launch gates (spec §10 ops gates — all pre-launch)
 
@@ -53,12 +56,6 @@ without all of them (spec §5).
 - [ ] **Configure Cloudflare Workers Builds:** connect this repo, build
   command `npm ci && npm run build`, deploy directory `dist/`. Push-to-main
   stays the trigger; deploy time grows ~30 s → ~1–2 min — re-verify at launch.
-- [ ] **Cloudflare Web Analytics beacon** (cookieless): dashboard → Web
-  Analytics → add `fulus.sa` → paste the snippet immediately before `</body>`
-  in `index.html` with the dashboard token:
-  `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "PASTE-DASHBOARD-TOKEN-HERE"}'></script>`
-  Then re-run `node tools/check_bundle_budget.mjs --measure` (external beacon
-  is not counted, but confirm the page still meets the 300 KB gz gate).
 - [ ] **Run the manual device gate** in `docs/launch-checklist.md` (real
   mid-range Android + iPhone Safari).
 - [ ] **Plan the first invite wave within ~1 month of signups starting.**
@@ -95,7 +92,7 @@ without all of them (spec §5).
   locales would be a new project.
 - Local `js/` byte budget (`tools/check_js_budget.mjs` + `js-budget.json`) —
   superseded by the gzipped critical-payload gate
-  (`tools/check_bundle_budget.mjs`, 300 KB gz).
+  (`tools/check_bundle_budget.mjs`, 350 KB gz).
 - Visual-regression CI — DONE: `tests/e2e/visual.spec.ts` poster frames.
 - `wrangler dev` infinite reload loop — RESOLVED: `assets.directory` now
   points at `./dist`, so the dev server no longer watches its own

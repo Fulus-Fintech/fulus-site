@@ -37,12 +37,30 @@ jobs:
         run: node tools/check_wellknown.mjs
       - name: install playwright chromium
         run: npx playwright install --with-deps chromium
-      # Runs document/copy-lock, redirects, a11y, keyboard, and the
-      # poster-edition visual baselines. WebGL frame quality is NEVER
+      # Runs document/copy-lock, a11y, keyboard, the world boot smoke and the
+      # poster-edition visual baselines. It does NOT run the redirect suite:
+      # those specs need a worker on :8787 and auto-skip without DOORS_MODE,
+      # so they get their own two steps below. WebGL frame quality is NEVER
       # pixel-gated here (spec §7 — SwiftShader lesson); it is reviewed by
       # eye via tools/qa_shots.mjs and at the founder gates.
       - name: e2e (playwright)
         run: npx playwright test
+      # The doors / redirect / POST /e contract against the REAL worker
+      # (src/worker.ts) under `wrangler dev` — the vite preview server the
+      # step above uses never executes it. Two passes because the doors flip
+      # is a var flip: A = wrangler.jsonc defaults (pre), B = the launch vars
+      # (open). tests/unit/worker.test.ts pins the same table at unit level;
+      # these steps prove the worker as deployed actually behaves that way.
+      - name: e2e redirects — doors pre (wrangler dev)
+        shell: pwsh
+        env:
+          DOORS_MODE: pre
+        run: ./.github/scripts/redirect-suite.ps1
+      - name: e2e redirects — doors open (wrangler dev)
+        shell: pwsh
+        env:
+          DOORS_MODE: open
+        run: ./.github/scripts/redirect-suite.ps1 --var DOORS:open --var APP_STORE_ID:6742000000 --var PLAY_PACKAGE_ID:sa.fulus.app
       - name: upload playwright artifacts
         if: failure()
         uses: actions/upload-artifact@v4
