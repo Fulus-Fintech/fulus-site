@@ -33,3 +33,6 @@ dist/
 test-results/
 playwright-report/
 tmp-e2e/
+
+# review captures — never committed (the plan commits only docs/superpowers/artdirection/frames/*)
+shots/
