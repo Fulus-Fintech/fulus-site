@@ -12,13 +12,16 @@ export function beatStates(prog: number, k: number): { hero: boolean; mid: boole
 export interface BeatUI {
   setMeter(p: number): void;
   setWash(o: number): void;
+  setScrim(o: number): void;
   setBeats(s: ReturnType<typeof beatStates>): void;
 }
 
 // Required DOM (ids fixed): #beat-hero #beat-mid #beat-open, and #beat-end
 // (dev harness) with production fallback #walk-in (the production end section's
 // id — fixed contract) — class 'on' toggles visibility; #mfill (meter fill
-// width), #wash (crossing wash opacity).
+// width), #wash (crossing wash opacity). The legibility scrim (body::before,
+// production styles.css) listens to the --scrim custom property; pages
+// without the scrim simply carry an unused variable.
 export function createBeatUI(): BeatUI {
   const el = (id: string): HTMLElement | null => document.getElementById(id);
   const beats = { hero: el('beat-hero'), mid: el('beat-mid'), open: el('beat-open'), end: el('beat-end') ?? el('walk-in') };
@@ -30,6 +33,9 @@ export function createBeatUI(): BeatUI {
     },
     setWash(o: number): void {
       if (wash) wash.style.opacity = o.toFixed(3);
+    },
+    setScrim(o: number): void {
+      document.documentElement.style.setProperty('--scrim', o.toFixed(3));
     },
     setBeats(s: ReturnType<typeof beatStates>): void {
       beats.hero?.classList.toggle('on', s.hero);

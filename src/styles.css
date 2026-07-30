@@ -50,10 +50,16 @@ body {
    beat, not just the hero. A soft vignette between the world layers and the
    content keeps copy readable there without flattening the poster into a
    dark rectangle (self-QA law, spec §8: "hero copy legible over it").
-   A ::before pseudo-element, not a div: no DOM/copy-lock surface. */
+   A ::before pseudo-element, not a div: no DOM/copy-lock surface.
+   --scrim (set per-frame by the flight via BeatUI.setScrim) fades it out as
+   the camera reaches the door: a dark screen-space ellipse over the bright
+   full-frame crossing reads as an untextured gray blob (G2 QA kill-class).
+   No copy shows in that window (open ends at .64, walk-in needs k > .75), so
+   legibility keeps its scrim at every beat. Default 1 = poster edition. */
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  opacity: var(--scrim, 1);
   background: radial-gradient(55% 45% at 50% 50%, rgba(2, 11, 24, .55) 0%, rgba(2, 11, 24, .22) 55%, rgba(2, 11, 24, 0) 85%);
 }
 #wash {

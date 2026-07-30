@@ -19,10 +19,23 @@ export const CROSS_RANGE = 3.2;  // k reaches 1 this far past the plane
 export const WASH_SIGMA = 0.55;  // Gaussian sigma of the crossing wash
 export const WASH_MAX = 0.92;    // wash peak opacity
 export const LERP = 0.07;        // approved scroll feel
+export const APPROACH_RANGE = 2.5; // door-yield ramp: starts this far from the plane
+export const APPROACH_DIM = 0.7;   // fraction of portal light shed right at the plane
 
 // prototype: clamp((-cz - 14) / 3.2, 0, 1) === clamp((PLANE_Z - camZ) / CROSS_RANGE, 0, 1)
 export function crossingK(camZ: number): number {
   return THREE.MathUtils.clamp((PLANE_Z - camZ) / CROSS_RANGE, 0, 1);
+}
+
+// The door yields as you reach it: 0 far away, 1 exactly at the plane,
+// symmetric on both sides. G2 QA law (kill-class: blown bloom cores): the
+// prototype only dimmed the portal AFTER crossing (k > 0), so on approach the
+// face fills the whole frustum at full HDR brightness and bloom blows the
+// frame to a white field. This ramp dims the door exactly while it swallows
+// the frame, keeping the through-the-door moment bright but textured; past
+// the plane it hands off to the k-based inside dim as it fades back out.
+export function doorProximity(camZ: number): number {
+  return THREE.MathUtils.clamp(1 - Math.abs(camZ - PLANE_Z) / APPROACH_RANGE, 0, 1);
 }
 
 // prototype: exp(-(cz + 14)^2 / (2 * .55^2)) * .92 — peaks exactly at the plane
@@ -71,8 +84,14 @@ export function createFlight(world: WorldHandles, ui: BeatUI): { frame(tMs: numb
       // the wash peaks exactly at the plane
       ui.setWash(washOpacity(p.z));
 
+      // the door yields on approach (see doorProximity), and the legibility
+      // scrim steps aside with it — a dark screen-space ellipse over a bright
+      // full-frame door reads as an untextured gray blob (G2 QA kill-class).
+      const near = doorProximity(p.z);
+      ui.setScrim(1 - near);
+
       // inside: calmer, dimmer door behind you, light ahead
-      world.portal.setDim(1 - k * 0.68);
+      world.portal.setDim((1 - k * 0.68) * (1 - near * APPROACH_DIM));
       fog.color.setHex(k > 0.01 ? 0x05202b : 0x020b18);
       fog.density = 0.052 - k * 0.012;
       world.beyond.material.opacity = k * 0.6;
