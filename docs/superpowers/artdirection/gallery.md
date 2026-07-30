@@ -141,3 +141,18 @@ Founder-selected at every round; controller eyes-on preceded the gate.
 Flag disclosed and accepted: operator heel seam is in the approved source take.
 Captures: shots/g2c (stops 0.15/0.3/0.42/0.55/0.72), all passed adversarial QA
 + controller eyes.
+
+## G3 — Environment richness pass (2026-07-30)
+
+- Frames: `frames/night-crossing-g3/g3-*.png` (stops 0/0.3/0.5/0.62/0.72/0.97,
+  fresh world boot per stop) + live preview at :4173
+- Additions on review: water ripple, film grain + vignette + shadow-cooling
+  grade, portal light shafts, depth-graded mote sizes, cast proximity fade —
+  ripple / shafts / grain+grade governor-sheddable, richness sheds first
+- Tuning that got here: round 1 fixed the post-chain order (the real cause
+  behind the scanline ripple and the hard shaft edge), made the shafts edgeless
+  and the ripple unable to alias, and opened the threshold; then the frustum
+  was caught slicing the visionary's raised hand at 0.62 — figures now dissolve
+  at arm's length (d8cfb31). 75/75 tests, critical payload 170KB of 350KB.
+- Founder verdict: **PENDING — do not proceed to Task 13 until this line is
+  replaced with the founder's verbatim answer.**
