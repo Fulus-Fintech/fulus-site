@@ -7,11 +7,14 @@ plan; this file is the ops side plus the G5 device gate.
 
 ## 0 · Dev-machine pre-check (before ANY motion QA session)
 
-- [ ] **Windows animation setting is ON**: Settings → Accessibility → Visual
+- [x] **Windows animation setting is ON**: Settings → Accessibility → Visual
   effects → Animation effects = On. It was deliberately enabled 2026-07-11
   because the OS default was faking `prefers-reduced-motion: reduce` — a
   silent revert makes every browser on this machine serve the poster edition
   and every motion QA session lies. Check it first, every session (spec §8 G5).
+
+      # 2026-07-30, SPI_GETCLIENTAREAANIMATION (0x1042), setting read not written
+      Client-area animations: True
 
 ## 1 · Store IDs into Worker vars (owner: founder → then dev)
 
@@ -114,11 +117,21 @@ reduced-motion)."
   green, and `curl -s https://fulus.sa/.well-known/apple-app-site-association`
   serves the JSON. (LAW: never edit these files here — source of truth is the
   Flutter repo.)
+
+      # 2026-07-30, c448928 — local half green; live-URL half needs a deploy
+      $ node tools/check_wellknown.mjs
+      OK: .well-known integrity — AASA appID, assetlinks package + fingerprint, _headers rules all present.
 - [ ] The `PRIVACY` legal link resolves on the live site and the privacy page
   states the analytics truth precisely: two events (`pv`, badge tap),
   first-party, cookieless, nothing else stored.
 - [ ] Analytics Engine dataset bound in `wrangler.jsonc` and receiving `pv`
   datapoints from real traffic.
-- [ ] Budgets green on the launch commit: `node tools/check_bundle_budget.mjs`
+- [x] Budgets green on the launch commit: `node tools/check_bundle_budget.mjs`
   (350 KB gz critical) and `node tools/check_bundle_budget.mjs --poster`
   (700 KB poster edition).
+
+      # 2026-07-30, commit c448928, after a clean `npm run build`
+      $ node tools/check_bundle_budget.mjs
+      OK: critical payload 170396 bytes <= 358400.
+      $ node tools/check_bundle_budget.mjs --poster
+      OK: poster-edition total 55180 bytes <= 716800.
