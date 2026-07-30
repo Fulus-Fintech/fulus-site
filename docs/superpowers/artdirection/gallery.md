@@ -128,3 +128,16 @@ Diagnosis opened: texture fidelity vs source art — suspects: ACES tone mapping
 
 Gate G2 round 2 verdict (founder verbatim): "it has nothing to do with the tone-mapping or atmospheric fog, the issue is from the images themselves, the characters are completely different from the key arts. return the previous version, it was better, then let's work on fixing/building characters with HiggsField MCP to fit the website and our original art style better."
 Actions: 3f9f1d7 reverted (previous rendering restored); character assets to be rebuilt via the sanctioned Higgsfield pipeline (Soul IDs + archetype canon) with founder in the loop.
+
+### Gate G2 — cast in the world, round 3 (2026-07-30)
+Verdict: APPROVED (founder verbatim: "G2 approved").
+The cast that passed: six solo HiggsField generations under the canon style law
+(Hero/Heroine = sole style masters) — Walker (f0e92037), Connector (42558b60,
+necklace removed per founder), Operator (2128ab41), Strategist (e086c6dc),
+Anchor (8d8a5ff4, hand repaired), Visionary (b39fc298) — matted via the
+luminance-gated isnet pipeline and staged black-on-glow with authored
+per-colorway backlight pools (commit 0287469, "the light is us").
+Founder-selected at every round; controller eyes-on preceded the gate.
+Flag disclosed and accepted: operator heel seam is in the approved source take.
+Captures: shots/g2c (stops 0.15/0.3/0.42/0.55/0.72), all passed adversarial QA
++ controller eyes.
