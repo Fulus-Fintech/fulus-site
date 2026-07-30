@@ -21,18 +21,30 @@ declare class HTMLRewriter {
   transform(response: Response): Response;
 }
 
+export type Doors = 'pre' | 'open';
+
 export interface Env {
   ASSETS: Fetcher;
-  DOORS: 'pre' | 'open';
+  // Typed as a plain string on purpose: this arrives from wrangler.jsonc or the
+  // dashboard, so the compile-time union was a promise the runtime never kept.
+  // Read it through normalizeDoors(), never directly.
+  DOORS: string;
   APP_STORE_ID: string;
   PLAY_PACKAGE_ID: string;
   EVENTS?: AnalyticsEngineDataset;
 }
 
+// The launch gate fails CLOSED: only the exact string 'open' opens the doors.
+// A typo ("Open", "opne", a stray space) keeps the doors shut instead of
+// shipping the store handoff early, and never reaches the DOM verbatim.
+export function normalizeDoors(value: unknown): Doors {
+  return value === 'open' ? 'open' : 'pre';
+}
+
 export function routeFor(
   path: string,
   ua: string,
-  doors: 'pre' | 'open',
+  doors: Doors,
   ids: { ios: string; android: string },
 ): { status: 301 | 302; location: string } | null {
   // Only /app and /app/* — /apple-touch-icon.png etc. belong to ASSETS.
@@ -57,14 +69,51 @@ export function routeFor(
 
 const EVENTS_ALLOWED = new Set(['pv', 'tap:ios', 'tap:android']);
 
+// The /e body is an event name, never more. Anything longer is not ours.
+const MAX_EVENT_BYTES = 32;
+
+// True when this request may be answered with the document we stamp. Browsers
+// label navigations (sec-fetch-dest / Accept); everything else is decided by
+// the only two HTML files this site builds — "/" (and any directory index) and
+// "*.html". Deliberately narrow: extensionless assets such as
+// /.well-known/apple-app-site-association keep their normal revalidation.
+export function isDocumentRequest(request: Request): boolean {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return false;
+  if (request.headers.get('sec-fetch-dest') === 'document') return true;
+  if ((request.headers.get('accept') ?? '').includes('text/html')) return true;
+  const path = new URL(request.url).pathname;
+  return path.endsWith('/') || path.endsWith('.html');
+}
+
+// The stamped document must never be served from a validator. ASSETS passes the
+// asset's ETag/Last-Modified straight through, and that ETag is byte-identical
+// under DOORS=pre and DOORS=open — so a returning browser would revalidate, get
+// a bodyless 304, and reuse its cached data-doors="pre" body forever.
+// HTMLRewriter cannot stamp a 304, so we drop the conditional headers on the way
+// in and the validators on the way out.
+function withoutValidators(request: Request): Request {
+  const headers = new Headers(request.headers);
+  headers.delete('if-none-match');
+  headers.delete('if-modified-since');
+  return new Request(request, { headers });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const doors = normalizeDoors(env.DOORS);
 
     if (url.pathname === '/e' && request.method === 'POST') {
-      const event = (await request.text()).slice(0, 32);
-      if (EVENTS_ALLOWED.has(event) && env.EVENTS) {
-        env.EVENTS.writeDataPoint({ blobs: [event], doubles: [1], indexes: [event] });
+      // Bounded before it is buffered: an event name declares its length, and
+      // navigator.sendBeacon (the only sender, src/main.ts) always sets it.
+      // No length, or more than an event name — dropped unread.
+      const declared = request.headers.get('content-length');
+      const size = declared === null ? Number.NaN : Number(declared);
+      if (Number.isFinite(size) && size <= MAX_EVENT_BYTES) {
+        const event = (await request.text()).slice(0, MAX_EVENT_BYTES);
+        if (EVENTS_ALLOWED.has(event) && env.EVENTS) {
+          env.EVENTS.writeDataPoint({ blobs: [event], doubles: [1], indexes: [event] });
+        }
       }
       return new Response(null, { status: 204 }); // always 204 — never an error surface
     }
@@ -72,7 +121,7 @@ export default {
     const route = routeFor(
       url.pathname,
       request.headers.get('user-agent') ?? '',
-      env.DOORS,
+      doors,
       { ios: env.APP_STORE_ID, android: env.PLAY_PACKAGE_ID },
     );
     if (route) {
@@ -82,12 +131,27 @@ export default {
       });
     }
 
-    const response = await env.ASSETS.fetch(request);
-    if ((response.headers.get('content-type') ?? '').includes('text/html')) {
-      return new HTMLRewriter()
-        .on('html', { element: (el) => el.setAttribute('data-doors', env.DOORS) })
-        .transform(response);
-    }
-    return response;
+    const response = await env.ASSETS.fetch(
+      isDocumentRequest(request) ? withoutValidators(request) : request,
+    );
+    const isHtml = (response.headers.get('content-type') ?? '').includes('text/html');
+    // A 304 has no body to stamp — pass it through untouched (static assets
+    // keep their validators, so this is the only shape that reaches here).
+    if (!isHtml || response.status === 304) return response;
+
+    // Rebuild first: ASSETS response headers are immutable, and the stamped
+    // document ships uncacheable so the flip reaches every returning visitor.
+    const headers = new Headers(response.headers);
+    headers.set('cache-control', 'no-store');
+    headers.delete('etag');
+    headers.delete('last-modified');
+    const stampable = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+    return new HTMLRewriter()
+      .on('html', { element: (el) => el.setAttribute('data-doors', doors) })
+      .transform(stampable);
   },
 };

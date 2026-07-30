@@ -16,7 +16,9 @@
     // env.ASSETS.fetch() as the fallback path already written in the fetch handler.
     "run_worker_first": true
   },
-  // Doors flip = change DOORS to "open" (one var). Store IDs are founder
+  // Doors flip = change DOORS to "open" (one var) — the EXACT lowercase string,
+  // nothing else: src/worker.ts fails closed, so "Open" or a stray space keeps
+  // the doors shut rather than opening them early. Store IDs are founder
   // open items (spec §10.1) — empty until the listings exist; redirects ship
   // against the vars either way.
   "vars": {
