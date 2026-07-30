@@ -158,6 +158,36 @@ const MAPPING = [
   { src: 'matted/visionary-matted.png', orig: 'visionary.png', out: 'visionary.webp' },
 ];
 
+// SURGICAL SOURCE-RESTORE PATCHES (round 1) — per-figure, keyed by `out`.
+// Localized hard defects that survive every pipeline-level pass because the
+// pixels are absent from the ISNet matte itself. Each patch is a small
+// SOURCE-space rectangle; inside it, pixels whose SOURCE luminance is below
+// maxLum (near-black figure art) are restored to full alpha with their
+// source RGB. Applied immediately after the alpha gain, before the floor
+// cut, so the floor line and every refinement pass keep authority over the
+// result. Reproducible by construction — never hand-edit a matte.
+const PATCHES = {
+  'operator.webp': [
+    // Right-shoe heel notch, reported in FINAL space at x264-280, y947-963
+    // (teal rectangle with a straight vertical edge at x=280 and straight
+    // top edge at y=947). Inverse of the crop/resize/pad transform (bbox
+    // x274-559/y351-1172, scale 1.1314, pad 35) puts it at SOURCE
+    // x476-491, y1157-1171. Measured there in the source take:
+    //   - the notch interior is BRIGHT portal-seam glare, rgb(3,206,227)
+    //     lum 143-186 — identical to the open floor at the same rows
+    //     (rgb(0,203,227)), i.e. the take itself has no dark heel block
+    //     under the glare (the LEFT shoe carries a full near-black heel;
+    //     the right shoe's hem-to-heel gap shows the glowing seam behind).
+    //     Bright glare pixels are NOT restorable as body — baking them in
+    //     would freeze portal light into the cutout.
+    //   - the near-black art the matte left sub-dense IS restorable: the
+    //     heel-back edge column (x490, lum 29-49) and the sole corner
+    //     (y1172, x482-485, lum 37-56). The rectangle below covers the
+    //     defect with margin and rescues exactly those.
+    { x0: 474, y0: 1152, x1: 494, y1: 1172, maxLum: 60 },
+  ],
+};
+
 const LONG_SIDE = 1000;   // final long side, px
 const PAD_PX = 35;        // transparent padding around the alpha bbox
 const QUALITY = 82;       // webp quality
@@ -274,6 +304,23 @@ async function processOne({ src, orig, out, floorY }) {
   for (let i = 0, q = 3; i < n; i++, q += 4) {
     rgba[q] = Math.min(255, Math.round(rgba[q] * ALPHA_GAIN));
   }
+
+  // 2a. surgical source-restore patches (see PATCHES): inside each figure's
+  //     patch rectangles, near-black SOURCE pixels the matte dropped or left
+  //     sub-dense become fully opaque with their source RGB. Runs before the
+  //     floor cut and the refinement passes so both keep authority.
+  let patched = 0;
+  for (const p of PATCHES[out] ?? []) {
+    for (let y = p.y0; y <= p.y1; y++) for (let x = p.x0; x <= p.x1; x++) {
+      const i = idx(x, y, w), q = i * 4, sq = i * 3;
+      if (lumOf(srcRgb, sq) >= p.maxLum) continue;
+      if (rgba[q + 3] === 255) continue;
+      rgba[q] = srcRgb[sq]; rgba[q + 1] = srcRgb[sq + 1]; rgba[q + 2] = srcRgb[sq + 2];
+      rgba[q + 3] = 255;
+      patched++;
+    }
+  }
+  if (patched) console.log(`  patch ${out}: ${patched}px restored`);
 
   // 2b. floor cut (see MAPPING): drop the wet-floor reflection below the
   //     figure's contact line, feathering the last few rows.
@@ -821,7 +868,7 @@ async function processOne({ src, orig, out, floorY }) {
   const covPct = (100 * figCount / n).toFixed(1);
   console.log(
     `${out}: ${fw}x${fh}  coverage=${covPct}%  bbox=x${minX}-${maxX},y${minY}-${maxY}  scale=${scale.toFixed(4)}\n` +
-    `  refine: rescued=${rescued} trimmed=${trimmed} healed=${healed} glowKilled=${glowKilled} hazed=${hazed} fringed=${fringed} remapped=${remapped} slivered=${slivered} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
+    `  refine: patched=${patched} rescued=${rescued} trimmed=${trimmed} healed=${healed} glowKilled=${glowKilled} hazed=${hazed} fringed=${fringed} remapped=${remapped} slivered=${slivered} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
     `  cornersAlpha=[${corners.map(c => c.toFixed(1)).join(', ')}]  ${pass ? 'PASS' : 'FAIL'}`
   );
   return pass;
