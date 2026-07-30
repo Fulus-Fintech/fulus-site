@@ -104,6 +104,7 @@ export function createCast(): THREE.Group {
     plane.scale.set(spec.height, spec.height, 1); // width corrected on texture load
     plane.position.y = spec.height / 2;
     plane.renderOrder = 2;
+    plane.userData.baseOpacity = 0; // raised to 1 by the loader; see updateCast
     fig.add(plane);
 
     // --- contact occlusion pool: radial dark decal at the feet ---
@@ -115,6 +116,7 @@ export function createCast(): THREE.Group {
     pool.rotation.x = -Math.PI / 2;
     pool.position.y = 0.015;
     pool.scale.set(spec.height * 0.9, spec.height * 0.45, 1);
+    pool.userData.baseOpacity = 0.35;
     fig.add(pool);
 
     // --- fake floor reflection: mirrored decal lying on the water, fading
@@ -133,6 +135,7 @@ export function createCast(): THREE.Group {
     reflection.position.set(0, 0.02, spec.height / 2); // stretches toward the approaching camera (+z)
     reflection.scale.set(spec.height, spec.height, 1);
     reflection.renderOrder = 1;
+    reflection.userData.baseOpacity = 0; // raised to 0.18 by the loader
     fig.add(reflection);
 
     // --- authored backlight pool: soft oval of the character's rim colours
@@ -159,6 +162,7 @@ export function createCast(): THREE.Group {
     backglow.position.set(0, spec.height * 0.55, -0.4);
     backglow.scale.set(spec.height * 1.7, spec.height * 1.4, 1); // oval, wider than tall
     backglow.renderOrder = 0; // behind reflection=1 and figure=2
+    backglow.userData.baseOpacity = 0.55;
     fig.add(backglow);
 
     // fixed world orientation facing the camera path — billboarding OFF
@@ -173,6 +177,7 @@ export function createCast(): THREE.Group {
         const w = spec.height * aspect;
         figMat.map = tex;
         figMat.opacity = 1;
+        plane.userData.baseOpacity = 1;
         figMat.needsUpdate = true;
         plane.scale.set(w, spec.height, 1);
         // vertically flipped copy for the reflection: feet meet feet
@@ -182,6 +187,7 @@ export function createCast(): THREE.Group {
         rtex.needsUpdate = true;
         refMat.map = rtex;
         refMat.opacity = 0.18;
+        reflection.userData.baseOpacity = 0.18;
         refMat.needsUpdate = true;
         reflection.scale.set(w, spec.height, 1);
         pool.scale.set(w * 1.15, spec.height * 0.45 * (w / spec.height) + 0.45, 1);
@@ -194,4 +200,34 @@ export function createCast(): THREE.Group {
   }
 
   return cast;
+}
+
+// Proximity fade. The camera flies THROUGH the gathering: at the closest
+// approach a figure fills the frame edge and the crop leaves a fragment —
+// a raised hand reads as a disembodied claw. Nobody is ever half a person
+// here, so each figure dissolves as the camera arrives instead of being
+// sliced by the frustum. Base opacities are captured once (they differ per
+// layer: body 1, pool .35, reflection .18, backglow .55) and scaled together.
+const FADE_GONE = 2.2; // world units: fully dissolved inside this radius
+const FADE_FULL = 4.6; // ... and fully present beyond it
+
+export function updateCast(cast: THREE.Group, camera: THREE.Camera): void {
+  for (const fig of cast.children) {
+    const d = fig.position.distanceTo(camera.position);
+    // smoothstep(FADE_GONE -> FADE_FULL): no pop, no linear ramp edge
+    const t = Math.min(1, Math.max(0, (d - FADE_GONE) / (FADE_FULL - FADE_GONE)));
+    const k = t * t * (3 - 2 * t);
+    for (const child of (fig as THREE.Group).children) {
+      const mesh = child as THREE.Mesh;
+      const mat = mesh.material as THREE.Material & { opacity: number };
+      if (!mat) continue;
+      // baseOpacity is authored at creation (and raised by the texture loader
+      // for the body/reflection, which start at 0 to avoid a white-box flash);
+      // never sampled from the live material, or a faded frame would stick.
+      const base = (mesh.userData as { baseOpacity?: number }).baseOpacity;
+      if (base === undefined) continue;
+      mat.opacity = base * k;
+    }
+    fig.visible = k > 0.001;
+  }
 }

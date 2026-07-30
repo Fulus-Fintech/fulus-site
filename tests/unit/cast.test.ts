@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { createCast } from '../../src/world/cast';
+import * as THREE from 'three';
+import { createCast, updateCast } from '../../src/world/cast';
 
 describe('createCast', () => {
   it('returns a group holding exactly the six canon figures, in flight order', () => {
@@ -40,5 +41,40 @@ describe('createCast', () => {
       expect(backglow.position.z).toBeLessThan(0);
       expect(backglow.position.y).toBeGreaterThan(0.8);
     }
+  });
+});
+
+describe('updateCast — proximity fade', () => {
+  it('dissolves a figure the camera has arrived at, and leaves distant ones alone', () => {
+    const cast = createCast();
+    const camera = new THREE.PerspectiveCamera();
+    const near = cast.getObjectByName('fig-visionary')!;   // [-1.5, 0, -11.5]
+    const far = cast.getObjectByName('fig-connector')!;    // [-3.6, 0, -5.9]
+
+    // park the camera on top of the visionary: inside FADE_GONE
+    camera.position.set(-1.5, 0, -11.5);
+    updateCast(cast, camera);
+    expect(near.visible).toBe(false);
+    expect(far.visible).toBe(true);
+    const farPool = far.getObjectByName('pool')! as THREE.Mesh;
+    expect((farPool.material as THREE.Material & { opacity: number }).opacity).toBeCloseTo(0.35);
+  });
+
+  it('restores authored opacities once the camera pulls away — no stuck fade', () => {
+    const cast = createCast();
+    const camera = new THREE.PerspectiveCamera();
+    const fig = cast.getObjectByName('fig-anchor')!;
+    const pool = fig.getObjectByName('pool')! as THREE.Mesh;
+    const glow = fig.getObjectByName('backglow')! as THREE.Mesh;
+
+    camera.position.set(-2.2, 0, -12.2); // on top of it
+    updateCast(cast, camera);
+    expect((pool.material as THREE.Material & { opacity: number }).opacity).toBe(0);
+
+    camera.position.set(0, 2, 8); // back at the start of the flight
+    updateCast(cast, camera);
+    expect((pool.material as THREE.Material & { opacity: number }).opacity).toBeCloseTo(0.35);
+    expect((glow.material as THREE.Material & { opacity: number }).opacity).toBeCloseTo(0.55);
+    expect(fig.visible).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { WorldHandles } from './scene'; // type-only: erased at runtime, keeps node-env tests WebGL-free
 import { beatStates, type BeatUI } from '../ui/beats';
+import { updateCast } from './cast';
 
 // The 8 approved camera path points, verbatim from the prototype.
 export const CAM_POINTS: [number, number, number][] = [
@@ -105,6 +106,10 @@ export function createFlight(world: WorldHandles, ui: BeatUI): { frame(tMs: numb
 
       const p = camPath.getPointAt(Math.min(0.999, Math.max(0, prog)));
       world.camera.position.set(p.x + mx * 0.8, p.y - my * 0.5, p.z);
+
+      // the gathering dissolves as the camera arrives among them — a figure
+      // sliced by the frame edge reads as a fragment, never as a person
+      updateCast(world.cast, world.camera);
 
       // crossing: k rises 0->1 as the camera passes the plane at z=-14
       const k = crossingK(p.z);
