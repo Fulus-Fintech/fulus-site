@@ -88,6 +88,47 @@
 //     enclosed pocket is portal show-through (e.g. the cleared thumb
 //     gap) and must stay transparent.
 //
+// MATTE REFINEMENT ROUND 3 (adversarial QA found DAMAGE the round-1/2
+// passes themselves did to thin near-black structures; acceptance was
+// recalibrated — attached soft glow fringes along silhouette edges are
+// the ART, only detached blobs / rectangular texture edges are defects,
+// and faint floor-line shadow is tolerable):
+//   - ANATOMY PROTECTION: the in-band floor trim and the dark-fringe
+//     kill were eroding / severing stiletto heel shafts (visionary left
+//     heel cut clean through, right heel thinned to a 1px thread,
+//     connector toe sole undercut, operator shoe notch edges hardened).
+//     Heel shafts, soles and toe tips are near-black in the SOURCE
+//     (lum < 60) — but so is the wet-floor reflection, so darkness alone
+//     cannot gate a floor pass. A dark pixel is protected from the
+//     in-band trim only when its own column (+-1px) still has DENSE
+//     body at or below it: true for every floor-contact structure
+//     (heels, soles, toes end in a dense rescued tip), false for shadow
+//     carpets and reflections, which have nothing dense underneath.
+//     The dark-fringe kill (6c) now skips near-black source pixels
+//     entirely (measured: genuine defocus fringe is 60-90, shafts <60).
+//     No pass fills rectangles or blocks — every kill stays per-pixel.
+//   - RESCUE MONOTONE CLAMP: the round-2 "upper-half columns" clamp let
+//     the rescue resurrect a 14px-wide zero-alpha shadow anvil across
+//     the last rows of the connector's right heel tip. The clamp is now
+//     per-row: walking the component top to bottom, a row may only
+//     restore pixels in columns within +-1 of the previous row's
+//     structure, so a spike can taper or drift but never flare sideways
+//     into floor shadow.
+//   - INTERIOR SLIVER PROTECTION + FILL: the bright-semi remap (6d) was
+//     zeroing bright semi pixels DEEP inside the solid body — filmed
+//     highlight lines (operator jacket hem, watch ring) — punching
+//     exact-teal slivers through the figure. 6d now only acts within
+//     3px of existing transparency (silhouette edge / glow-killed gap),
+//     and a sliver-fill pass solidifies sub-opaque non-zero pixels deep
+//     inside the body that have near-opaque neighbours within 4px on
+//     all four sides. Genuine see-through gaps always carry zero-alpha
+//     cores, so they are exempt by the same transparency-proximity test.
+//   - THIN-SLIT HOLE FILL: enclosed components that contain fully
+//     transparent pixels, measure <= 200px, hug the solid wall within
+//     2px everywhere and do not overlap a glow-killed gap are matte
+//     pinholes, never genuine windows (the real windows measure 694px+
+//     and run deeper than 2px) — filled from the source scene.
+//
 // Usage: node tools/process_figures.mjs
 
 import sharp from 'sharp';
@@ -145,6 +186,19 @@ const GLOW_KEEP_DIST = 2; // baked (near-opaque) rim hugs the dark core <=2px
 const FRINGE_KEEP_DIST = 2; // dark edge feather allowance around the body
 const CULL_MAX_SIZE = 2000; // never cull anything bigger (safety)
 const POCKET_MAX = 150;   // interior pinhole fill cap, px
+const PROTECT_LUM = 60;   // src lum below this = near-black figure art
+                          // (heel shafts, soles, toe tips); never zeroed
+                          // by the in-band trim (when dense body remains
+                          // below in the column) or the dark-fringe kill
+const DARK_KEEP_DIST = 3; // near-black art also survives the in-band trim
+                          // within this distance of dense body (sole/toe
+                          // tapers sit 2-3px off the dense core; anything
+                          // farther with no dense below is shadow carpet)
+const ZERO_NEAR_DIST = 3; // "near transparency" halo for the 6d gate and
+                          // the sliver fill (genuine gaps carry a<=8 cores)
+const SLIVER_REACH = 4;   // sliver fill: solid wall within this many px
+                          // in all four axis directions
+const HOLE_MAX = 200;     // thin-slit enclosed hole fill cap, px
 
 function idx(x, y, w) { return y * w + x; }
 const lumOf = (buf, q) => 0.2126 * buf[q] + 0.7152 * buf[q + 1] + 0.0722 * buf[q + 2];
@@ -349,26 +403,41 @@ async function processOne({ src, orig, out, floorY }) {
       const cw = mxX - mnX + 1, chh = mxY - mnY + 1;
       if (touches && ct <= RESCUE_MAX_SIZE && chh >= RESCUE_MIN_H &&
           cw <= RESCUE_MAX_W && chh >= 1.2 * cw) {
-        // vertical-continuity clamp: a heel spike is column-continuous top
-        // to bottom, while its contact shadow flares SIDEWAYS at the floor.
-        // Pixels in the lower half may only be restored in columns (+-1)
-        // the upper half also occupies — the flare stays semi and is then
-        // removed by the floor trim.
-        const midY = mnY + (chh >> 1);
-        const upperCols = new Uint8Array(w);
+        // per-row monotone continuity clamp (round 3): a heel spike is
+        // column-continuous top to bottom, while its contact shadow flares
+        // SIDEWAYS at the floor. The round-2 "upper-half columns" clamp let
+        // a wide zero-alpha shadow anvil ride back in on the last rows of
+        // the connector's right heel, so the clamp is now per-row: a row
+        // may only restore pixels in columns within +-1 of the previous
+        // row's structure (restored candidates, or pixels of this
+        // component's bbox that are already near-opaque). The restored
+        // shape can taper or drift 1px/row but never jump sideways into
+        // the flare; unrestored flare pixels keep their near-zero alpha
+        // and the floor trim still owns them.
+        const rows = new Map(); // y -> comp pixel indices on that row
         for (let k = 0; k < ct; k++) {
-          const i = comp[k];
-          if (((i / w) | 0) <= midY) upperCols[i % w] = 1;
+          const i = comp[k], y = (i / w) | 0;
+          let arr = rows.get(y);
+          if (!arr) rows.set(y, arr = []);
+          arr.push(i);
         }
+        let support = null; // columns with structure on the previous row
         let kept = 0;
-        for (let k = 0; k < ct; k++) {
-          const i = comp[k], x = i % w, y = (i / w) | 0;
-          if (y > midY && !upperCols[x] && !(x > 0 && upperCols[x - 1]) &&
-              !(x < w - 1 && upperCols[x + 1])) continue;
-          const q = i * 4, sq = i * 3;
-          rgba[q] = srcRgb[sq]; rgba[q + 1] = srcRgb[sq + 1]; rgba[q + 2] = srcRgb[sq + 2];
-          rgba[q + 3] = 250;
-          kept++;
+        for (let y = mnY; y <= mxY; y++) {
+          const next = new Uint8Array(w);
+          for (let x = mnX; x <= mxX; x++)
+            if (solid[idx(x, y, w)]) next[x] = 1; // pre-existing body
+          for (const i of rows.get(y) ?? []) {
+            const x = i % w;
+            if (support && !support[x] && !(x > 0 && support[x - 1]) &&
+                !(x < w - 1 && support[x + 1])) continue;
+            const q = i * 4, sq = i * 3;
+            rgba[q] = srcRgb[sq]; rgba[q + 1] = srcRgb[sq + 1]; rgba[q + 2] = srcRgb[sq + 2];
+            rgba[q + 3] = 250;
+            next[x] = 1;
+            kept++;
+          }
+          support = next;
         }
         rescued += kept;
         console.log(`  rescue ${out}: ${kept}/${ct}px x${mnX}-${mxX} y${mnY}-${mxY}`);
@@ -387,16 +456,45 @@ async function processOne({ src, orig, out, floorY }) {
     for (let x = 0; x < w; x++) if (dense[idx(x, y, w)]) { lastDenseRow = y; break; }
   const nearDense = dilate(dense, w, h, BAND_KEEP_DIST);
 
+  // ANATOMY PROTECTION (round 3): near-black SOURCE pixels are figure art
+  // (heel shafts, soles, toe tips) — but the wet-floor reflection is also
+  // near-black, so darkness alone cannot gate a floor pass. A dark pixel
+  // is protected only while its own column (+-1px) still has DENSE body
+  // at or below it: true for floor-contact structures (they end in a
+  // dense sole / rescued tip), false for shadow carpets and reflections,
+  // which have nothing dense underneath.
+  const srcDark = new Uint8Array(n);
+  for (let i = 0; i < n; i++) srcDark[i] = lumOf(srcRgb, i * 3) < PROTECT_LUM ? 1 : 0;
+  const denseBelow = new Uint8Array(n); // column has dense at this row or lower
+  for (let x = 0; x < w; x++) {
+    let seenD = 0;
+    for (let y = h - 1; y >= 0; y--) {
+      const i = idx(x, y, w);
+      if (dense[i]) seenD = 1;
+      denseBelow[i] = seenD;
+    }
+  }
+  // ...and a sole/toe TAPER has nothing dense below its own bottom edge,
+  // so dark pixels also survive within DARK_KEEP_DIST of the dense core
+  // (a 2-3px dark contact feather is the tolerated floor-line look;
+  // shadow carpets run 8+ rows down and stay outside both rules).
+  const nearDenseDark = dilate(dense, w, h, DARK_KEEP_DIST);
+  const darkArt = (i, x) => srcDark[i] &&
+    (nearDenseDark[i] || denseBelow[i] ||
+     (x > 0 && denseBelow[i - 1]) || (x < w - 1 && denseBelow[i + 1]));
+
   // 5. FLOOR-SHADOW TRIM: nothing lives below the lowest dense row
   //    (heel-tip reflections, under-sole shadow tails), and inside the
   //    bottom band sub-dense pixels that do not hug the dense body are
-  //    contact-shadow / arch-haze remnants, not figure edges.
+  //    contact-shadow / arch-haze remnants, not figure edges. Near-black
+  //    art pixels with dense body below them in the column are anatomy
+  //    (heel shafts / soles / toes) and are never zeroed.
   let trimmed = 0;
   for (let y = Math.max(0, lastDenseRow - BAND_H); y < h; y++) for (let x = 0; x < w; x++) {
     const i = idx(x, y, w), q = i * 4 + 3;
     if (rgba[q] === 0) continue;
     if (y > lastDenseRow) { rgba[q] = 0; trimmed++; continue; }
-    if (rgba[q] < DENSE_A && !nearDense[i]) { rgba[q] = 0; trimmed++; }
+    if (rgba[q] < DENSE_A && !nearDense[i] && !darkArt(i, x)) { rgba[q] = 0; trimmed++; }
   }
 
   // 5b. NICK HEAL: the stricter in-band bar can bite small notches into a
@@ -433,6 +531,8 @@ async function processOne({ src, orig, out, floorY }) {
   //     pixel farther out is background glow. The dark core is eroded so
   //     an isolated dark speck inside a glow pocket cannot shelter it.
   let glowKilled = 0;
+  const glowCut = new Uint8Array(n); // glow-killed gap pixels: these gaps
+                                     // must never be refilled (round 3)
   {
     solid = solidMask(rgba, n);
     const darkCore = new Uint8Array(n);
@@ -442,7 +542,7 @@ async function processOne({ src, orig, out, floorY }) {
     for (let i = 0; i < n; i++) {
       const q = i * 4;
       if (rgba[q + 3] >= SOLID_A && !nearDark[i] && lumOf(srcRgb, i * 3) >= HAZE_MIN_LUM) {
-        rgba[q + 3] = 0; glowKilled++;
+        rgba[q + 3] = 0; glowCut[i] = 1; glowKilled++;
       }
     }
   }
@@ -469,14 +569,19 @@ async function processOne({ src, orig, out, floorY }) {
   //     solid core is blur/shadow, not edge feather; the 1-2px feather
   //     adjacent to the body survives and bright rim light is exempt.
   //     (Sole contact feather survives too: it sits within 1px of the
-  //     dense sole, whose outline the erosion preserves.)
+  //     dense sole, whose outline the erosion preserves.) Round 3: skips
+  //     near-black source pixels — erode8 strips thin heel shafts from the
+  //     core, so this pass was severing them; genuine defocus fringe
+  //     measures lum 60-90, shafts and soles < 60.
   let fringed = 0;
   {
     const nearCore2 = dilate(erode8(solid, w, h), w, h, FRINGE_KEEP_DIST);
     for (let i = 0; i < n; i++) {
       const q = i * 4;
       const a = rgba[q + 3];
-      if (a > 8 && a < DENSE_A && !nearCore2[i] && lumOf(srcRgb, i * 3) < HAZE_MIN_LUM) {
+      if (a <= 8 || a >= DENSE_A || nearCore2[i]) continue;
+      const l = lumOf(srcRgb, i * 3);
+      if (l >= PROTECT_LUM && l < HAZE_MIN_LUM) {
         rgba[q + 3] = 0; fringed++;
       }
     }
@@ -490,17 +595,65 @@ async function processOne({ src, orig, out, floorY }) {
   //     kill below 0.45, keep 0.85+, ease between — the faint bloom tail
   //     dies, the near-solid rim feather stays partial, dark feather is
   //     untouched. Also clears the low-alpha glow residue that 6a's halo
-  //     leaves along the walls of a glow-killed gap.
+  //     leaves along the walls of a glow-killed gap. Round 3: only acts
+  //     within ZERO_NEAR_DIST of existing transparency — bloom tails ride
+  //     the silhouette edge and glow-gap walls hug their zeroed core, but
+  //     bright semi pixels DEEP inside the solid body are filmed highlight
+  //     lines (operator jacket hem / watch ring), and remapping them was
+  //     punching exact-teal slivers through the figure.
   let remapped = 0;
   {
     const LO = 115, HI = SOLID_A; // 0.45 / 0.85
+    const zeroM = new Uint8Array(n);
+    for (let i = 0; i < n; i++) zeroM[i] = rgba[i * 4 + 3] <= 8 ? 1 : 0;
+    const nearZero = dilate(zeroM, w, h, ZERO_NEAR_DIST);
     for (let i = 0; i < n; i++) {
       const q = i * 4;
       const a = rgba[q + 3];
-      if (a <= 8 || a >= HI || lumOf(srcRgb, i * 3) < HAZE_MIN_LUM) continue;
+      if (a <= 8 || a >= HI || !nearZero[i] || lumOf(srcRgb, i * 3) < HAZE_MIN_LUM) continue;
       const t = (a - LO) / (HI - LO);
       const a2 = t <= 0 ? 0 : Math.round(HI * t * t * (3 - 2 * t));
       if (a2 !== a) { rgba[q + 3] = a2; remapped++; }
+    }
+  }
+
+  // 6e. SLIVER FILL (round 3): sub-opaque non-zero pixels DEEP inside the
+  //     body (farther than ZERO_NEAR_DIST from any transparency) with a
+  //     near-opaque wall within SLIVER_REACH px in all four axis
+  //     directions are interior matte slivers over filmed highlights —
+  //     solidified from their own matte RGB. Genuine see-through gaps
+  //     always carry zero-alpha cores (ISNet zeroes real background
+  //     confidently), so the transparency-proximity test exempts them.
+  //     A sliver LINE only has walls across its own axis (the operator's
+  //     watch-ring sliver is a 1x11px vertical line: solid left+right
+  //     within 1px, but 5+px from any solid wall above/below its middle),
+  //     so one fully-walled axis (L+R or U+D) qualifies — still interior
+  //     only, still fill-only.
+  let slivered = 0;
+  {
+    const zeroM = new Uint8Array(n);
+    for (let i = 0; i < n; i++) zeroM[i] = rgba[i * 4 + 3] <= 8 ? 1 : 0;
+    const nearZero = dilate(zeroM, w, h, ZERO_NEAR_DIST);
+    for (let it = 0; it < 3; it++) {
+      const fills = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const i = idx(x, y, w);
+        const a = rgba[i * 4 + 3];
+        if (a <= 8 || a >= SOLID_A || nearZero[i]) continue;
+        const S = (xx, yy) => xx >= 0 && yy >= 0 && xx < w && yy < h &&
+          rgba[idx(xx, yy, w) * 4 + 3] >= SOLID_A;
+        let L = 0, R = 0, U = 0, D = 0;
+        for (let d = 1; d <= SLIVER_REACH; d++) {
+          if (!L && S(x - d, y)) L = 1;
+          if (!R && S(x + d, y)) R = 1;
+          if (!U && S(x, y - d)) U = 1;
+          if (!D && S(x, y + d)) D = 1;
+        }
+        if ((L && R) || (U && D)) fills.push(i);
+      }
+      if (!fills.length) break;
+      for (const i of fills) rgba[i * 4 + 3] = 250;
+      slivered += fills.length;
     }
   }
 
@@ -571,8 +724,56 @@ async function processOne({ src, orig, out, floorY }) {
       // higher up a bright enclosed pocket is portal show-through (e.g. the
       // glow-killed thumb gap) and must stay open. Dark pockets fill as in
       // round 1.
-      if (ct <= POCKET_MAX && (sumLum / ct < HAZE_MIN_LUM || maxCY > zoneTop)) {
-        for (let k = 0; k < ct; k++) rgba[comp[k] * 4 + 3] = 255;
+      //
+      // THIN-SLIT HOLE FILL (round 3): an enclosed pocket that contains
+      // fully transparent pixels, measures <= HOLE_MAX, hugs the solid
+      // wall within 2px everywhere (no pixel deeper than two peels from
+      // the near-opaque boundary) and does not overlap a glow-killed gap
+      // is a matte pinhole punched through the body, never a genuine
+      // window — the real windows measure 694px+ and run far deeper.
+      // Zero-alpha pixels take their RGB from the source scene (the matte
+      // RGB is unreliable where ISNet zeroed the alpha).
+      let slit = 0;
+      {
+        let zeroCt = 0, cutGap = 0;
+        for (let k = 0; k < ct; k++) {
+          if (rgba[comp[k] * 4 + 3] <= 8) zeroCt++;
+          if (glowCut[comp[k]]) cutGap = 1;
+        }
+        if (!cutGap && zeroCt > 0 && ct <= HOLE_MAX) {
+          const inComp = new Set();
+          for (let k = 0; k < ct; k++) inComp.add(comp[k]);
+          const dist = new Map();
+          let frontier = [];
+          for (let k = 0; k < ct; k++) {
+            const i = comp[k], x = i % w, y = (i / w) | 0;
+            let wall = 0;
+            for (let dy = -1; dy <= 1 && !wall; dy++) for (let dx = -1; dx <= 1 && !wall; dx++) {
+              if (!dx && !dy) continue;
+              if (!inComp.has(idx(x + dx, y + dy, w))) wall = 1;
+            }
+            if (wall) { dist.set(i, 1); frontier.push(i); }
+          }
+          let covered = dist.size;
+          for (const i of frontier) {
+            const x = i % w, y = (i / w) | 0;
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+              const j = idx(x + dx, y + dy, w);
+              if (inComp.has(j) && !dist.has(j)) { dist.set(j, 2); covered++; }
+            }
+          }
+          if (covered === ct) slit = 1;
+        }
+      }
+      if ((ct <= POCKET_MAX && (sumLum / ct < HAZE_MIN_LUM || maxCY > zoneTop)) || slit) {
+        for (let k = 0; k < ct; k++) {
+          const i = comp[k], q = i * 4;
+          if (slit && rgba[q + 3] <= 8) {
+            const sq = i * 3;
+            rgba[q] = srcRgb[sq]; rgba[q + 1] = srcRgb[sq + 1]; rgba[q + 2] = srcRgb[sq + 2];
+          }
+          rgba[q + 3] = 255;
+        }
         pocketed += ct;
       }
     }
@@ -620,7 +821,7 @@ async function processOne({ src, orig, out, floorY }) {
   const covPct = (100 * figCount / n).toFixed(1);
   console.log(
     `${out}: ${fw}x${fh}  coverage=${covPct}%  bbox=x${minX}-${maxX},y${minY}-${maxY}  scale=${scale.toFixed(4)}\n` +
-    `  refine: rescued=${rescued} trimmed=${trimmed} healed=${healed} glowKilled=${glowKilled} hazed=${hazed} fringed=${fringed} remapped=${remapped} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
+    `  refine: rescued=${rescued} trimmed=${trimmed} healed=${healed} glowKilled=${glowKilled} hazed=${hazed} fringed=${fringed} remapped=${remapped} slivered=${slivered} culled=${culled} pocketed=${pocketed} filled=${filled}\n` +
     `  cornersAlpha=[${corners.map(c => c.toFixed(1)).join(', ')}]  ${pass ? 'PASS' : 'FAIL'}`
   );
   return pass;
