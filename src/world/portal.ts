@@ -32,6 +32,12 @@ const PORTAL_FRAGMENT = /* glsl */ `
 
 // Halo behind the portal — radial gradient texture so it has NO visible bounds
 // (kill-class from QA history: bounded-plane halo). Stops verbatim from prototype.
+// G2 QA round 2: the halo quad crosses the water plane (its bottom sits at world
+// y ≈ -2.86), and the opaque floor depth-clips the additive glow exactly along
+// the waterline — a hard horizontal sky/floor junction across the far field.
+// Dissolve the glow to zero just above world y=0 inside the texture so the
+// geometric cut happens where the alpha is already 0; the water still carries
+// the halo through its real mirror reflection.
 function makeHaloTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
@@ -43,6 +49,17 @@ function makeHaloTexture(): THREE.CanvasTexture {
     grad.addColorStop(1, 'rgba(51,51,242,0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 256, 256);
+    // canvas row of a world height on the halo quad (center world y = PH*0.7,
+    // quad height PH*3.2 — must match createPortal's halo geometry/position)
+    const PH = PORTAL_W * PORTAL_ASPECT;
+    const rowOf = (worldY: number): number => 256 * (0.5 + (PH * 0.7 - worldY) / (PH * 3.2));
+    const fade = ctx.createLinearGradient(0, rowOf(0.9), 0, rowOf(0));
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, rowOf(0.9), 256, 256 - rowOf(0.9)); // gradient clamps to full erase below rowOf(0)
+    ctx.globalCompositeOperation = 'source-over';
   }
   return new THREE.CanvasTexture(c);
 }

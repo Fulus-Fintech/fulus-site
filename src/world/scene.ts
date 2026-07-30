@@ -28,6 +28,51 @@ export interface WorldHandles {
 const NIGHT = 0x020b18; // Deep Ocean Night — brandbook constitution
 const FOG_DENSITY = 0.052; // prototype verbatim
 
+// G2 QA round 2: the stock ReflectorShader has no fog support, so the mirror
+// rode at full reflection brightness all the way to its far edge — the horizon
+// read as stacked banded seams (unfogged reflection against fogged veil/sky),
+// and far-field reflection detail (the ribbon's mirrored band) kept hard,
+// stair-stepped edges instead of dissolving into the night. This variant is the
+// stock shader with the scene's fog threaded through the water surface, exactly
+// like every fogged material (fog_fragment after tonemapping, meshbasic order).
+const FOGGED_REFLECTOR_SHADER = {
+  name: 'FoggedReflectorShader',
+  // stock ReflectorShader uniforms (the addon's static isn't in @types/three) + fog
+  uniforms: THREE.UniformsUtils.merge([
+    THREE.UniformsLib['fog'],
+    { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null } },
+  ]),
+  vertexShader: /* glsl */ `
+    uniform mat4 textureMatrix;
+    varying vec4 vUv;
+    #include <common>
+    #include <fog_pars_vertex>
+    void main() {
+      vUv = textureMatrix * vec4( position, 1.0 );
+      vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+      gl_Position = projectionMatrix * mvPosition;
+      #include <fog_vertex>
+    }`,
+  fragmentShader: /* glsl */ `
+    uniform vec3 color;
+    uniform sampler2D tDiffuse;
+    varying vec4 vUv;
+    #include <fog_pars_fragment>
+    float blendOverlay( float base, float blend ) {
+      return ( base < 0.5 ? ( 2.0 * base * blend ) : ( 1.0 - 2.0 * ( 1.0 - base ) * ( 1.0 - blend ) ) );
+    }
+    vec3 blendOverlay( vec3 base, vec3 blend ) {
+      return vec3( blendOverlay( base.r, blend.r ), blendOverlay( base.g, blend.g ), blendOverlay( base.b, blend.b ) );
+    }
+    void main() {
+      vec4 base = texture2DProj( tDiffuse, vUv );
+      gl_FragColor = vec4( blendOverlay( base.rgb, color ), 1.0 );
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      #include <fog_fragment>
+    }`,
+};
+
 // "The beyond": soft light horizon inside — radial texture, never a bounded
 // plane, so the horizon can never show a seam (kill-class from QA history).
 function makeBeyondTexture(): THREE.CanvasTexture {
@@ -58,13 +103,16 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
 
   const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 200);
 
-  // floor: black mirror, fog-swallowed edges
+  // floor: black mirror, fog-swallowed edges (FOGGED_REFLECTOR_SHADER — the
+  // stock shader ignores fog and broke exactly that law at the horizon)
   const mirror = new Reflector(new THREE.PlaneGeometry(400, 400), {
     clipBias: 0.003,
     textureWidth: 1024,
     textureHeight: 1024,
     color: 0x0a1622,
+    shader: FOGGED_REFLECTOR_SHADER,
   });
+  (mirror.material as THREE.ShaderMaterial).fog = true; // opt into scene.fog uniforms (USE_FOG) — flight's fog colour/density changes flow through
   mirror.rotation.x = -Math.PI / 2;
   mirror.position.y = 0;
   scene.add(mirror);
@@ -127,7 +175,16 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   scene.add(cast);
 
   // post: ACES render + UnrealBloom (.85 strength = flight formula at prog 0; radius .55, threshold .82)
-  const composer = new EffectComposer(renderer);
+  // G2 QA round 2: the composer replaces the default framebuffer, so the
+  // renderer's `antialias: true` never applied to the composed frame — every
+  // edge staircased at 1x (stair-stepped monolith top, serrated seams). A 4x
+  // multisampled target restores edge AA through the post chain (WebGL2 is
+  // guaranteed: shouldBootWorld only boots the world on webgl2).
+  const composer = new EffectComposer(
+    renderer,
+    new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { samples: 4, type: THREE.HalfFloatType }),
+  );
+  composer.setSize(window.innerWidth, window.innerHeight); // scale the target to the device pixel ratio (the constructor stores the raw target size)
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.55, 0.82);
   composer.addPass(bloom);
