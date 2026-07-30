@@ -108,15 +108,15 @@ export function createCast(): THREE.Group {
     fig.add(plane);
 
     // --- contact occlusion pool: radial dark decal at the feet ---
-    const pool = new THREE.Mesh(
-      new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0.35, depthWrite: false })
-    );
+    // opacity starts at 0 like figMat: a contact shadow with no body standing
+    // in it is a stain on the floor. Raised to 0.35 by the loader.
+    const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0, depthWrite: false });
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), poolMat);
     pool.name = 'pool';
     pool.rotation.x = -Math.PI / 2;
     pool.position.y = 0.015;
     pool.scale.set(spec.height * 0.9, spec.height * 0.45, 1);
-    pool.userData.baseOpacity = 0.35;
+    pool.userData.baseOpacity = 0; // raised to 0.35 by the loader; see updateCast
     fig.add(pool);
 
     // --- fake floor reflection: mirrored decal lying on the water, fading
@@ -148,21 +148,22 @@ export function createCast(): THREE.Group {
       glowTex = glowTexture(spec.glow[0], spec.glow[1]);
       glowTexCache.set(glowKey, glowTex);
     }
-    const backglow = new THREE.Mesh(
-      new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({
-        map: glowTex,
-        transparent: true,
-        opacity: 0.55, // bloom-safe knob: lower this, not the gradient alphas
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      })
-    );
+    // opacity starts at 0 like figMat: glow with nothing occluding it is a
+    // bodiless coloured oval hanging in the night. Raised to its authored 0.55
+    // by the loader, so the backlight and the body it backlights arrive together.
+    const glowMat = new THREE.MeshBasicMaterial({
+      map: glowTex,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const backglow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), glowMat);
     backglow.name = 'backglow';
     backglow.position.set(0, spec.height * 0.55, -0.4);
     backglow.scale.set(spec.height * 1.7, spec.height * 1.4, 1); // oval, wider than tall
     backglow.renderOrder = 0; // behind reflection=1 and figure=2
-    backglow.userData.baseOpacity = 0.55;
+    backglow.userData.baseOpacity = 0; // raised to 0.55 by the loader; see updateCast
     fig.add(backglow);
 
     // fixed world orientation facing the camera path — billboarding OFF
@@ -191,6 +192,12 @@ export function createCast(): THREE.Group {
         refMat.needsUpdate = true;
         reflection.scale.set(w, spec.height, 1);
         pool.scale.set(w * 1.15, spec.height * 0.45 * (w / spec.height) + 0.45, 1);
+        // the contact pool and the backlight only exist because a body does:
+        // raise them to their authored values with it, never before it
+        poolMat.opacity = 0.35;
+        pool.userData.baseOpacity = 0.35;
+        glowMat.opacity = 0.55; // bloom-safe knob: lower this, not the gradient alphas
+        backglow.userData.baseOpacity = 0.55;
       },
       undefined,
       () => {}
@@ -206,8 +213,9 @@ export function createCast(): THREE.Group {
 // approach a figure fills the frame edge and the crop leaves a fragment —
 // a raised hand reads as a disembodied claw. Nobody is ever half a person
 // here, so each figure dissolves as the camera arrives instead of being
-// sliced by the frustum. Base opacities are captured once (they differ per
-// layer: body 1, pool .35, reflection .18, backglow .55) and scaled together.
+// sliced by the frustum. Base opacities are authored once (they differ per
+// layer: body 1, pool .35, reflection .18, backglow .55 — every one of them
+// raised from 0 by the texture loader) and scaled together.
 const FADE_GONE = 2.2; // world units: fully dissolved inside this radius
 const FADE_FULL = 4.6; // ... and fully present beyond it
 
@@ -221,9 +229,10 @@ export function updateCast(cast: THREE.Group, camera: THREE.Camera): void {
       const mesh = child as THREE.Mesh;
       const mat = mesh.material as THREE.Material & { opacity: number };
       if (!mat) continue;
-      // baseOpacity is authored at creation (and raised by the texture loader
-      // for the body/reflection, which start at 0 to avoid a white-box flash);
-      // never sampled from the live material, or a faded frame would stick.
+      // baseOpacity is authored at creation (every layer starts at 0 and is
+      // raised by the texture loader — no white-box flash, and no glow or
+      // floor pool before there is a body to own it); never sampled from the
+      // live material, or a faded frame would stick.
       const base = (mesh.userData as { baseOpacity?: number }).baseOpacity;
       if (base === undefined) continue;
       mat.opacity = base * k;

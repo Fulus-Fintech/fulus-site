@@ -38,7 +38,9 @@ async function bootWorld(): Promise<void> {
     import('./world/governor'),
   ]);
 
-  const world = createWorld(canvas);
+  // `let` + null: the poster shed drops this reference so the disposed world
+  // (renderer, scene graph, textures) can actually be collected.
+  let world: ReturnType<typeof createWorld> | null = createWorld(canvas);
   const flight = createFlight(world, createBeatUI());
 
   let raf = 0;
@@ -49,10 +51,15 @@ async function bootWorld(): Promise<void> {
     // final shed: the poster underneath IS the page — fade the world away
     dead = true;
     cancelAnimationFrame(raf);
+    removeEventListener('resize', onResize);
+    document.removeEventListener('visibilitychange', onVisibility);
     canvas.style.opacity = '0';
     delete canvas.dataset.world; // acts fall back to document flow (styles.css staging is data-world gated)
     flight.dispose();
-    window.setTimeout(() => world.dispose(), 700); // after the fade
+    window.setTimeout(() => {
+      world?.dispose();
+      world = null; // the listeners are gone; drop the last strong reference too
+    }, 700); // after the fade
   });
 
   const loop = (t: number): void => {
@@ -62,7 +69,20 @@ async function bootWorld(): Promise<void> {
     flight.frame(t);
     raf = requestAnimationFrame(loop);
   };
-  raf = requestAnimationFrame(loop);
+
+  // The ONLY way the loop is ever scheduled. rAF callbacks queued while the tab
+  // is hidden are not dropped — they fire on the next visible frame — so
+  // scheduling without cancelling first (a boot in a background tab, then a
+  // return to it) leaves two loops running forever: double GPU cost, and the
+  // governor reading half-length frame times so it never sheds. The cancel makes
+  // it idempotent; resetting `last` swallows the hidden-time delta so the
+  // governor sees no fake spike either.
+  const schedule = (): void => {
+    cancelAnimationFrame(raf);
+    last = performance.now();
+    raf = requestAnimationFrame(loop);
+  };
+  schedule();
 
   // fade the world in over the poster: 600ms opacity, never a black hold
   canvas.style.transition = 'opacity 600ms ease';
@@ -71,16 +91,20 @@ async function bootWorld(): Promise<void> {
     canvas.dataset.world = 'on'; // staging hook: html:has(#gl[data-world]) re-stages the acts as fixed beats; the reduced-motion e2e asserts this never appears
   });
 
-  addEventListener('resize', () => world.setSize(window.innerWidth, window.innerHeight));
-  document.addEventListener('visibilitychange', () => {
+  // named so the poster shed can remove them — an anonymous listener holding
+  // `world` in its closure pins the whole disposed world in memory forever
+  function onResize(): void {
+    if (!world) return;
+    world.setSize(window.innerWidth, window.innerHeight);
+    governor.reapply(); // composer.setSize just restored every pass at full res; tiers only ever drop
+  }
+  function onVisibility(): void {
     if (dead) return;
-    if (document.hidden) {
-      cancelAnimationFrame(raf);
-    } else {
-      last = performance.now(); // swallow the hidden-time delta so the governor sees no fake spike
-      raf = requestAnimationFrame(loop);
-    }
-  });
+    if (document.hidden) cancelAnimationFrame(raf);
+    else schedule();
+  }
+  addEventListener('resize', onResize);
+  document.addEventListener('visibilitychange', onVisibility);
 }
 
 function boot(): void {

@@ -22,6 +22,7 @@ function stubWorld() {
   const mirrorRT = { setSize: vi.fn() };
   const world = {
     renderer: { setPixelRatio: vi.fn() },
+    composer: { setPixelRatio: vi.fn(), setSize: vi.fn() },
     bloom: { resolution: { x: 1440, y: 900 }, setSize: vi.fn() },
     mirror: { visible: true, getRenderTarget: () => mirrorRT },
     dust: { geometry: { setDrawRange: vi.fn() } },
@@ -76,5 +77,78 @@ describe('createGovernor extended shed ladder (richness sheds first)', () => {
     g.tick(8); // one frame under budget
     slowFrames(g, 59);
     expect(g.tier()).toBe(3);
+  });
+});
+
+describe('the tier-1 pixelRatio cap reaches the frame that is actually shown', () => {
+  it('caps the composer too — EffectComposer snapshots the renderer ratio at construction', () => {
+    const { world } = stubWorld();
+    const g = createGovernor(world, vi.fn());
+    slowFrames(g, 120); // 3 -> 2 -> 1
+    expect(g.tier()).toBe(1);
+    expect((world as any).composer.setPixelRatio).toHaveBeenCalledWith(1.5);
+  });
+
+  it('caps the composer BEFORE halving the bloom (setPixelRatio calls setSize)', () => {
+    const { world } = stubWorld();
+    const g = createGovernor(world, vi.fn());
+    slowFrames(g, 120);
+    const capOrder = (world as any).composer.setPixelRatio.mock.invocationCallOrder[0];
+    const bloomOrder = (world as any).bloom.setSize.mock.invocationCallOrder[0];
+    // reversed, composer.setSize would re-apply the bloom pass at full size
+    expect(capOrder).toBeLessThan(bloomOrder);
+  });
+});
+
+describe('reapply — a resize can never climb back a shed tier', () => {
+  it('is a no-op before anything has been shed', () => {
+    const { world, mirrorRT } = stubWorld();
+    const g = createGovernor(world, vi.fn());
+    g.reapply();
+    expect(g.tier()).toBe(3);
+    expect((world as any).env.grain.enabled).toBe(true);
+    expect((world as any).bloom.setSize).not.toHaveBeenCalled();
+    expect(mirrorRT.setSize).not.toHaveBeenCalled();
+  });
+
+  it('replays every shed the resize undid, and never changes the tier', () => {
+    const { world, mirrorRT } = stubWorld();
+    const g = createGovernor(world, vi.fn());
+    slowFrames(g, 120); // 3 -> 2 -> 1
+    expect(g.tier()).toBe(1);
+
+    // what a window resize does: composer.setSize walks every pass at the new
+    // full resolution, so the shed state is silently restored to full richness
+    (world as any).env.grain.enabled = true;
+    (world as any).env.ripple.mesh.visible = true;
+    (world as any).env.shafts.visible = true;
+    (world as any).bloom.setSize.mockClear();
+    (world as any).composer.setPixelRatio.mockClear();
+    mirrorRT.setSize.mockClear();
+    (world as any).dust.geometry.setDrawRange.mockClear();
+
+    g.reapply();
+
+    expect((world as any).env.grain.enabled).toBe(false);
+    expect((world as any).env.ripple.mesh.visible).toBe(false);
+    expect((world as any).env.shafts.visible).toBe(false);
+    expect((world as any).bloom.setSize).toHaveBeenCalledWith(720, 450);
+    expect((world as any).composer.setPixelRatio).toHaveBeenCalledWith(1.5);
+    expect(mirrorRT.setSize).toHaveBeenCalledWith(512, 512);
+    expect((world as any).dust.geometry.setDrawRange).toHaveBeenCalledWith(0, 325);
+    expect(g.tier()).toBe(1);
+  });
+
+  it('replays the tier-0 shed too, and does not re-fire the poster', () => {
+    const { world } = stubWorld();
+    const onPoster = vi.fn();
+    const g = createGovernor(world, onPoster);
+    slowFrames(g, 180); // 3 -> 2 -> 1 -> 0
+    expect(g.tier()).toBe(0);
+
+    (world as any).mirror.visible = true; // as if a resize had revived it
+    g.reapply();
+    expect((world as any).mirror.visible).toBe(false);
+    expect(onPoster).not.toHaveBeenCalled();
   });
 });

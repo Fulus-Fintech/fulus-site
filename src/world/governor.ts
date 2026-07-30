@@ -25,6 +25,11 @@ export function createGovernor(world: WorldHandles, onPoster: () => void) {
   let tier: Tier = 3;
   let over = 0;
   let posterFired = false;
+  // Every shed applied so far, in the order it was applied. A window resize
+  // walks composer.setSize over each pass at full resolution, which silently
+  // climbs a shed tier back up — and tiers only ever drop (spec §6). The
+  // resize path replays this list through reapply().
+  const applied: Tier[] = [];
 
   function applyTier(t: Tier): void {
     if (t === 2) {
@@ -32,8 +37,16 @@ export function createGovernor(world: WorldHandles, onPoster: () => void) {
       world.env.ripple.mesh.visible = false;
     } else if (t === 1) {
       world.env.shafts.visible = false;
+      // spec §6: pixelRatio cap 2 (1.5 under load). EffectComposer snapshots
+      // the renderer's pixel ratio in its constructor and never re-reads it, so
+      // renderer.setPixelRatio alone sheds nothing — the composed frame (which
+      // IS the frame) keeps rendering at the old ratio. ORDER IS LOAD-BEARING:
+      // composer.setPixelRatio calls setSize, which re-applies every pass at
+      // full resolution, so the bloom must be halved AFTER the cap lands.
+      const pixelRatio = Math.min(window.devicePixelRatio, 1.5);
+      world.renderer.setPixelRatio(pixelRatio);
+      world.composer.setPixelRatio(pixelRatio);
       world.bloom.setSize(world.bloom.resolution.x / 2, world.bloom.resolution.y / 2);
-      world.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // spec §6: pixelRatio cap 2 (1.5 under load)
       world.mirror.getRenderTarget().setSize(512, 512);
       world.dust.geometry.setDrawRange(0, 325);
     } else if (t === 0) {
@@ -49,6 +62,7 @@ export function createGovernor(world: WorldHandles, onPoster: () => void) {
       if (next !== tier) {
         tier = next;
         over = 0;
+        applied.push(tier);
         applyTier(tier);
         return;
       }
@@ -56,6 +70,13 @@ export function createGovernor(world: WorldHandles, onPoster: () => void) {
         posterFired = true;
         onPoster();
       }
+    },
+    // Call after any world.setSize(): composer.setSize re-applies each pass at
+    // the new full resolution, undoing the sheds. Replaying them re-asserts the
+    // shed state (visible=false, halved bloom, 512 mirror, halved dust range)
+    // against the fresh sizes, so a resize can never climb a tier back.
+    reapply(): void {
+      for (const t of applied) applyTier(t);
     },
     tier: (): Tier => tier,
   };
