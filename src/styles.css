@@ -65,6 +65,21 @@ body::before {
   opacity: var(--scrim, 1);
   background: radial-gradient(55% 45% at 50% 50%, rgba(2, 11, 24, .55) 0%, rgba(2, 11, 24, .22) 55%, rgba(2, 11, 24, 0) 85%);
 }
+/* Poster edition: the ellipse above is justified by camera motion — it dims
+   the centre because the flight keeps the bright core there. Under reduced
+   motion the world never boots (shouldBootWorld, src/main.ts), so this media
+   query matches the poster edition and only the poster edition: a fixed
+   photograph under copy that scrolls across the whole frame. The poster's
+   brightest point measures rgb(167, 251, 239) at 62% x / 86% y — outside the
+   ellipse's reach (it is already at ~0 opacity there), so centre-weighted
+   dimming protects nothing where the copy actually passes. A flat full-bleed
+   dim at the ellipse's own peak (.55) is therefore never weaker than the
+   authored scrim anywhere, and the poster is near-black over ~99% of its area
+   (measured median relative luminance .0011), so the visible effect is
+   confined to the portal glow. The authored world ellipse is untouched. */
+@media (prefers-reduced-motion: reduce) {
+  body::before { background: rgba(2, 11, 24, .55); }
+}
 #wash {
   position: fixed; inset: 0; z-index: 15; pointer-events: none; opacity: 0;
   background: radial-gradient(60% 60% at 50% 46%, #ECFFFE 0%, #BDF6FF 55%, rgba(189, 246, 255, .6) 100%);
@@ -80,7 +95,7 @@ body::before {
 .meter {
   display: flex; align-items: center; gap: 10px;
   font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .22em;
-  color: rgba(242, 245, 248, .45);
+  color: var(--text-quiet); /* AA floor, not rgba(...,.45) — that composites to 4.19:1 on #020B18 */
 }
 .meter-bar { width: 110px; height: 2px; background: rgba(242, 245, 248, .12); border-radius: 2px; overflow: hidden; }
 .meter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--teal)); }
@@ -101,7 +116,7 @@ h1 {
 .sub { margin-top: 12px; font-size: clamp(.95rem, 2vw, 1.15rem); font-weight: 300; color: var(--sub); }
 .hint {
   margin-top: 22px; font-family: ui-monospace, monospace; font-size: 10px;
-  letter-spacing: .28em; color: rgba(242, 245, 248, .45);
+  letter-spacing: .28em; color: var(--text-quiet); /* AA floor (see .meter) */
 }
 .waypoint {
   font-size: clamp(1.3rem, 3.2vw, 2rem); font-weight: 400; color: var(--text-bright);
@@ -122,8 +137,15 @@ h1 {
   padding: 10px 18px; color: var(--text); text-decoration: none;
   transition: box-shadow .12s;
 }
-/* focus answers with light, no movement (spec §6 accessibility) */
-.badge:hover, .badge:focus-visible { box-shadow: 0 0 28px rgba(0, 229, 255, .35); outline: none; }
+/* Hover answers with light, no movement (spec §6 accessibility). Hover is
+   SPLIT from focus on purpose: `.badge:focus-visible` (0,2,0) outranked the
+   replacement focus ring on `a:focus-visible` (0,1,1) at the foot of this
+   sheet, and box-shadow does not stack across rules — so the two store links,
+   the only real destinations on the page, showed the soft hover glow INSTEAD
+   of a ring. `:not(:focus-visible)` makes the glow yield whenever the badge is
+   keyboard-focused, and the ring below is then the only box-shadow that
+   applies. Do not fold focus back into this selector. */
+.badge:hover:not(:focus-visible) { box-shadow: 0 0 28px rgba(0, 229, 255, .35); }
 .badge svg { width: 20px; height: 20px; flex: none; }
 .badge small { display: block; font-size: 9px; color: rgba(242, 245, 248, .7); text-align: left; }
 .badge strong { display: block; font-size: 13px; font-weight: 500; text-align: left; }
@@ -157,7 +179,14 @@ html:has(#gl[data-world]) .act {
   min-height: 0; padding: 0;
   opacity: 0; transition: opacity .5s ease; pointer-events: none;
 }
-html:has(#gl[data-world]) .act.on { opacity: 1; pointer-events: auto; }
+/* `.act:focus-within` carries the SAME specificity as `.act.on` (1,3,1) and
+   sits in the same rule: a beat that holds keyboard focus stages itself in.
+   Without it the store badges — fixed, opacity 0, pointer-events none until
+   #walk-in gets .on late in the flight — stay in the tab order the whole time
+   (opacity 0 does not remove an element from it), so a keyboard user could tab
+   into two invisible links with no way to reveal them. */
+html:has(#gl[data-world]) .act.on,
+html:has(#gl[data-world]) .act:focus-within { opacity: 1; pointer-events: auto; }
 /* per-beat offsets verbatim from the prototype .beat rules */
 html:has(#gl[data-world]) #beat-hero { top: 16%; }
 html:has(#gl[data-world]) #beat-mid { top: 20%; }

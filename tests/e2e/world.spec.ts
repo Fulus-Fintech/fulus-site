@@ -35,6 +35,34 @@ test('world boots: canvas fades in, beats stage fixed, zero console errors throu
   expect(errors).toEqual([]);
 });
 
+test('world mode: a beat that takes keyboard focus stages itself in', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'world', 'runs only in the world project (SwiftShader WebGL2)');
+
+  await page.goto('/');
+  await expect(page.locator('canvas#gl')).toHaveAttribute('data-world', 'on', { timeout: 15_000 });
+
+  const walkIn = page.locator('#walk-in');
+  const ios = page.locator('a[href="/app/ios"]');
+
+  // At the top of the flight the end beat has not been staged by the scroll:
+  // fixed, opacity 0, pointer-events none. opacity 0 does NOT take a link out
+  // of the tab order, so both store badges are reachable right now.
+  await expect(walkIn).not.toHaveClass(/\bon\b/);
+  await expect(walkIn).toHaveCSS('opacity', '0');
+
+  let found = false;
+  for (let i = 0; i < 10 && !found; i++) {
+    await page.keyboard.press('Tab');
+    found = await ios.evaluate((el) => el === document.activeElement);
+  }
+  await expect(ios).toBeFocused();
+
+  // ...so the beat holding that focus must reveal itself rather than leave a
+  // keyboard user on an invisible, un-clickable link with no way out.
+  await expect(walkIn).toHaveCSS('opacity', '1');
+  await expect(walkIn).toHaveCSS('pointer-events', 'auto');
+});
+
 test('reduced motion: poster edition only — no world boot, zero three.js bytes', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'reduced-motion', 'runs only in the reduced-motion project');
 
