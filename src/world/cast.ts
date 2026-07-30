@@ -2,7 +2,9 @@ import * as THREE from 'three';
 
 // The canon cast in the night (spec §5.1). Billboarding OFF: fixed world
 // orientation, each figure faces a point on the camera path. Heights are
-// silhouette heights in world units, feet at y=0.
+// silhouette heights in world units, feet at y=0. The pair converses before
+// the door, the walker crosses alone on the right, and the huddle of three
+// gathers at the threshold.
 interface FigureSpec {
   name: string;
   url: string;
@@ -12,9 +14,12 @@ interface FigureSpec {
 }
 
 const FIGURES: FigureSpec[] = [
-  { name: 'fig-pair',  url: '/assets/images/fig-pair.webp',  height: 1.9, position: [-3.2, 0, -6],   face: [0.9, -2] },
-  { name: 'fig-lone',  url: '/assets/images/fig-lone.webp',  height: 1.8, position: [2.8, 0, -9.5],  face: [-0.6, -7] },
-  { name: 'fig-group', url: '/assets/images/fig-group.webp', height: 2.2, position: [-2.5, 0, -12],  face: [0, -8] },
+  { name: 'fig-connector',  url: '/assets/images/cast/connector.webp',  height: 1.85, position: [-3.6, 0, -5.9],  face: [0.9, -2] },
+  { name: 'fig-operator',   url: '/assets/images/cast/operator.webp',   height: 1.95, position: [-2.7, 0, -6.2],  face: [0.7, -2.2] },
+  { name: 'fig-walker',     url: '/assets/images/cast/walker.webp',     height: 1.9,  position: [2.8, 0, -9.5],   face: [-0.6, -7] },
+  { name: 'fig-strategist', url: '/assets/images/cast/strategist.webp', height: 1.85, position: [-3.1, 0, -11.6], face: [0.2, -8] },
+  { name: 'fig-anchor',     url: '/assets/images/cast/anchor.webp',     height: 1.95, position: [-2.2, 0, -12.2], face: [0, -8.2] },
+  { name: 'fig-visionary',  url: '/assets/images/cast/visionary.webp',  height: 1.9,  position: [-1.5, 0, -11.5], face: [0.4, -7.8] },
 ];
 
 // 2d-context guard: jsdom (unit tests) has no canvas 2d context; the guard
