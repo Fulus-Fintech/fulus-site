@@ -26,14 +26,19 @@ describe('createCast', () => {
     expect([at('fig-visionary').x, at('fig-visionary').y, at('fig-visionary').z]).toEqual([-1.5, 0, -11.5]);
   });
 
-  it('gives every figure a plane, a contact pool, and a floor reflection', () => {
+  it('gives every figure a plane, a contact pool, a floor reflection, and a backglow', () => {
     const cast = createCast();
     for (const fig of cast.children) {
       expect(fig.getObjectByName('figure')).toBeTruthy();
       expect(fig.getObjectByName('pool')).toBeTruthy();
       expect(fig.getObjectByName('reflection')).toBeTruthy();
+      expect(fig.getObjectByName('backglow')).toBeTruthy();
       // feet on floor: the figure plane's centre sits at half its height
       expect(fig.getObjectByName('figure')!.position.y).toBeGreaterThan(0.8);
+      // the backlight pool sits BEHIND the figure (local -Z) at chest height
+      const backglow = fig.getObjectByName('backglow')!;
+      expect(backglow.position.z).toBeLessThan(0);
+      expect(backglow.position.y).toBeGreaterThan(0.8);
     }
   });
 });

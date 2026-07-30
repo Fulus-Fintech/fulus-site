@@ -11,15 +11,16 @@ interface FigureSpec {
   height: number;
   position: [number, number, number];
   face: [number, number]; // x,z point on/near the camera path to face (y=0 keeps them upright)
+  glow: [string, string]; // authored backlight pool: [core, secondary] — matches the character's approved rims
 }
 
 const FIGURES: FigureSpec[] = [
-  { name: 'fig-connector',  url: '/assets/images/cast/connector.webp',  height: 1.85, position: [-3.6, 0, -5.9],  face: [0.9, -2] },
-  { name: 'fig-operator',   url: '/assets/images/cast/operator.webp',   height: 1.95, position: [-2.7, 0, -6.2],  face: [0.7, -2.2] },
-  { name: 'fig-walker',     url: '/assets/images/cast/walker.webp',     height: 1.9,  position: [2.8, 0, -9.5],   face: [-0.6, -7] },
-  { name: 'fig-strategist', url: '/assets/images/cast/strategist.webp', height: 1.85, position: [-3.1, 0, -11.6], face: [0.2, -8] },
-  { name: 'fig-anchor',     url: '/assets/images/cast/anchor.webp',     height: 1.95, position: [-2.2, 0, -12.2], face: [0, -8.2] },
-  { name: 'fig-visionary',  url: '/assets/images/cast/visionary.webp',  height: 1.9,  position: [-1.5, 0, -11.5], face: [0.4, -7.8] },
+  { name: 'fig-connector',  url: '/assets/images/cast/connector.webp',  height: 1.85, position: [-3.6, 0, -5.9],  face: [0.9, -2],    glow: ['#00E5FF', '#F800FF'] },
+  { name: 'fig-operator',   url: '/assets/images/cast/operator.webp',   height: 1.95, position: [-2.7, 0, -6.2],  face: [0.7, -2.2],  glow: ['#00FFB2', '#00E5FF'] },
+  { name: 'fig-walker',     url: '/assets/images/cast/walker.webp',     height: 1.9,  position: [2.8, 0, -9.5],   face: [-0.6, -7],   glow: ['#00E5FF', '#00FFB2'] },
+  { name: 'fig-strategist', url: '/assets/images/cast/strategist.webp', height: 1.85, position: [-3.1, 0, -11.6], face: [0.2, -8],    glow: ['#00E5FF', '#F800FF'] },
+  { name: 'fig-anchor',     url: '/assets/images/cast/anchor.webp',     height: 1.95, position: [-2.2, 0, -12.2], face: [0, -8.2],    glow: ['#00E5FF', '#00FFB2'] },
+  { name: 'fig-visionary',  url: '/assets/images/cast/visionary.webp',  height: 1.9,  position: [-1.5, 0, -11.5], face: [0.4, -7.8],  glow: ['#F800FF', '#00E5FF'] },
 ];
 
 // 2d-context guard: jsdom (unit tests) has no canvas 2d context; the guard
@@ -37,6 +38,31 @@ function poolTexture(): THREE.CanvasTexture {
     x.fillRect(0, 0, 128, 128);
   }
   return new THREE.CanvasTexture(c);
+}
+
+// Authored backlight pool: soft radial gradient in the character's approved
+// rim colours. In canon art every figure is staged against glow — the black
+// body reads because it occludes a bright backdrop. Alphas are baked into the
+// gradient; overall intensity is tuned via material opacity (bloom-safe knob).
+function glowTexture(core: string, secondary: string): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const x = c.getContext('2d');
+  if (x) {
+    const toRgba = (hex: string, a: number) => {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+    };
+    const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, toRgba(core, 0.8));
+    g.addColorStop(0.5, toRgba(secondary, 0.3));
+    g.addColorStop(1, toRgba(secondary, 0));
+    x.fillStyle = g;
+    x.fillRect(0, 0, 128, 128);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 function reflectionMask(): THREE.CanvasTexture {
@@ -61,6 +87,7 @@ export function createCast(): THREE.Group {
   const loader = new THREE.TextureLoader();
   const poolTex = poolTexture();
   const maskTex = reflectionMask();
+  const glowTexCache = new Map<string, THREE.CanvasTexture>();
 
   for (const spec of FIGURES) {
     const fig = new THREE.Group();
@@ -107,6 +134,32 @@ export function createCast(): THREE.Group {
     reflection.scale.set(spec.height, spec.height, 1);
     reflection.renderOrder = 1;
     fig.add(reflection);
+
+    // --- authored backlight pool: soft oval of the character's rim colours
+    //     BEHIND the figure, so the black body reads by occluding glow.
+    //     fig.lookAt(face) points local +Z at the camera path, so local -Z is
+    //     behind; the default plane orientation (facing +Z) faces the camera. ---
+    const glowKey = spec.glow.join('/');
+    let glowTex = glowTexCache.get(glowKey);
+    if (!glowTex) {
+      glowTex = glowTexture(spec.glow[0], spec.glow[1]);
+      glowTexCache.set(glowKey, glowTex);
+    }
+    const backglow = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({
+        map: glowTex,
+        transparent: true,
+        opacity: 0.55, // bloom-safe knob: lower this, not the gradient alphas
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    backglow.name = 'backglow';
+    backglow.position.set(0, spec.height * 0.55, -0.4);
+    backglow.scale.set(spec.height * 1.7, spec.height * 1.4, 1); // oval, wider than tall
+    backglow.renderOrder = 0; // behind reflection=1 and figure=2
+    fig.add(backglow);
 
     // fixed world orientation facing the camera path — billboarding OFF
     fig.lookAt(spec.face[0], 0, spec.face[1]);
