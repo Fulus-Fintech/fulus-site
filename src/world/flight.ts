@@ -88,6 +88,7 @@ export function createFlight(world: WorldHandles, ui: BeatUI): { frame(tMs: numb
 
       world.portal.setTime(time);
       world.ribbon.setTime(time);
+      world.env.setTime(tMs * 0.001);
       world.dust.rotation.y = time * 0.012;
 
       const p = camPath.getPointAt(Math.min(0.999, Math.max(0, prog)));

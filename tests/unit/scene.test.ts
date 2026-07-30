@@ -40,8 +40,8 @@ describe('createWorld dispose() (structure only, WebGLRenderer stubbed)', () => 
     const canvas = document.createElement('canvas');
     const world = createWorld(canvas);
 
-    // sanity: exactly RenderPass + bloom are registered, per scene.ts
-    expect(world.composer.passes).toHaveLength(2);
+    // sanity: exactly RenderPass + bloom + env grain pass are registered, per scene.ts
+    expect(world.composer.passes).toHaveLength(3);
     // spy each pass exactly once — spying the same object+method twice
     // orphans the earlier spy (it stops receiving calls), so bloom (which
     // IS composer.passes[1]) must not be spied a second time separately.

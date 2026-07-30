@@ -6,6 +6,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { createPortal, type PortalHandles } from './portal';
 import { createRibbon, type RibbonHandles } from './ribbon';
 import { createCast } from './cast';
+import { createEnvironment, gradeMotes, type EnvHandles } from './environment';
 
 export interface WorldHandles {
   renderer: THREE.WebGLRenderer;
@@ -21,6 +22,7 @@ export interface WorldHandles {
   portal: PortalHandles;
   ribbon: RibbonHandles;
   cast: THREE.Group;
+  env: EnvHandles;
   setSize(w: number, h: number): void;
   dispose(): void;
 }
@@ -189,8 +191,14 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.55, 0.82);
   composer.addPass(bloom);
 
+  const env = createEnvironment();
+  scene.add(env.ripple.mesh);
+  scene.add(env.shafts);
+  composer.addPass(env.grain); // final pass: grain + vignette + colour grade over everything
+  gradeMotes(dust);            // depth-graded mote sizes (spec §5.2) — swaps the dust material in place
+
   return {
-    renderer, scene, camera, composer, bloom, mirror, veil, beyond, beyondRef, dust, portal, ribbon, cast,
+    renderer, scene, camera, composer, bloom, mirror, veil, beyond, beyondRef, dust, portal, ribbon, cast, env,
     setSize(w: number, h: number): void {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
