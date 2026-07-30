@@ -52,10 +52,13 @@ body {
    dark rectangle (self-QA law, spec §8: "hero copy legible over it").
    A ::before pseudo-element, not a div: no DOM/copy-lock surface.
    --scrim (set per-frame by the flight via BeatUI.setScrim) fades it out as
-   the camera reaches the door: a dark screen-space ellipse over the bright
-   full-frame crossing reads as an untextured gray blob (G2 QA kill-class).
-   No copy shows in that window (open ends at .64, walk-in needs k > .75), so
-   legibility keeps its scrim at every beat. Default 1 = poster edition. */
+   the camera reaches the door AND again as it crosses: a dark screen-space
+   ellipse over a bright world reads as an untextured gray blob (G2 QA
+   kill-class on approach, G3 QA on the far side, where the light beyond fills
+   the frame). The hero/mid/open beats all sit in the dark half of the film and
+   keep the full scrim; the walk-in copy rides the near-black water at the
+   bottom of the frame, past the reach of this centre ellipse.
+   Default 1 = poster edition. */
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: 2; pointer-events: none;

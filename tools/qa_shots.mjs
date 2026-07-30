@@ -25,14 +25,48 @@ const url = /^https?:/i.test(target) ? target : pathToFileURL(resolve(target)).h
 // artifacts for eyes, never pixel-gated (spec §7).
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+// NOTE: never setDefaultTimeout(0) here — with no deadline, page.screenshot()
+// stops waiting for a composited frame and writes a blank white PNG.
+
+// G3 QA: SwiftShader renders this world at 2-3 fps, and the harness used to
+// judge the frames it produced under that. Two lies came out of it:
+//   1. every frame was "over budget", so the governor shed richness (ripple,
+//      grain/vignette/grade, then shafts) partway through a capture — the last
+//      frames showed a DEGRADED world, not the authored one;
+//   2. the scroll lerp (0.07/frame) only got ~10 frames per stop, so a shot
+//      labelled 0.72 was really the world at ~0.64.
+// A synthetic 60fps clock fixes both at the source: the governor sees healthy
+// frames and never sheds, and the noise phase is identical every run, so two
+// captures of the same stop are comparable.
+await page.addInitScript(() => {
+  const raf = window.requestAnimationFrame.bind(window);
+  let clock = 0;
+  window.requestAnimationFrame = (cb) => raf(() => { clock += 1000 / 60; cb(clock); });
+});
+
+// Wait for real animation frames, not wall-clock: the lerp converges per frame.
+// 0.93^130 ≈ 8e-5 — the camera is at the stop it was asked for.
+const settleFrames = (n) =>
+  page.evaluate(
+    (frames) =>
+      new Promise((done) => {
+        let i = 0;
+        const step = () => (++i >= frames ? done(null) : requestAnimationFrame(step));
+        requestAnimationFrame(step);
+      }),
+    n,
+  );
+
 await page.goto(url, { waitUntil: 'load' });
-await page.waitForTimeout(3000); // let the world boot and settle
+await page.waitForTimeout(3000); // let the world boot (requestIdleCallback + module fetch)
+await settleFrames(30);
 
 for (const stop of stops) {
   await page.evaluate((s) => {
     window.scrollTo(0, s * (document.body.scrollHeight - window.innerHeight));
   }, stop);
-  await page.waitForTimeout(4000); // scroll lerp 0.07 needs time to converge
+  await settleFrames(130);
+  await page.waitForTimeout(1000); // let the compositor commit the settled frame — screenshotting straight out of a rAF callback captures a blank surface
   const file = `${outPrefix}-${String(stop).replace('.', 'p')}.png`;
   await page.screenshot({ path: file });
   console.log(`wrote ${file}`);

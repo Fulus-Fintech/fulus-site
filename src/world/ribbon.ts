@@ -7,17 +7,34 @@ export interface RibbonHandles {
   setTime(t: number): void;
 }
 
-// --- shaders verbatim from prototype.html ---
-const RIBBON_VERTEX = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
+// --- shaders from prototype.html (colour, pulse and rim verbatim) ---
+// G3 QA round 1 (kill-class: visible quad edge / horizon-seam read) — the rim
+// term fades the tube along its SEAM, not along its silhouette, so the band
+// ended in a dead-straight 1px cliff (measured 179 -> 67 in a single row at the
+// 0.5 stop, running to the frame edge: it read as a lit plane meeting the dark
+// floor, i.e. a false horizon). A river of light has no cut edge, so the tube
+// now also fades where its surface turns away from the eye — the silhouette
+// dissolves instead of stopping.
+const RIBBON_VERTEX = /* glsl */ `
+    varying vec2 vUv; varying vec3 vNormalV; varying vec3 vViewV;
+    void main(){
+      vUv = uv;
+      vec4 mv = modelViewMatrix * vec4(position, 1.);
+      vNormalV = normalMatrix * normal;
+      vViewV = -mv.xyz;
+      gl_Position = projectionMatrix * mv;
+    }`;
 
 const RIBBON_FRAGMENT = /* glsl */ `
-    varying vec2 vUv; uniform float uTime; uniform float uFade;
+    varying vec2 vUv; varying vec3 vNormalV; varying vec3 vViewV;
+    uniform float uTime; uniform float uFade;
     void main(){
       vec3 cyan = vec3(0., .898, 1.); vec3 teal = vec3(0., 1., .698);
       vec3 col = mix(cyan, teal, vUv.x);
       float pulse = .55 + .45 * sin(vUv.x * 40. - uTime * 2.2);
       float rim = smoothstep(0., .5, vUv.y) * smoothstep(1., .5, vUv.y);
-      gl_FragColor = vec4(col * (1.3 + pulse * 1.1), rim * .8 * uFade);
+      float facing = abs(dot(normalize(vNormalV), normalize(vViewV)));
+      gl_FragColor = vec4(col * (1.3 + pulse * 1.1), rim * smoothstep(0., .8, facing) * .8 * uFade);
     }`;
 
 export function createRibbon(): RibbonHandles {
@@ -31,7 +48,10 @@ export function createRibbon(): RibbonHandles {
     new THREE.Vector3(0.2, 2.3, -12.2),
     new THREE.Vector3(0.3, PH * 0.5, -13.85),
   ]);
-  const geo = new THREE.TubeGeometry(curve, 260, 0.028, 10, false);
+  // radial segments 10 -> 16 (G3 QA): with 10 facets the silhouette facet's
+  // normal is still 18° off perpendicular, so the fade above could not reach
+  // zero at the edge and left a residual step. Geometry-only, ~2k extra verts.
+  const geo = new THREE.TubeGeometry(curve, 260, 0.028, 16, false);
   const mat = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,

@@ -3,7 +3,7 @@
 // verbatim exported constants — no DOM, no WebGL context needed.
 import { describe, it, expect } from 'vitest';
 import {
-  crossingK, washOpacity, doorProximity, CAM_POINTS,
+  crossingK, washOpacity, doorProximity, wayOpen, CAM_POINTS,
   PLANE_Z, CROSS_RANGE, WASH_SIGMA, WASH_MAX, LERP,
   APPROACH_RANGE, APPROACH_DIM,
 } from '../../src/world/flight';
@@ -56,6 +56,31 @@ describe('doorProximity — the door yields as the camera reaches it (G2 QA law:
   });
   it('does not touch the approved figure stops (0.15/0.3/0.42/0.55 all have z >= -8.3)', () => {
     expect(doorProximity(-8.3)).toBe(0);
+  });
+});
+
+describe('wayOpen — the beyond rises as the door yields (G3 QA: no empty frame at the threshold)', () => {
+  it('is shut while the door is still a door', () => {
+    expect(wayOpen(-8)).toBe(0);
+    expect(wayOpen(PLANE_Z + APPROACH_RANGE)).toBe(0);
+  });
+  it('is fully open at the plane and stays open past it', () => {
+    expect(wayOpen(PLANE_Z)).toBe(1);
+    expect(wayOpen(-17.2)).toBe(1);
+    expect(wayOpen(-30)).toBe(1);
+  });
+  it('carries the settled 0.72 stop, where the face is already gone (z≈-13.4)', () => {
+    // doorProximity has shed ~99% of the door's presence by here; the light
+    // beyond it must be most of the way in or the frame is fog and nothing else
+    expect(wayOpen(-13.4)).toBeGreaterThan(0.75);
+  });
+  it('never falls back on the way in — a pumping beyond would breathe at the crossing', () => {
+    let prev = -1;
+    for (let z = -11; z >= -18; z -= 0.1) {
+      const v = wayOpen(z);
+      expect(v).toBeGreaterThanOrEqual(prev);
+      prev = v;
+    }
   });
 });
 

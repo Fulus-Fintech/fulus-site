@@ -40,17 +40,30 @@ describe('createWorld dispose() (structure only, WebGLRenderer stubbed)', () => 
     const canvas = document.createElement('canvas');
     const world = createWorld(canvas);
 
-    // sanity: exactly RenderPass + bloom + env grain pass are registered, per scene.ts
+    // sanity: exactly RenderPass + env grain pass + bloom are registered, per scene.ts
     expect(world.composer.passes).toHaveLength(3);
     // spy each pass exactly once — spying the same object+method twice
     // orphans the earlier spy (it stops receiving calls), so bloom (which
-    // IS composer.passes[1]) must not be spied a second time separately.
+    // IS composer.passes[2]) must not be spied a second time separately.
     const passSpies = world.composer.passes.map((p) => vi.spyOn(p, 'dispose'));
 
     world.dispose();
 
     for (const spy of passSpies) expect(spy).toHaveBeenCalledTimes(1);
-    expect(world.bloom.dispose).toHaveBeenCalledTimes(1); // same spy as passSpies[1]
+    expect(world.bloom.dispose).toHaveBeenCalledTimes(1); // same spy as passSpies[2]
+  });
+
+  it('the bloom ENDS the composer chain — kill-class guard: a linear frame on the canvas', async () => {
+    // UnrealBloomPass only blits through a MeshBasicMaterial (the linear->sRGB
+    // encode, and the approved display-space bloom composite) when it is the
+    // last enabled pass. The G3 richness pass put the grade/grain ShaderPass
+    // after it, which both flattened the night into haze and shipped the frame
+    // in linear light. The grade runs on the linear frame, before the bloom.
+    const { createWorld } = await import('../../src/world/scene');
+    const world = createWorld(document.createElement('canvas'));
+    expect(world.composer.passes.at(-1)).toBe(world.bloom);
+    expect(world.composer.passes[1]).toBe(world.env.grain);
+    world.dispose();
   });
 
   it('disposes the portal halo CanvasTexture — kill-class guard: leaked halo/beyond textures', async () => {

@@ -77,6 +77,10 @@ const FOGGED_REFLECTOR_SHADER = {
 
 // "The beyond": soft light horizon inside — radial texture, never a bounded
 // plane, so the horizon can never show a seam (kill-class from QA history).
+const BEYOND_W = 46;
+const BEYOND_H = 22;
+const BEYOND_Y = 3.2; // centre height of the beyond quad; its reflection mirrors it
+
 function makeBeyondTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
@@ -88,6 +92,23 @@ function makeBeyondTexture(): THREE.CanvasTexture {
     g.addColorStop(1, 'rgba(0,229,255,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 256, 256);
+    // G3 QA round 1 (kill-class: horizon seam) — the same law the portal halo
+    // already lives under. This quad spans world y ≈ -7.8 … 14.2, so it crosses
+    // the water: the floor depth-clips the additive glow exactly along the
+    // waterline and the far field draws a hard sky/water step across the full
+    // frame (measured at 0.72 and 0.97). Dissolve the glow to zero just above
+    // y = 0 inside the texture, where the geometric cut costs nothing — the
+    // water carries the beyond through its own mirrored quad and the Reflector.
+    // beyondRef is this same texture flipped about the waterline, so the very
+    // same band stops the reflection climbing back up into the sky.
+    const rowOf = (worldY: number): number => 256 * (0.5 + (BEYOND_Y - worldY) / BEYOND_H);
+    const fade = ctx.createLinearGradient(0, rowOf(1.2), 0, rowOf(0));
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, rowOf(1.2), 256, 256 - rowOf(1.2)); // gradient clamps to full erase below rowOf(0)
+    ctx.globalCompositeOperation = 'source-over';
   }
   return new THREE.CanvasTexture(c);
 }
@@ -142,14 +163,14 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   // the beyond + its reflection in the water
   const beyondTex = makeBeyondTexture();
   const beyond = new THREE.Mesh(
-    new THREE.PlaneGeometry(46, 22),
+    new THREE.PlaneGeometry(BEYOND_W, BEYOND_H),
     new THREE.MeshBasicMaterial({ map: beyondTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }),
   );
-  beyond.position.set(0, 3.2, -34);
+  beyond.position.set(0, BEYOND_Y, -34);
   scene.add(beyond);
 
   const beyondRef = new THREE.Mesh(
-    new THREE.PlaneGeometry(46, 22),
+    new THREE.PlaneGeometry(BEYOND_W, BEYOND_H),
     new THREE.MeshBasicMaterial({ map: beyondTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }),
   );
   beyondRef.position.set(0, -3.0, -33.8);
@@ -188,13 +209,25 @@ export function createWorld(canvas: HTMLCanvasElement): WorldHandles {
   );
   composer.setSize(window.innerWidth, window.innerHeight); // scale the target to the device pixel ratio (the constructor stores the raw target size)
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.55, 0.82);
-  composer.addPass(bloom);
 
   const env = createEnvironment();
   scene.add(env.ripple.mesh);
   scene.add(env.shafts);
-  composer.addPass(env.grain); // final pass: grain + vignette + colour grade over everything
+  // G3 QA round 1 — pass ORDER is load-bearing, and getting it wrong killed the
+  // whole richness pass. UnrealBloomPass composites two different ways: as the
+  // LAST pass it blits the frame through a MeshBasicMaterial (linear -> sRGB
+  // encoded) and then adds the bloom on top in display space — that is the
+  // composition the G1/G2 gates approved. Put any pass after it and it instead
+  // adds the bloom into the linear buffer, where the later sRGB encode
+  // multiplies it several-fold in the shadows: the night flattened into teal
+  // haze, and the raw ShaderMaterial that ended the chain never encoded at all,
+  // so the frames went out in linear light (the 0.72 "void", the muddy cores).
+  // The grade/grain/vignette therefore run on the linear frame BEFORE the bloom
+  // — the bloom's own high-pass then sees a graded, vignetted world, and the
+  // approved composite still ends the chain.
+  composer.addPass(env.grain);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.55, 0.82);
+  composer.addPass(bloom);
   gradeMotes(dust);            // depth-graded mote sizes (spec §5.2) — swaps the dust material in place
 
   return {

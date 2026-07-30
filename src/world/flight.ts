@@ -55,6 +55,17 @@ export function doorProximity(camZ: number): number {
   return 1 - (1 - t) * (1 - t);
 }
 
+// How open the way ahead is: 0 until the door is within APPROACH_RANGE, 1 from
+// the plane onward. G3 QA (kill-class: an empty frame at the threshold) — the
+// beyond used to ride on crossingK alone, which is still 0 at z ≈ -13.4 where
+// the door has already yielded 99% of its presence. That left the 0.72 stop
+// with neither door nor light in it, just fog. The beyond IS what shows through
+// the opening, so it rises over the same window the door yields over, and never
+// falls back once you are through.
+export function wayOpen(camZ: number): number {
+  return THREE.MathUtils.clamp((PLANE_Z + APPROACH_RANGE - camZ) / APPROACH_RANGE, 0, 1);
+}
+
 // prototype: exp(-(cz + 14)^2 / (2 * .55^2)) * .92 — peaks exactly at the plane
 export function washOpacity(camZ: number): number {
   return Math.exp(-Math.pow(camZ - PLANE_Z, 2) / (2 * WASH_SIGMA * WASH_SIGMA)) * WASH_MAX;
@@ -63,6 +74,7 @@ export function washOpacity(camZ: number): number {
 export function createFlight(world: WorldHandles, ui: BeatUI): { frame(tMs: number): void; dispose(): void } {
   const camPath = new THREE.CatmullRomCurve3(CAM_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z)));
   const fog = world.scene.fog as THREE.FogExp2;
+  const sky = world.scene.background as THREE.Color;
   const look = new THREE.Vector3();
 
   let prog = 0;
@@ -105,8 +117,16 @@ export function createFlight(world: WorldHandles, ui: BeatUI): { frame(tMs: numb
       // the door yields on approach (see doorProximity), and the legibility
       // scrim steps aside with it — a dark screen-space ellipse over a bright
       // full-frame door reads as an untextured gray blob (G2 QA kill-class).
+      // G3 QA round 1: the same blob came back on the far side. Past the plane
+      // the light beyond fills the frame, and the scrim's ellipse sat over the
+      // brightest, deepest moment of the film — the reviewer read the centre as
+      // "a grey smudge occluding frame center rather than luminous depth"
+      // (measured neutral R58 G80 B88 inside a teal R31 G98 B108 field). It
+      // steps aside with the crossing too. Nothing is lost: the walk-in copy
+      // rides the near-black water at the bottom of the frame, where this
+      // 55%×45% centre ellipse has already fallen to zero.
       const near = doorProximity(p.z);
-      ui.setScrim(1 - near);
+      ui.setScrim(Math.min(1 - near, 1 - k));
 
       // inside: calmer, dimmer door behind you, light ahead. The near ramp
       // yields the face's presence (alpha); the k dim keeps carrying the
@@ -115,11 +135,18 @@ export function createFlight(world: WorldHandles, ui: BeatUI): { frame(tMs: numb
       // be effectively OPEN (transparent) by the time it swallows the frame.
       world.portal.setDim(1 - k * 0.68);
       world.portal.setYield(1 - (1 - near * APPROACH_DIM) ** 2);
-      fog.color.setHex(k > 0.01 ? 0x05202b : 0x020b18);
+      const night = k > 0.01 ? 0x05202b : 0x020b18;
+      fog.color.setHex(night);
       fog.density = 0.052 - k * 0.012;
-      world.beyond.material.opacity = k * 0.6;
-      world.beyondRef.material.opacity = k * 0.3;
-      world.veil.material.color.setHex(k > 0.01 ? 0x05202b : 0x020b18); // QA LAW: veil colour follows fog colour
+      const open = wayOpen(p.z); // the beyond rises with the door's yield (see wayOpen)
+      world.beyond.material.opacity = open * 0.6;
+      world.beyondRef.material.opacity = open * 0.3;
+      world.veil.material.color.setHex(night); // QA LAW: veil colour follows fog colour
+      // ...and so does the sky. The mirror's far field fogs to fog.color while
+      // the sky above it stays scene.background: when the two drift apart the
+      // water's far edge draws a hard line across the full frame (G3 QA at
+      // 0.97: a 1px step at y ≈ 466 — the horizon-seam kill-class).
+      sky.setHex(night);
       world.veil.material.opacity = 0.58 - k * 0.06;
       world.bloom.strength = (0.85 + prog * 0.35) * (1 - k * 0.35);
 
