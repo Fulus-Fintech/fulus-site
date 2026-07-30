@@ -109,6 +109,16 @@ Note on stop 0.72: at prog ~0.72 the crossing wash is at/near its peak
 is a near-white wash with no figures legible — expected/by-design, not
 diagnostic for this gate. Figure QA judgment rests on stops 0.15/0.3/0.42/0.55.
 
+AMENDED (G2 QA round 3, 2026-07-30): the "by-design near-white 0.72" doctrine
+is retired. QA killed the settled 0.72 whiteout; attribution shots proved it
+was the full-frustum portal face + wide wash sigma (the cast backglows
+contribute zero pixels there — figures sit behind the camera). The door now
+YIELDS its presence on approach (face alpha + hushed halo, flight/portal
+round-3 laws) and the wash hugs the plane (sigma 0.24), so settled 0.72 reads
+as deep night with a soft halo whisper, and the 0.92 flash lives only at the
+crossing itself (~prog 0.74). Settled captures need converged-lerp polling —
+fixed 4s waits under-settle on SwiftShader (g2b/g2c stop labels lag true prog).
+
 Question to ask, per figure: "does this figure stand in the night, or does
 it read as pasted?"
 

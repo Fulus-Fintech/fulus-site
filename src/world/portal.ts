@@ -9,6 +9,7 @@ export const LEAN_DEG = 20;
 export interface PortalHandles {
   group: THREE.Group;
   setDim(v: number): void;
+  setYield(v: number): void; // 0 = fully present, 1 = fully yielded (face transparent)
   setTime(t: number): void;
 }
 
@@ -16,7 +17,7 @@ export interface PortalHandles {
 const PORTAL_VERTEX = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
 
 const PORTAL_FRAGMENT = /* glsl */ `
-    varying vec2 vUv; uniform float uTime; uniform float uDim;
+    varying vec2 vUv; uniform float uTime; uniform float uDim; uniform float uYield;
     void main(){
       vec3 cyan = vec3(0.0, 0.898, 1.0); vec3 teal = vec3(0.0, 1.0, 0.698);
       float depth = smoothstep(0., 1., vUv.y);
@@ -27,7 +28,7 @@ const PORTAL_FRAGMENT = /* glsl */ `
       col *= (1. + shimmer);
       float edge = smoothstep(.0, .06, vUv.x) * smoothstep(1., .94, vUv.x) * smoothstep(.0, .05, vUv.y) * smoothstep(1., .95, vUv.y);
       col *= mix(.4, 1., edge);
-      gl_FragColor = vec4(col * uDim, 1.);
+      gl_FragColor = vec4(col * uDim, 1. - uYield);
     }`;
 
 // Halo behind the portal — radial gradient texture so it has NO visible bounds
@@ -72,9 +73,18 @@ export function createPortal(): PortalHandles {
   const shear = new THREE.Matrix4().makeShear(0, 0, Math.tan(THREE.MathUtils.degToRad(LEAN_DEG)), 0, 0, 0);
   geo.applyMatrix4(shear);
 
+  // G2 QA round 3 (kill-class: blown crossing frame): transparent so the face
+  // can YIELD on approach — a full-frustum emissive face can never read as
+  // night by color-dim alone (custom shader bypasses tone mapping, covers
+  // every pixel). As uYield rises the night world behind the door (halo, fog,
+  // floor) carries the frame. depthWrite stays ON while the door is present
+  // (presence = occlusion: without it the ribbon behind the door blew a white
+  // core through the face at the approved 0.42/0.55 stops) and is dropped by
+  // setYield once the door starts to open.
   const mat = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
-    uniforms: { uTime: { value: 0 }, uDim: { value: 1 } },
+    transparent: true,
+    uniforms: { uTime: { value: 0 }, uDim: { value: 1 }, uYield: { value: 0 } },
     vertexShader: PORTAL_VERTEX,
     fragmentShader: PORTAL_FRAGMENT,
   });
@@ -83,22 +93,30 @@ export function createPortal(): PortalHandles {
   face.position.y = PH / 2;
   group.add(face);
 
-  const halo = new THREE.Mesh(
-    new THREE.PlaneGeometry(PORTAL_W * 5, PH * 3.2),
-    new THREE.MeshBasicMaterial({
-      map: makeHaloTexture(),
-      transparent: true,
-      opacity: 0.5,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  );
+  const HALO_OPACITY = 0.5; // authored mid-distance strength (prototype verbatim)
+  const haloMat = new THREE.MeshBasicMaterial({
+    map: makeHaloTexture(),
+    transparent: true,
+    opacity: HALO_OPACITY,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(PORTAL_W * 5, PH * 3.2), haloMat);
   halo.position.set(0.4, PH * 0.7, -0.5);
   group.add(halo);
 
   return {
     group,
     setDim(v: number): void { mat.uniforms.uDim.value = v; },
+    // The door yields its presence at the threshold (G2 QA round 3): face
+    // alpha drops with v, and the halo hushes most of the way with it — at
+    // point-blank range its additive flood alone flattens the frame — but
+    // keeps a whisper (20%): it IS the soft authored ellipse of the crossing.
+    setYield(v: number): void {
+      mat.uniforms.uYield.value = v;
+      mat.depthWrite = v <= 0.01; // an opening door stops occluding the world behind it
+      haloMat.opacity = HALO_OPACITY * (1 - v * 0.8);
+    },
     setTime(t: number): void { mat.uniforms.uTime.value = t; },
   };
 }
