@@ -6,6 +6,19 @@
   "observability": {
     "enabled": true
   },
+  // Cutover from Framer, 2026-08-01 (founder: "yes, cut it over"). The zone
+  // moved to Cloudflare nameservers, which left both hostnames without an
+  // origin; a custom domain makes Cloudflare itself serve the site, so no
+  // origin exists to go down. www is attached rather than left pointing at
+  // Framer — canonicalising it to the apex stays a zone-level 301 (Bulk
+  // Redirect), the mechanism this project chose for it in May.
+  // Kept on so the site always has a reachable URL that does not depend on the
+  // zone — the review link, and the fallback if a domain change goes wrong.
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "fulus.sa", "custom_domain": true },
+    { "pattern": "www.fulus.sa", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
