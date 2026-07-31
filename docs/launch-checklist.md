@@ -172,7 +172,7 @@ reduced-motion)."
 
 ## 5 · Ops
 
-- [ ] Cloudflare Workers Builds: push-to-main runs `npm ci && npm run build`
+- [n/a] Cloudflare Workers Builds: push-to-main runs `npm ci && npm run build`
   and deploys — watch one deploy end-to-end before launch week.
 - [ ] `www.fulus.sa/*` → `https://fulus.sa/$1` (301) bulk redirect still live
   (configured at the Cloudflare dashboard, not `_redirects`).
@@ -180,6 +180,15 @@ reduced-motion)."
   green, and `curl -s https://fulus.sa/.well-known/apple-app-site-association`
   serves the JSON. (LAW: never edit these files here — source of truth is the
   Flutter repo.)
+
+      2026-08-01: NOT CONFIGURED, and that is now a recorded fact rather than
+      an assumption. `main` was pushed (f9f8434 -> 850ec47) and the deployment
+      list was watched for three minutes: no new worker version appeared and
+      the live site stayed on d3f1ceb8. Deploys are therefore manual
+      (`npx wrangler deploy`) and `main` is source-of-truth, not a trigger.
+      If Workers Builds is connected later, re-open this box and watch one
+      push through end to end before relying on it.
+
 
       # 2026-07-30, c448928 — local half green; live-URL half needs a deploy
       $ node tools/check_wellknown.mjs
