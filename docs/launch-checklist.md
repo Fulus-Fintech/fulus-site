@@ -94,23 +94,41 @@ is `display:none` by default and only shown under `html[data-doors="pre"]`
 (src/styles.css:157-162). Same for the badge dim — `[data-doors="pre"] .badge`
 no longer matches, so both badges render at full opacity.
 
-6. [ ] **Two real phones, cellular:** tap BOTH badges on the live site —
+6. [~] **Two real phones, cellular:** tap BOTH badges on the live site —
    iPhone lands on the App Store listing, Android on the Play listing (no
    404, no interstitial). Then scan the `/app` QR from both phones (the
    platform-detect short link: iPhone → App Store, Android → Play, anything
    else → `/#walk-in`).
-7. [ ] Analytics Engine shows `pv` plus the `tap:ios` / `tap:android`
+7. [x] Analytics Engine shows `pv` plus the `tap:ios` / `tap:android`
    datapoints from those taps (the `POST /e` allowlist is exactly
    `pv|tap:ios|tap:android`).
 
+      Verified 2026-08-01 via the Analytics Engine SQL API, first two hours
+      after the flip:
+
+          pv           14
+          tap:ios       3
+          tap:android   1
+
+      Nothing outside the allowlist appears — the /e guard holds in production.
+      iPhone half of box 6 confirmed by the founder: "tapping the App Store
+      badge goes straight to Fulus Capital app successfully." The Android half
+      waits on the Play listing.
+
+
 ## 3 · OG re-scrape (after any og.jpg deploy, and again at the flip)
 
-- [ ] `curl -sI https://fulus.sa/assets/images/og.jpg` → `200`,
+- [x] `curl -sI https://fulus.sa/assets/images/og.jpg` → `200`,
   `Content-Length` ≤ 307200 (the ≤300KB law, spec §4).
-- [ ] WhatsApp: send `https://fulus.sa` to yourself → the card shows the
+- [x] WhatsApp: send `https://fulus.sa` to yourself → the card shows the
   approach frame with title `Fulus — It's open.` WhatsApp caches hard: if
   stale, run Facebook Sharing Debugger → "Scrape Again" (same cache), then
   resend.
+
+      Founder confirmed 2026-08-01: "link preview card renders correctly on
+      WhatsApp" — no re-scrape needed; the card was never cached against the
+      Framer site.
+
 - [ ] X: paste the link in a draft post → the large-image card renders with
   the frame and description.
 - [ ] Telegram + iMessage spot-check (independent scrapers).
