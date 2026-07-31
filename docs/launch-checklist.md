@@ -18,10 +18,17 @@ plan; this file is the ops side plus the G5 device gate.
 
 ## 1 · Store IDs into Worker vars (owner: founder → then dev)
 
-- [ ] Founder supplies the **App Store ID** (numeric, from the live listing
+- [~] Founder supplies the **App Store ID** (numeric, from the live listing
   URL `https://apps.apple.com/app/id<ID>`) and the **Play package name**
   (reverse-DNS, from the Play listing `?id=` parameter).
-- [ ] Put them in `wrangler.jsonc` under `vars` — use the exact var names
+
+      App Store ID 6752026264 supplied 2026-07-31 (Fulus Capital, live since
+      2026-04-14). Play package is com.fulus.fintech per .well-known/assetlinks.json
+      but the listing is in testing — PLAY_PACKAGE_ID stays empty on purpose so
+      Android taps return to the door rather than a dead store page. Fill it and
+      redeploy on publish day; no code change, no second flip.
+
+- [x] Put them in `wrangler.jsonc` under `vars` — use the exact var names
   `src/worker.ts` reads from `env` (confirm against the file before editing):
 
       "vars": {
@@ -30,7 +37,7 @@ plan; this file is the ops side plus the G5 device gate.
         "PLAY_PACKAGE_ID": "<package name>"
       }
 
-- [ ] Deploy and verify the pre-state contract:
+- [x] Deploy and verify the pre-state contract:
   `curl -sI https://fulus.sa/app/ios` → `302`, `Location: /#walk-in`,
   `Cache-Control: no-store` (while `DOORS=pre`, EVERY `/app` path goes home —
   the redirects never 404, spec §6).
@@ -40,15 +47,53 @@ plan; this file is the ops side plus the G5 device gate.
 Preconditions: both store listings live and public; IDs in vars (§1); OG
 assets deployed (§3); device gate passed (§4).
 
-1. [ ] Edit `wrangler.jsonc`: `"DOORS": "open"`.
-2. [ ] `npm run build && npx wrangler deploy` — note the deployed version id.
-3. [ ] `curl -s https://fulus.sa/ | grep -o 'data-doors="[^"]*"'` →
+> **LAUNCH RECORD — 2026-08-01.**
+> Founder's device-gate verdict, verbatim: **"I tried it, it is good."**
+> Given in answer to: walk https://fulus.sa on the phone over cellular, and
+> "tell me it's good, and I flip one variable."
+>
+> **One precondition is knowingly waived:** *both* store listings are not
+> live. Fulus Capital is public on the App Store (id 6752026264); the Play
+> listing is still in testing (founder, 2026-07-31: "it's in testing, I'll
+> publish it in a separate session"). This is safe by construction rather
+> than by luck — `routeFor` opens a store only when an id exists for it, and
+> `PLAY_PACKAGE_ID` is deliberately empty, so Android taps return to the door
+> instead of reaching a dead Play page. Step 5 below is therefore recorded
+> against that intended behaviour, not against a live Play listing. Android
+> goes live later by filling one var and redeploying — no code change, no
+> second flip.
+>
+> Step 6 (two real phones) is recorded honestly below: the iPhone half was
+> walked by the founder; the Android half cannot be walked until Play
+> publishes.
+
+1. [x] Edit `wrangler.jsonc`: `"DOORS": "open"`.
+2. [x] `npm run build && npx wrangler deploy` — note the deployed version id.
+3. [x] `curl -s https://fulus.sa/ | grep -o 'data-doors="[^"]*"'` →
    `data-doors="open"`; badges at full opacity; the `Doors at midnight.`
    folio line is gone (it renders only under `[data-doors="pre"]`).
-4. [ ] `curl -sI https://fulus.sa/app/ios` → `302` to
+4. [x] `curl -sI https://fulus.sa/app/ios` → `302` to
    `https://apps.apple.com/app/id<APP_STORE_ID>`, `Cache-Control: no-store`.
-5. [ ] `curl -sI https://fulus.sa/app/android` → `302` to
+5. [x] `curl -sI https://fulus.sa/app/android` → `302` to
    `https://play.google.com/store/apps/details?id=<PLAY_PACKAGE_ID>`, no-store.
+**Executed 2026-08-01 — worker version d3f1ceb8-71be-4d64-8d15-01b593585b20.**
+
+```
+data-doors="open"                                    (apex + www)
+/app/ios      302  https://apps.apple.com/app/id6752026264   no-store
+              follows to 200 apps.apple.com/us/app/fulus-capital/id6752026264
+/app/android  302  /#walk-in                                  no-store   <- by design, Play in testing
+/app iPhone   302  https://apps.apple.com/app/id6752026264
+/app Android  302  /#walk-in                                  <- by design
+/app desktop  302  /#walk-in
+/app/qr       302  /#walk-in                                  (unknown subpath, never a 404)
+```
+
+The `Doors at midnight.` folio line is present in the DOM but hidden: `.doors-note`
+is `display:none` by default and only shown under `html[data-doors="pre"]`
+(src/styles.css:157-162). Same for the badge dim — `[data-doors="pre"] .badge`
+no longer matches, so both badges render at full opacity.
+
 6. [ ] **Two real phones, cellular:** tap BOTH badges on the live site —
    iPhone lands on the App Store listing, Android on the Play listing (no
    404, no interstitial). Then scan the `/app` QR from both phones (the

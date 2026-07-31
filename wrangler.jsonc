@@ -37,7 +37,7 @@
   // the door rather than to ".../id" or "...?id="), so the two platforms can
   // go live on different days with one var and no code change.
   "vars": {
-    "DOORS": "pre",
+    "DOORS": "open",
     // Fulus Capital — live since 2026-04-14 (apps.apple.com/app/id6752026264)
     "APP_STORE_ID": "6752026264",
     // Package is com.fulus.fintech (see .well-known/assetlinks.json), but the
