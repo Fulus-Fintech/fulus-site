@@ -42,6 +42,38 @@ describe('doors open', () => {
   });
 });
 
+// The two stores land on different days: iOS was live before the site, Android
+// follows. Whichever one we hold no id for stays shut even with the doors open —
+// a visitor is returned to the door, never handed ".../id" or "...?id=".
+describe('doors open, one store not yet live', () => {
+  const iosOnly = { ios: '6752026264', android: '' };
+  const androidOnly = { ios: '', android: 'com.fulus.fintech' };
+
+  test.each([
+    ['/app/android', WINDOWS, iosOnly, WALK_IN],
+    ['/app', ANDROID, iosOnly, WALK_IN], // android phone, no android store yet
+    ['/app/ios', WINDOWS, iosOnly, 'https://apps.apple.com/app/id6752026264'],
+    ['/app', IOS, iosOnly, 'https://apps.apple.com/app/id6752026264'],
+    ['/app/ios', WINDOWS, androidOnly, WALK_IN],
+    ['/app', IOS, androidOnly, WALK_IN],
+    ['/app/android', WINDOWS, androidOnly, 'https://play.google.com/store/apps/details?id=com.fulus.fintech'],
+  ])('%s (%s) -> %s', (path, ua, partial, location) => {
+    expect(routeFor(path, ua, 'open', partial)).toEqual({ status: 302, location });
+  });
+
+  test('never emits a store URL with an empty id', () => {
+    for (const path of ['/app', '/app/ios', '/app/android']) {
+      for (const ua of [IOS, ANDROID, MAC, WINDOWS]) {
+        for (const partial of [iosOnly, androidOnly, { ios: '', android: '' }]) {
+          const r = routeFor(path, ua, 'open', partial);
+          expect(r!.location).not.toMatch(/id$/);
+          expect(r!.location).not.toMatch(/id=$/);
+        }
+      }
+    }
+  });
+});
+
 describe('non-app paths are not routed (served by ASSETS)', () => {
   test.each([['/'], ['/privacy.html'], ['/apple-touch-icon.png'], ['/application']])(
     '%s -> null',

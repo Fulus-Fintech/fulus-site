@@ -19,11 +19,17 @@
   // Doors flip = change DOORS to "open" (one var) — the EXACT lowercase string,
   // nothing else: src/worker.ts fails closed, so "Open" or a stray space keeps
   // the doors shut rather than opening them early. Store IDs are founder
-  // open items (spec §10.1) — empty until the listings exist; redirects ship
-  // against the vars either way.
+  // A store id is a promise that the listing is reachable. An empty one keeps
+  // that store shut even with the doors open (routeFor returns the visitor to
+  // the door rather than to ".../id" or "...?id="), so the two platforms can
+  // go live on different days with one var and no code change.
   "vars": {
     "DOORS": "pre",
-    "APP_STORE_ID": "",
+    // Fulus Capital — live since 2026-04-14 (apps.apple.com/app/id6752026264)
+    "APP_STORE_ID": "6752026264",
+    // Package is com.fulus.fintech (see .well-known/assetlinks.json), but the
+    // Play listing is in testing and not publicly reachable as of 2026-07-31 —
+    // paste the package here on the day it publishes and redeploy.
     "PLAY_PACKAGE_ID": ""
   },
   "analytics_engine_datasets": [

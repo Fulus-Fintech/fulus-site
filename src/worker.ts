@@ -51,11 +51,21 @@ export function routeFor(
   if (path !== '/app' && !path.startsWith('/app/')) return null;
   const walkIn = { status: 302 as const, location: '/#walk-in' };
   if (doors === 'pre') return walkIn;
-  const ios = { status: 302 as const, location: 'https://apps.apple.com/app/id' + ids.ios };
-  const android = {
-    status: 302 as const,
-    location: 'https://play.google.com/store/apps/details?id=' + ids.android,
-  };
+  // A store opens only when we hold an id for it. The two platforms land on
+  // different days — iOS was live before the site, Android follows — and an
+  // empty id would otherwise build ".../id" or "...?id=", handing a visitor a
+  // dead store page. An unopened store returns them to the door instead: the
+  // id IS the readiness signal, so switching a platform on is one var, no
+  // deploy of code. (Spec §6: the redirect must never 404.)
+  const ios = ids.ios
+    ? { status: 302 as const, location: 'https://apps.apple.com/app/id' + ids.ios }
+    : walkIn;
+  const android = ids.android
+    ? {
+        status: 302 as const,
+        location: 'https://play.google.com/store/apps/details?id=' + ids.android,
+      }
+    : walkIn;
   if (path === '/app/ios') return ios;
   if (path === '/app/android') return android;
   if (path === '/app') {
