@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy — Fulus</title>
-  <meta name="description" content="What fulus.sa counts: two plain counts, no cookies, no personal data. Why, and how long they are kept.">
+  <meta name="description" content="What the Fulus app and fulus.sa collect, who else can see it, where it is stored, how long it is kept, and how to have it removed.">
   <meta name="theme-color" content="#020B18">
   <link rel="canonical" href="https://fulus.sa/privacy.html">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32.png">
@@ -30,61 +30,169 @@
   <main id="main" class="privacy-main">
     <div class="container">
       <h1>Privacy</h1>
-      <p>This page covers what fulus.sa collects. Plain language, short on purpose.</p>
+      <p>This policy covers the <strong>Fulus Capital</strong> app and this website, <bdi>fulus.sa</bdi>. Plain language, and specific — we would rather tell you exactly what happens than say something reassuring and vague.</p>
+      <p>Fulus is software for running an investment club. Your club records who put in what, what the club holds, and what each member's share is worth. <strong>Fulus never holds, moves, or invests your money.</strong> Transfers happen between you and your club through your own bank; the app records them.</p>
+
       <section class="privacy-block">
-        <h2>What we collect</h2>
-        <p>Two counts: that a page was opened, and that someone tapped a store badge — the App Store one or the Google Play one. Each one travels as a single word to our own server, with nothing attached to it. That's the whole list.</p>
+        <h2>Who we are</h2>
+        <p>Fulus Fintech Company. You can reach us any time at <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
       </section>
+
       <section class="privacy-block">
-        <h2>What we don't collect</h2>
-        <p>No cookies. No name, no email address, no phone number, nothing you could be identified by — this site has no form that asks for any of it. No trackers belonging to other companies, and nothing that follows you from here to anywhere else. The two counts carry nothing that says who sent them.</p>
+        <h2>What the app collects</h2>
+        <p><strong>To create your account:</strong> your email address and a password — or, if you sign in with Apple or Google, the name and email address they pass to us. We never see your Apple or Google password.</p>
+        <p><strong>Your profile:</strong> a username and your first and last name, which are required. A phone number, a date of birth and a profile photo, all optional — the app works without them.</p>
+        <p><strong>Your club activity:</strong> the contributions, withdrawals, trades, income, expenses and opening balances that you or your club managers enter, along with any notes attached to them. If you upload a transfer receipt, we store the file as you sent it — <strong>a receipt often shows your name and bank details</strong>, so it is worth knowing that it is kept.</p>
+        <p><strong>To send you notifications:</strong> a device token from Apple or Google, so a message can reach your phone.</p>
+        <p>That is the whole list. The app does not ask for your location, your contacts or your calendar, it contains no advertising, and it has no advertising identifier.</p>
       </section>
+
       <section class="privacy-block">
-        <h2>Why we count them</h2>
-        <p>To know whether the page is being read, and whether the way to the app is easy to find. Two numbers answer both. They are never sold and never shared.</p>
+        <h2>Face ID, Touch ID and your screen lock</h2>
+        <p>If you turn on App Lock, the check happens entirely on your phone, by your phone. <strong>Your fingerprint or face never reaches us</strong> — your device simply tells the app yes or no. The same is true of your device passcode.</p>
       </section>
+
       <section class="privacy-block">
-        <h2>How long we keep them</h2>
-        <p>The counts sit with Cloudflare, who serve this site for us, and they age out on Cloudflare's own schedule. There is no record of you among them to keep or to delete, because none was ever made.</p>
+        <h2>What this website collects</h2>
+        <p>Two counts: that a page was opened, and that someone tapped a store badge. Each travels to our own server as a single word with nothing attached. No cookies, no trackers belonging to other companies, and no form on this site asks who you are. If you join the waitlist, we keep the email address you give us and nothing else.</p>
       </section>
+
       <section class="privacy-block">
-        <h2>When you leave for a store</h2>
-        <p>A store badge takes you to the App Store or to Google Play. From the moment you arrive there, Apple's or Google's own privacy terms apply, not ours.</p>
+        <h2>Who else can see your information</h2>
+        <p><strong>Other members of your club</strong> see your name, your username and your photo, and they see your transactions in the club's records — that is what a shared ledger is. Club managers can additionally see the requests you make and the receipts you upload.</p>
+        <!--
+          ACCURACY NOTE, remove before publishing only if still true then:
+          Until the user_profile column split ships (workstream A, steps 4-8), an
+          optional phone number and date of birth are technically readable through
+          the API by any signed-in user, even though no screen displays them. The
+          sentence above describes what the app shows. If this page is published
+          BEFORE that fix lands, add: "An optional phone number or date of birth you
+          add is not shown on any screen." and get counsel's view on whether the
+          API-level readability needs disclosing.
+        -->
+        <p><strong>Companies that run parts of the service for us.</strong> They act on our instructions and may not use your information for their own purposes:</p>
+        <ul>
+          <li><strong>Supabase</strong> — stores the database, your account, and uploaded files.</li>
+          <li><strong>Google</strong> — delivers push notifications to your phone (Firebase Cloud Messaging).</li>
+          <li><strong>Logflare</strong> — receives a copy of our sign-in security log, which includes the email address used and the network address it came from. We use it to notice attacks on accounts.</li>
+          <li><strong>Cloudflare</strong> — serves this website and runs the anti-robot check on our sign-in and sign-up screens.</li>
+          <li><strong>Apple</strong> and <strong>Google</strong> — only if you choose to sign in with them.</li>
+        </ul>
+        <p>We do not sell your information. We do not share it for advertising. We would disclose it if the law required us to.</p>
       </section>
+
       <section class="privacy-block">
-        <h2>Questions</h2>
-        <p><span>Write to us at</span> <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+        <h2>Where your information is stored</h2>
+        <p>Our database and files are hosted by Supabase in <strong>Mumbai, India</strong>. Push notifications and sign-in providers are operated by Google and Apple, which may process data in other countries. This means <strong>your information is transferred outside Saudi Arabia</strong> to be stored and processed, and we tell you so plainly because Saudi Arabia's Personal Data Protection Law requires us to.</p>
       </section>
-      <p class="privacy-updated">We handle this data in line with the principles of Saudi Arabia's Personal Data Protection Law (PDPL).</p>
+
+      <section class="privacy-block">
+        <h2>How long we keep it</h2>
+        <p>Your account and profile are kept while your account is open. Your club's financial records are kept as long as the club keeps them, because they are the club's records and not yours alone — other members' balances are calculated from them. Sign-in security logs age out on our log provider's schedule.</p>
+      </section>
+
+      <section class="privacy-block">
+        <h2>Deleting your account</h2>
+        <p>You can ask us to delete your account at any time — from the app, or from <a href="/delete-account">the deletion page</a> on this site.</p>
+        <p>We want to be straight about what deletion can and cannot do. <strong>If you still hold units in a club, we will ask you to redeem them or leave the club first</strong> — deleting you while you have money in the pool would erase the record of a claim you still own, and we are not willing to do that to you.</p>
+        <p>Once you have no live claim, we remove your name, username, email address, phone number, date of birth and profile photo, unlink your Apple and Google sign-in, and end your sessions. <strong>Your transactions stay in the club's ledger, without your name on them</strong> — they are also other members' records, and removing them would change everyone else's balance. Receipts you uploaded stay with the club's financial records for the same reason. Your profile photo is removed from the app.</p>
+        <p>If you have never joined a club or recorded anything, there is nothing to keep, and your account is deleted outright.</p>
+      </section>
+
+      <section class="privacy-block">
+        <h2>Your rights</h2>
+        <p>Under Saudi Arabia's Personal Data Protection Law you can ask to see the personal data we hold about you, correct it, have it deleted, or object to how we use it. Write to <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a> and we will answer within 30 days. You may also complain to the Saudi Data &amp; AI Authority (SDAIA).</p>
+      </section>
+
+      <section class="privacy-block">
+        <h2>Age</h2>
+        <p>Fulus is for people aged 18 and over. We do not knowingly collect information from anyone younger. If you believe a child has an account, tell us and we will remove it.</p>
+      </section>
+
+      <section class="privacy-block">
+        <h2>Changes</h2>
+        <p>If we change something that materially affects you, we will say so in the app before it takes effect.</p>
+      </section>
+
+      <p class="privacy-updated">Last updated 7 August 2026. Questions: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
 
       <div class="privacy-arabic" lang="ar" dir="rtl">
         <h2>الخصوصية</h2>
-        <p>هذه الصفحة تشرح ما يجمعه موقع ‎fulus.sa‎. لغة واضحة ومختصرة عن قصد.</p>
+        <p>تغطي هذه السياسة تطبيق <strong><bdi>Fulus Capital</bdi></strong> وهذا الموقع <bdi>fulus.sa</bdi>. لغة واضحة ومحددة — نفضّل أن نخبرك بما يحدث بالضبط على أن نقول كلامًا مطمئنًا وغامضًا.</p>
+        <p>فلوس برنامج لإدارة نادي استثماري. ناديك يسجّل من دفع ماذا، وما الذي يملكه النادي، وكم تساوي حصة كل عضو. <strong>فلوس لا تحتفظ بأموالك ولا تحوّلها ولا تستثمرها.</strong> التحويلات تتم بينك وبين ناديك عبر بنكك أنت، والتطبيق يسجّلها.</p>
+
         <section class="privacy-block">
-          <h3>ما الذي نجمعه</h3>
-          <p>رقمان لا غير: عدد مرات فتح الصفحة، وعدد مرات الضغط على شارة المتجر — شارة <bdi>App Store</bdi> أو شارة <bdi>Google Play</bdi>. كل واحدة تصل إلى خادمنا نحن ككلمة واحدة، لا يُرفق بها شيء. هذه القائمة كاملة.</p>
+          <h3>من نحن</h3>
+          <p>شركة فلوس للتقنية المالية. يمكنك مراسلتنا في أي وقت على <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
         </section>
+
         <section class="privacy-block">
-          <h3>ما الذي لا نجمعه</h3>
-          <p>لا ملفات تعريف ارتباط، ولا اسم، ولا بريد إلكتروني، ولا رقم هاتف، ولا أي شيء يمكن التعرّف عليك من خلاله — لا يوجد في هذا الموقع نموذج يطلب شيئًا من ذلك. ولا أدوات تتبّع تعود لشركات أخرى، ولا شيء يتبعك من هنا إلى أي مكان آخر. والرقمان لا يحملان ما يدل على مُرسِلهما.</p>
+          <h3>ما الذي يجمعه التطبيق</h3>
+          <p><strong>لإنشاء حسابك:</strong> بريدك الإلكتروني وكلمة مرور — أو، إن سجّلت الدخول عبر <bdi>Apple</bdi> أو <bdi>Google</bdi>، الاسم والبريد الإلكتروني اللذين يمرّرانهما لنا. ولا نرى كلمة مرورك لديهما أبدًا.</p>
+          <p><strong>ملفك الشخصي:</strong> اسم مستخدم واسمك الأول والأخير، وهي مطلوبة. ورقم هاتف وتاريخ ميلاد وصورة شخصية، وكلها اختيارية — التطبيق يعمل بدونها.</p>
+          <p><strong>نشاطك في النادي:</strong> الاشتراكات والاستردادات والصفقات والإيرادات والمصروفات والأرصدة الافتتاحية التي تُدخلها أنت أو مدراء ناديك، مع أي ملاحظات مرفقة بها. وإذا رفعت إيصال تحويل، نحفظ الملف كما أرسلته — <strong>وغالبًا ما يُظهر الإيصال اسمك وبيانات حسابك البنكي</strong>، ومن الجدير أن تعرف أنه محفوظ.</p>
+          <p><strong>لإرسال الإشعارات إليك:</strong> رمز جهاز من <bdi>Apple</bdi> أو <bdi>Google</bdi> ليصل الإشعار إلى هاتفك.</p>
+          <p>هذه القائمة كاملة. التطبيق لا يطلب موقعك ولا جهات اتصالك ولا تقويمك، ولا يحتوي على إعلانات، وليس فيه معرّف إعلاني.</p>
         </section>
+
         <section class="privacy-block">
-          <h3>لماذا نعدّهما</h3>
-          <p>لنعرف إن كانت الصفحة تُقرأ، وإن كان الطريق إلى التطبيق واضحًا. رقمان يجيبان عن السؤالين. ولا يُباعان ولا يُشاركان مع أي جهة.</p>
+          <h3>بصمة الوجه والإصبع وقفل الشاشة</h3>
+          <p>إذا فعّلت قفل التطبيق، يتم التحقق داخل هاتفك بالكامل ومن هاتفك. <strong>بصمتك أو وجهك لا يصلان إلينا إطلاقًا</strong> — جهازك يخبر التطبيق بنعم أو لا فقط. وينطبق الأمر نفسه على رمز قفل جهازك.</p>
         </section>
+
         <section class="privacy-block">
-          <h3>كم نحتفظ بهما</h3>
-          <p>الرقمان محفوظان لدى <bdi>Cloudflare</bdi>، الجهة التي تستضيف هذا الموقع لنا، وتنتهي مدتهما وفق جدول <bdi>Cloudflare</bdi> نفسه. ولا يوجد فيهما سجل عنك لنحتفظ به أو نحذفه، لأنه لم يُنشأ أصلًا.</p>
+          <h3>ما الذي يجمعه هذا الموقع</h3>
+          <p>رقمان: عدد مرات فتح الصفحة، وعدد مرات الضغط على شارة المتجر. كل واحد يصل إلى خادمنا ككلمة واحدة لا يُرفق بها شيء. لا ملفات تعريف ارتباط، ولا أدوات تتبّع تعود لشركات أخرى، ولا نموذج في هذا الموقع يسأل من أنت. وإن انضممت إلى قائمة الانتظار، نحتفظ بالبريد الإلكتروني الذي تعطينا إياه ولا شيء غيره.</p>
         </section>
+
         <section class="privacy-block">
-          <h3>عند المغادرة إلى المتجر</h3>
-          <p>شارة المتجر تنقلك إلى <bdi>App Store</bdi> أو <bdi>Google Play</bdi>. ومنذ وصولك إلى هناك تسري شروط الخصوصية الخاصة بـ<bdi>Apple</bdi> أو <bdi>Google</bdi>، لا شروطنا.</p>
+          <h3>من غيرنا يمكنه رؤية معلوماتك</h3>
+          <p><strong>أعضاء ناديك الآخرون</strong> يرون اسمك واسم المستخدم وصورتك، ويرون معاملاتك في سجلات النادي — فهذا هو معنى السجل المشترك. ويستطيع مدراء النادي إضافةً إلى ذلك رؤية الطلبات التي تقدّمها والإيصالات التي ترفعها.</p>
+          <p><strong>شركات تُشغّل أجزاء من الخدمة نيابة عنا.</strong> تعمل وفق تعليماتنا ولا يجوز لها استخدام معلوماتك لأغراضها الخاصة:</p>
+          <ul>
+            <li><strong><bdi>Supabase</bdi></strong> — تخزّن قاعدة البيانات وحسابك والملفات المرفوعة.</li>
+            <li><strong><bdi>Google</bdi></strong> — توصّل الإشعارات إلى هاتفك.</li>
+            <li><strong><bdi>Logflare</bdi></strong> — تستقبل نسخة من سجل أمان تسجيل الدخول، وفيه البريد الإلكتروني المستخدم وعنوان الشبكة الذي جاء منه. نستخدمه لملاحظة الهجمات على الحسابات.</li>
+            <li><strong><bdi>Cloudflare</bdi></strong> — تستضيف هذا الموقع وتُشغّل فحص مكافحة الآلي في شاشتَي الدخول والتسجيل.</li>
+            <li><strong><bdi>Apple</bdi></strong> و<strong><bdi>Google</bdi></strong> — فقط إن اخترت تسجيل الدخول عبرهما.</li>
+          </ul>
+          <p>لا نبيع معلوماتك. ولا نشاركها لأغراض إعلانية. وسنفصح عنها إن ألزمنا النظام بذلك.</p>
         </section>
+
         <section class="privacy-block">
-          <h3>أسئلة</h3>
-          <p><span>راسلنا على</span> <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+          <h3>أين تُخزّن معلوماتك</h3>
+          <p>قاعدة بياناتنا وملفاتنا مستضافة لدى <bdi>Supabase</bdi> في <strong>مومباي، الهند</strong>. أما الإشعارات ومزوّدو تسجيل الدخول فتُشغّلهم <bdi>Google</bdi> و<bdi>Apple</bdi>، وقد يعالجون البيانات في دول أخرى. وهذا يعني أن <strong>معلوماتك تُنقل خارج المملكة العربية السعودية</strong> لتُخزَّن وتُعالَج، ونخبرك بذلك صراحةً لأن نظام حماية البيانات الشخصية السعودي يوجب علينا ذلك.</p>
         </section>
-        <p class="privacy-updated">نتعامل مع هذه البيانات وفق مبادئ نظام حماية البيانات الشخصية في المملكة العربية السعودية.</p>
+
+        <section class="privacy-block">
+          <h3>كم نحتفظ بها</h3>
+          <p>حسابك وملفك الشخصي محفوظان ما دام حسابك مفتوحًا. أما السجلات المالية لناديك فتُحفظ ما دام النادي يحفظها، لأنها سجلات النادي وليست سجلاتك وحدك — فأرصدة الأعضاء الآخرين تُحتسب منها. وسجلات أمان تسجيل الدخول تنتهي مدتها وفق جدول مزوّد السجلات.</p>
+        </section>
+
+        <section class="privacy-block">
+          <h3>حذف حسابك</h3>
+          <p>يمكنك أن تطلب حذف حسابك في أي وقت — من التطبيق، أو من <a href="/delete-account">صفحة الحذف</a> في هذا الموقع.</p>
+          <p>ونريد أن نكون صريحين بشأن ما يستطيع الحذف فعله وما لا يستطيع. <strong>إن كنت لا تزال تملك وحدات في نادٍ، سنطلب منك استردادها أو مغادرة النادي أولًا</strong> — فحذفك ولك مال في الوعاء يمحو سجل حقٍّ ما زال لك، ولسنا مستعدين لفعل ذلك بك.</p>
+          <p>وحين لا يبقى لك حق قائم، نزيل اسمك واسم المستخدم وبريدك الإلكتروني ورقم هاتفك وتاريخ ميلادك وصورتك الشخصية، ونفك ارتباط تسجيل الدخول عبر <bdi>Apple</bdi> و<bdi>Google</bdi>، وننهي جلساتك. <strong>وتبقى معاملاتك في سجل النادي بلا اسمك عليها</strong> — فهي أيضًا سجلات الأعضاء الآخرين، وإزالتها تغيّر أرصدة الجميع. وتبقى الإيصالات التي رفعتها ضمن السجلات المالية للنادي للسبب نفسه. أما صورتك الشخصية فتُزال من التطبيق.</p>
+          <p>وإن لم تنضم إلى نادٍ قط ولم تسجّل شيئًا، فلا شيء يستدعي الحفظ، ويُحذف حسابك كليًا.</p>
+        </section>
+
+        <section class="privacy-block">
+          <h3>حقوقك</h3>
+          <p>بموجب نظام حماية البيانات الشخصية في المملكة العربية السعودية، يمكنك طلب الاطلاع على بياناتك الشخصية لدينا، أو تصحيحها، أو حذفها، أو الاعتراض على طريقة استخدامنا لها. راسلنا على <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a> وسنردّ خلال ٣٠ يومًا. ويمكنك أيضًا تقديم شكوى إلى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p>
+        </section>
+
+        <section class="privacy-block">
+          <h3>العمر</h3>
+          <p>فلوس مخصص لمن أعمارهم ١٨ عامًا فأكثر. ولا نجمع معلومات عمّن هم أصغر عن علم. وإن كنت تعتقد أن لدى طفل حسابًا، فأخبرنا وسنزيله.</p>
+        </section>
+
+        <section class="privacy-block">
+          <h3>التغييرات</h3>
+          <p>إن غيّرنا شيئًا يؤثر عليك جوهريًا، سنخبرك بذلك في التطبيق قبل أن يسري.</p>
+        </section>
+
+        <p class="privacy-updated">آخر تحديث ٧ أغسطس ٢٠٢٦. للأسئلة: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
       </div>
     </div>
   </main>

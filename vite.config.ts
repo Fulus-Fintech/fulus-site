@@ -54,6 +54,13 @@ export default defineConfig({
       input: {
         index: fromRoot('./index.html'),
         privacy: fromRoot('./privacy.html'),
+        // Both are legal requirements, not marketing pages. /terms is linked
+        // from inside the shipped app binary (kTermsUrl), and Google Play
+        // requires a public account-deletion URL. Omitting either from this
+        // input list builds a site where those URLs 404 — which is how /terms
+        // came to 404 in the first place.
+        terms: fromRoot('./terms.html'),
+        'delete-account': fromRoot('./delete-account.html'),
       },
       output: {
         manualChunks: { three: ['three'] },
