@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fulus Play feature graphic (dev render source — screenshot at 1024x500)</title>
+<!--
+  Google Play feature graphic. Rendered by tools/make_feature_graphic.mjs.
+
+  Spec: exactly 1024x500, JPEG or 24-bit PNG with NO alpha channel. Play refuses
+  a graphic with an alpha channel, so the render script flattens it — do not
+  "fix" that by exporting RGBA here.
+
+  Composition rules this follows, from ../fulus-brand:
+
+  * Horizontal bilingual lockup, not Full-Stack. brandbook.md:183 assigns
+    Full-Stack to "app store listings", but lists it beside social profile
+    images and business cards — i.e. SQUARE and VERTICAL formats. brandbook.md:165
+    assigns the Horizontal lockup to wide formats. At 2.048:1 this is
+    unambiguously wide, and the 1.9:1 OG card (tools/og-image.html) already sets
+    the precedent.
+  * Canvas is Deep Ocean Night, FulusColors.oceanNight #020B18 (tokens.dart:8).
+  * The halo is Electric Cyan #00E5FF (tokens.dart:9) at low alpha — atmosphere,
+    the single permitted glow moment.
+  * Tagline in onSurfaceVariant #7A8AA0 (tokens.dart:26).
+  * Readex Pro, NOT FK Grotesk. FK Grotesk faces in the brand repo are
+    unlicensed TRIAL binaries and must never be distributed; a store feature
+    graphic is a distributed artifact. Readex Pro is OFL and safe.
+  * Copy is the App Store subtitle, already through Apple review, so the two
+    stores read consistently. Title Case, no exclamation mark, no emoji.
+
+  Play crops this graphic on some surfaces and overlays the app title on others,
+  so everything meaningful sits inside a generous safe area — nothing important
+  within ~90px of any edge.
+-->
+<style>
+  @font-face {
+    font-family: 'Readex Pro';
+    src: url('../assets/fonts/readex-pro-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-display: block;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; }
+  body {
+    background: #020B18;
+    font-family: 'Readex Pro', sans-serif;
+    position: relative;
+  }
+
+  /* Atmosphere only — never behind or on top of the wordmarks' counters. */
+  .halo {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 760px 420px at 50% 44%, rgba(0, 229, 255, 0.13), transparent 70%),
+      radial-gradient(ellipse 420px 260px at 50% 96%, rgba(0, 255, 178, 0.05), transparent 72%);
+  }
+
+  /* Safe area: Play may crop toward the centre and overlays the title on some
+     surfaces. 90px keeps the lockup and tagline clear of both. */
+  .stage {
+    position: relative;
+    height: 100%;
+    padding: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 34px;
+  }
+
+  /* 1624x361 source at 520px wide renders 520x115.6 — comfortably inside the
+     844px safe width, and large enough that the Arabic counters stay open. */
+  .lockup { width: 520px; height: auto; display: block; }
+
+  .tagline {
+    color: #7A8AA0;
+    font-size: 27px;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* A single hairline of hero light, echoing the app's gradient vocabulary
+     without introducing illustration. */
+  .rule {
+    width: 132px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #00E5FF, #00FFB2);
+    opacity: 0.85;
+  }
+</style>
+</head>
+<body>
+  <div class="halo"></div>
+  <div class="stage">
+    <img class="lockup" src="../assets/images/logo-horizontal-bilingual-white.png" alt="Fulus">
+    <div class="rule"></div>
+    <p class="tagline">Group Investing Made Simple</p>
+  </div>
+</body>
+</html>
