@@ -61,23 +61,41 @@ describe('the retired waitlist is gone from the disclosure', () => {
     ['waitlist', /waitlist/i],
     ['a place in line', /place in line/i],
     ['launch updates', /launch updates/i],
-    ['your email address', /your email address/i],
     ['قائمة الانتظار', /قائمة\s*(ال)?انتظار/],
   ])('the page no longer mentions %s', (_label, pattern) => {
     expect(privacyHtml).not.toMatch(pattern);
   });
 
-  it('the meta description describes this site, not the retired one', () => {
+  // 'your email address' USED to be banned outright, because the only email the
+  // page could describe was the retired waitlist's. The page is now app-scoped
+  // and the app genuinely does collect one at sign-up, so a blanket ban would
+  // forbid a true statement. The guard that matters is unchanged above: the
+  // WAITLIST must stay gone. This narrows the ban to the site-analytics section,
+  // which is the part that still collects nothing.
+  it('the site-analytics section claims no email, because the site takes none', () => {
+    const siteSection = /<section class="privacy-block">(?:(?!<\/section>)[\s\S])*?Two counts[\s\S]*?<\/section>/
+      .exec(privacyHtml)?.[0];
+    expect(siteSection, 'the "Two counts" analytics section is missing').toBeDefined();
+    expect(siteSection).not.toMatch(/email/i);
+  });
+
+  it('the meta description describes what the page now covers', () => {
     const description = /<meta\s+name="description"\s+content="([^"]+)"/.exec(privacyHtml)?.[1];
     expect(description, 'privacy.html lost its meta description').toBeDefined();
     expect(description).not.toMatch(/waitlist/i);
-    expect(description).toMatch(/no cookies/i);
+    // Was /no cookies/i, which described a site-only disclosure. The page now
+    // covers the app as well, so the description has to name the app — that is
+    // the thing a stale description would get wrong.
+    expect(description).toMatch(/app/i);
   });
 });
 
 describe('every “we do not” on the page is true of the code', () => {
   it('“No cookies” — nothing on this site touches a cookie or browser storage', () => {
-    expect(privacyHtml).toMatch(/No cookies\./);
+    // The claim moved from its own sentence ("No cookies.") into a list
+    // ("No cookies, no trackers ..."), so the period is no longer there. The
+    // claim itself is what this test is for, not its punctuation.
+    expect(privacyHtml).toMatch(/No cookies[.,]/);
     const storage = /document\.cookie|localStorage|sessionStorage|indexedDB|set-cookie/i;
     for (const source of [...srcFiles, indexHtml, privacyHtml]) {
       expect(source.replace(/cookieless/gi, '')).not.toMatch(storage);
@@ -110,9 +128,36 @@ describe('the Arabic mirror still mirrors (spec §9 keeps it bilingual)', () => 
   // U+200E on both sides keeps the Latin domain from being re-ordered inside an
   // RTL sentence. It is invisible, so an editor can drop it without a trace —
   // hence an explicit escape here rather than a pasted character.
-  it('the Latin domain keeps its LRM isolation inside the Arabic sentence', () => {
+  // A Latin domain inside an RTL sentence must be ISOLATED, or the surrounding
+  // punctuation re-orders around it. Three spellings are all correct:
+  //   - <bdi>, the element that exists for exactly this \u2014 what the page uses
+  //   - dir="ltr" on the wrapper, which the HTML spec gives `unicode-bidi:
+  //     isolate` in the UA stylesheet
+  //   - U+200E on both sides (invisible, so an editor can drop it without trace)
+  // This asserts the OUTCOME rather than one spelling, so improving the
+  // technique does not read as a regression while dropping isolation still
+  // fails. Occurrences inside a tag (href="mailto:support@fulus.sa") are
+  // skipped: an attribute is not rendered text and cannot be re-ordered.
+  it('every Latin domain in the Arabic TEXT is bidi-isolated', () => {
     const arabic = privacyHtml.split('<div class="privacy-arabic"')[1] ?? '';
+    expect(arabic, 'the Arabic legal text is missing').toBeTruthy();
     const LRM = '\u200E';
-    expect(arabic).toContain(`${LRM}fulus.sa${LRM}`);
+    const inMarkup = (idx: number): boolean =>
+      arabic.lastIndexOf('<', idx) > arabic.lastIndexOf('>', idx);
+
+    const textOccurrences = [...arabic.matchAll(/fulus\.sa/g)]
+      .map((m) => m.index ?? 0)
+      .filter((idx) => !inMarkup(idx));
+    expect(textOccurrences.length, 'no rendered Latin domain found in the Arabic text')
+      .toBeGreaterThan(0);
+
+    for (const idx of textOccurrences) {
+      const before = arabic.slice(Math.max(0, idx - 80), idx);
+      const isolated =
+        arabic.slice(idx - 1, idx) === LRM ||
+        /<bdi\b[^>]*>[^<]*$/.test(before) ||
+        /<[a-z]+[^>]*\bdir="ltr"[^>]*>[^<]*$/.test(before);
+      expect(isolated, `fulus.sa at ${idx} is rendered text but not bidi-isolated`).toBe(true);
+    }
   });
 });
