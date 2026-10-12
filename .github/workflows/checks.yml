@@ -48,14 +48,16 @@ jobs:
       # The doors / redirect / POST /e contract against the REAL worker
       # (src/worker.ts) under `wrangler dev` — the vite preview server the
       # step above uses never executes it. Two passes because the doors flip
-      # is a var flip: A = wrangler.jsonc defaults (pre), B = the launch vars
-      # (open). tests/unit/worker.test.ts pins the same table at unit level;
+      # is a var flip: A = doors forced shut (--var DOORS:pre; wrangler.jsonc
+      # itself ships DOORS=open since the launch, so its defaults are no longer
+      # "pre"), B = the launch vars (open) with test store ids.
+      # tests/unit/worker.test.ts pins the same table at unit level;
       # these steps prove the worker as deployed actually behaves that way.
       - name: e2e redirects — doors pre (wrangler dev)
         shell: pwsh
         env:
           DOORS_MODE: pre
-        run: ./.github/scripts/redirect-suite.ps1
+        run: ./.github/scripts/redirect-suite.ps1 --var DOORS:pre
       - name: e2e redirects — doors open (wrangler dev)
         shell: pwsh
         env:
