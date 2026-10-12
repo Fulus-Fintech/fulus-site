@@ -44,6 +44,9 @@
         <p><strong>Your profile:</strong> a username and your first and last name, which are required. A phone number, a date of birth and a profile photo, all optional — the app works without them.</p>
         <p><strong>Your club activity:</strong> the contributions, withdrawals, trades, income, expenses and opening balances that you or your club managers enter, along with any notes attached to them. If you upload a transfer receipt, we store the file as you sent it — <strong>a receipt often shows your name and bank details</strong>, so it is worth knowing that it is kept.</p>
         <p><strong>To send you notifications:</strong> a device token from Apple or Google, so a message can reach your phone.</p>
+        <!-- Crash reporting: keep in step with the app repo (Fulus-Fintech/fulus):
+             lib/utils/sentry_scrub.dart and audit/runbooks/sentry-pii-scrubbing.md. -->
+        <p><strong>To find and fix problems in the app:</strong> if the app crashes, freezes or hits an error, it sends a report to Sentry. The report contains what failed in the app's code, the app version, technical details of your phone such as its model, operating system, language and region settings and time zone, the app's most recent steps before the problem (up to 100), and a random identifier for this installation of the app. It does not include your password, and we do not add your name or email address to it, but <strong>the error details and recent steps can include information the app was handling</strong>, such as your account's internal ID, an email address you typed, or amounts and unit holdings quoted when an action is refused. The app also tells Sentry, with the same random identifier, when you open it and when you leave it, so we can see how often using the app ends in a crash. For about one launch in ten, it also sends how long the app took to start, with the same phone details, recent steps and random identifier. Like any server, Sentry receives the network address each report comes from.</p>
         <p>That is the whole list. The app does not ask for your location, your contacts or your calendar, it contains no advertising, and it has no advertising identifier.</p>
       </section>
 
@@ -76,6 +79,7 @@
           <li><strong>Google</strong> — delivers push notifications to your phone (Firebase Cloud Messaging).</li>
           <li><strong>Logflare</strong> — receives a copy of our sign-in security log, which includes the email address used and the network address it came from. We use it to notice attacks on accounts.</li>
           <li><strong>Cloudflare</strong> — serves this website and runs the anti-robot check on our sign-in and sign-up screens.</li>
+          <li><strong>Sentry</strong> — receives the crash reports, open-and-close signals and start-up reports described above, so we can find and fix problems in the app.</li>
           <li><strong>Apple</strong> and <strong>Google</strong> — only if you choose to sign in with them.</li>
         </ul>
         <p>We do not sell your information. We do not share it for advertising. We would disclose it if the law required us to.</p>
@@ -83,12 +87,12 @@
 
       <section class="privacy-block">
         <h2>Where your information is stored</h2>
-        <p>Our database and files are hosted by Supabase in <strong>Mumbai, India</strong>. Push notifications and sign-in providers are operated by Google and Apple, which may process data in other countries. This means <strong>your information is transferred outside Saudi Arabia</strong> to be stored and processed, and we tell you so plainly because Saudi Arabia's Personal Data Protection Law requires us to.</p>
+        <p>Our database and files are hosted by Supabase in <strong>Mumbai, India</strong>, and what the app sends to Sentry is stored in <strong>Frankfurt, Germany</strong>. Push notifications and sign-in providers are operated by Google and Apple, which may process data in other countries. This means <strong>your information is transferred outside Saudi Arabia</strong> to be stored and processed, and we tell you so plainly because Saudi Arabia's Personal Data Protection Law requires us to.</p>
       </section>
 
       <section class="privacy-block">
         <h2>How long we keep it</h2>
-        <p>Your account and profile are kept while your account is open. Your club's financial records are kept as long as the club keeps them, because they are the club's records and not yours alone — other members' balances are calculated from them. Sign-in security logs age out on our log provider's schedule.</p>
+        <p>Your account and profile are kept while your account is open. Your club's financial records are kept as long as the club keeps them, because they are the club's records and not yours alone — other members' balances are calculated from them. Sign-in security logs age out on our log provider's schedule. What the app sends to Sentry is kept for up to 90 days.</p>
       </section>
 
       <section class="privacy-block">
@@ -114,7 +118,7 @@
         <p>If we change something that materially affects you, we will say so in the app before it takes effect.</p>
       </section>
 
-      <p class="privacy-updated">Last updated 7 August 2026. Questions: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+      <p class="privacy-updated">Last updated 12 October 2026. Questions: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
 
       <div class="privacy-arabic" lang="ar" dir="rtl">
         <h2>الخصوصية</h2>
@@ -132,6 +136,7 @@
           <p><strong>ملفك الشخصي:</strong> اسم مستخدم واسمك الأول والأخير، وهي مطلوبة. ورقم هاتف وتاريخ ميلاد وصورة شخصية، وكلها اختيارية — التطبيق يعمل بدونها.</p>
           <p><strong>نشاطك في النادي:</strong> الاشتراكات والاستردادات والصفقات والإيرادات والمصروفات والأرصدة الافتتاحية التي تُدخلها أنت أو مدراء ناديك، مع أي ملاحظات مرفقة بها. وإذا رفعت إيصال تحويل، نحفظ الملف كما أرسلته — <strong>وغالبًا ما يُظهر الإيصال اسمك وبيانات حسابك البنكي</strong>، ومن الجدير أن تعرف أنه محفوظ.</p>
           <p><strong>لإرسال الإشعارات إليك:</strong> رمز جهاز من <bdi>Apple</bdi> أو <bdi>Google</bdi> ليصل الإشعار إلى هاتفك.</p>
+          <p><strong>لاكتشاف مشكلات التطبيق وإصلاحها:</strong> إذا تعطّل التطبيق أو توقّف عن الاستجابة أو واجه خطأً، يرسل تقريرًا إلى <bdi>Sentry</bdi>. يتضمن التقرير: ما الذي فشل في شيفرة التطبيق، وإصدار التطبيق، وتفاصيل تقنية عن هاتفك مثل طرازه ونظام تشغيله وإعدادات اللغة والمنطقة، والمنطقة الزمنية، وآخر الخطوات التي قام بها التطبيق قبل المشكلة (بحد أقصى ١٠٠ خطوة)، ومعرّفًا عشوائيًا يميّز تثبيت التطبيق على جهازك. ولا يتضمن كلمة مرورك، ولا نُضيف إليه اسمك أو بريدك الإلكتروني، لكن <strong>تفاصيل الخطأ وآخر الخطوات قد تتضمن بيانات كان التطبيق يتعامل معها</strong>، مثل المعرّف الداخلي لحسابك، أو بريد إلكتروني كتبته، أو مبالغ ووحدات ذُكرت عند رفض عملية. ويُخبر التطبيق <bdi>Sentry</bdi> أيضًا، مع المعرّف العشوائي نفسه، عندما تفتحه وعندما تغادره، لنعرف كم مرة انتهى استخدام التطبيق بتعطّله. وفي نحو مرة من كل عشر مرات يُشغَّل فيها، يُرسل كذلك المدة التي استغرقها ليبدأ، ومعها تفاصيل هاتفك وآخر الخطوات والمعرّف العشوائي نفسه. وكأي خادم، تتلقى <bdi>Sentry</bdi> عنوان الشبكة الذي يأتي منه كل تقرير.</p>
           <p>هذه القائمة كاملة. التطبيق لا يطلب موقعك ولا جهات اتصالك ولا تقويمك، ولا يحتوي على إعلانات، وليس فيه معرّف إعلاني.</p>
         </section>
 
@@ -154,6 +159,7 @@
             <li><strong><bdi>Google</bdi></strong> — توصّل الإشعارات إلى هاتفك.</li>
             <li><strong><bdi>Logflare</bdi></strong> — تستقبل نسخة من سجل أمان تسجيل الدخول، وفيه البريد الإلكتروني المستخدم وعنوان الشبكة الذي جاء منه. نستخدمه لملاحظة الهجمات على الحسابات.</li>
             <li><strong><bdi>Cloudflare</bdi></strong> — تستضيف هذا الموقع وتُشغّل فحص مكافحة الآلي في شاشتَي الدخول والتسجيل.</li>
+            <li><strong><bdi>Sentry</bdi></strong> — تستقبل تقارير الأعطال وإشارات فتح التطبيق ومغادرته وتقارير زمن بدء تشغيله الموضحة أعلاه، لنكتشف مشكلات التطبيق ونصلحها.</li>
             <li><strong><bdi>Apple</bdi></strong> و<strong><bdi>Google</bdi></strong> — فقط إن اخترت تسجيل الدخول عبرهما.</li>
           </ul>
           <p>لا نبيع معلوماتك. ولا نشاركها لأغراض إعلانية. وسنفصح عنها إن ألزمنا النظام بذلك.</p>
@@ -161,12 +167,12 @@
 
         <section class="privacy-block">
           <h3>أين تُخزّن معلوماتك</h3>
-          <p>قاعدة بياناتنا وملفاتنا مستضافة لدى <bdi>Supabase</bdi> في <strong>مومباي، الهند</strong>. أما الإشعارات ومزوّدو تسجيل الدخول فتُشغّلهم <bdi>Google</bdi> و<bdi>Apple</bdi>، وقد يعالجون البيانات في دول أخرى. وهذا يعني أن <strong>معلوماتك تُنقل خارج المملكة العربية السعودية</strong> لتُخزَّن وتُعالَج، ونخبرك بذلك صراحةً لأن نظام حماية البيانات الشخصية السعودي يوجب علينا ذلك.</p>
+          <p>قاعدة بياناتنا وملفاتنا مستضافة لدى <bdi>Supabase</bdi> في <strong>مومباي، الهند</strong>، وما يرسله التطبيق إلى <bdi>Sentry</bdi> تخزّنه في <strong>فرانكفورت، ألمانيا</strong>. أما الإشعارات ومزوّدو تسجيل الدخول فتُشغّلهم <bdi>Google</bdi> و<bdi>Apple</bdi>، وقد يعالجون البيانات في دول أخرى. وهذا يعني أن <strong>معلوماتك تُنقل خارج المملكة العربية السعودية</strong> لتُخزَّن وتُعالَج، ونخبرك بذلك صراحةً لأن نظام حماية البيانات الشخصية السعودي يوجب علينا ذلك.</p>
         </section>
 
         <section class="privacy-block">
           <h3>كم نحتفظ بها</h3>
-          <p>حسابك وملفك الشخصي محفوظان ما دام حسابك مفتوحًا. أما السجلات المالية لناديك فتُحفظ ما دام النادي يحفظها، لأنها سجلات النادي وليست سجلاتك وحدك — فأرصدة الأعضاء الآخرين تُحتسب منها. وسجلات أمان تسجيل الدخول تنتهي مدتها وفق جدول مزوّد السجلات.</p>
+          <p>حسابك وملفك الشخصي محفوظان ما دام حسابك مفتوحًا. أما السجلات المالية لناديك فتُحفظ ما دام النادي يحفظها، لأنها سجلات النادي وليست سجلاتك وحدك — فأرصدة الأعضاء الآخرين تُحتسب منها. وسجلات أمان تسجيل الدخول تنتهي مدتها وفق جدول مزوّد السجلات. وما يرسله التطبيق إلى <bdi>Sentry</bdi> يُحفظ لمدة أقصاها ٩٠ يومًا.</p>
         </section>
 
         <section class="privacy-block">
@@ -192,7 +198,7 @@
           <p>إن غيّرنا شيئًا يؤثر عليك جوهريًا، سنخبرك بذلك في التطبيق قبل أن يسري.</p>
         </section>
 
-        <p class="privacy-updated">آخر تحديث ٧ أغسطس ٢٠٢٦. للأسئلة: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+        <p class="privacy-updated">آخر تحديث ١٢ أكتوبر ٢٠٢٦. للأسئلة: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
       </div>
     </div>
   </main>

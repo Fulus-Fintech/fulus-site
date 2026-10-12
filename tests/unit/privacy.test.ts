@@ -125,6 +125,21 @@ describe('the Arabic mirror still mirrors (spec §9 keeps it bilingual)', () => 
     expect(sections(arabic)).toBe(sections(english));
   });
 
+  // Section counts alone let a dropped Arabic paragraph or list item pass (the
+  // crash-reporting copy added one of each per language), so the SHAPE of each
+  // section is compared too: its paragraphs and its list items.
+  it('each section has the same paragraphs and list items in both languages', () => {
+    const [english, arabic] = privacyHtml.split('<div class="privacy-arabic"');
+    expect(arabic, 'the Arabic legal text is missing').toBeDefined();
+    const shape = (html: string): number[][] =>
+      [...html.matchAll(/<section class="privacy-block">([\s\S]*?)<\/section>/g)].map((m) => [
+        (m[1].match(/<p\b/g) ?? []).length,
+        (m[1].match(/<li\b/g) ?? []).length,
+      ]);
+    expect(shape(english).length).toBeGreaterThan(4);
+    expect(shape(arabic as string)).toEqual(shape(english));
+  });
+
   // U+200E on both sides keeps the Latin domain from being re-ordered inside an
   // RTL sentence. It is invisible, so an editor can drop it without a trace —
   // hence an explicit escape here rather than a pasted character.
