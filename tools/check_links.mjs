@@ -41,7 +41,14 @@ for (const page of pages) {
     // tested in tests/unit/worker.test.ts + tests/e2e/redirects.spec.ts.
     if (/^\/app(\/|$)/.test(clean)) continue;
     const rel = clean.startsWith('/') ? clean.slice(1) : clean;
-    if (!existsSync(join(root, rel))) failures.push(`${page}: missing file for "${ref}"`);
+    // Cloudflare's asset handling (html_handling, default "auto-trailing-slash")
+    // serves /delete-account from delete-account.html and /x/ from x/index.html;
+    // live, /delete-account answers 200 and /delete-account.html 307s to it. Model
+    // that instead of reporting the clean URL the pages are meant to use.
+    const candidates = [rel, `${rel}.html`, join(rel, 'index.html')];
+    if (!candidates.some((c) => existsSync(join(root, c)))) {
+      failures.push(`${page}: missing file for "${ref}"`);
+    }
   }
 }
 
