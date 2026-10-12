@@ -4,13 +4,28 @@ on:
   push:
   pull_request:
 
+# Read-only, whatever the repository default says: nothing here writes to
+# GitHub (checkout only reads; the npm cache and the artifact upload use the
+# runner's own token).
+permissions:
+  contents: read
+
 jobs:
+  # `gates` is the REQUIRED status check on `main` (branch protection, pinned
+  # to GitHub Actions). Renaming this job, giving it a `name:`, or making it a
+  # matrix renames the check, and every PR then waits forever for a `gates`
+  # that never reports: change the protection in the same sitting. Never
+  # filter `on:` above by paths or branches either; a workflow that doesn't
+  # run leaves the check pending.
   gates:
     # Visual baselines are committed for chromium-win32; CI stays on Windows
     # so toHaveScreenshot compares against them (governance note at the top
     # of tests/e2e/visual.spec.ts — baselines change only with a
     # founder-approval reference in the commit message).
     runs-on: windows-latest
+    # A run takes about 7 minutes. Without this, a hung step would block
+    # every merge for GitHub's default of 6 hours.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

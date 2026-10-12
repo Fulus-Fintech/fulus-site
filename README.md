@@ -44,17 +44,44 @@ self-hosted. Visual QA harness: `tools/qa_shots.mjs`; poster/OG generation:
     node tools/check_wellknown.mjs           # deep-link artifact integrity
     npx html-validate dist/index.html dist/privacy.html
 
-CI (`.github/workflows/checks.yml`, node 20) runs all of the above on every
+CI (`.github/workflows/checks.yml`, node 22) runs all of the above on every
 push/PR. Visual-regression baselines live in
 `tests/e2e/visual.spec.ts-snapshots/` — the update workflow is documented at
 the top of `tests/e2e/visual.spec.ts`.
 
 ## Deploy
 
-Cloudflare Workers Builds runs `npm ci && npm run build` and deploys `dist/`
-(`wrangler.jsonc` `assets.directory: "./dist"`). Pushing to `main` is the
-trigger; expect ~1–2 min with the build in the path. Local Worker preview:
-`npm run build && npx wrangler dev`.
+Merging a PR into `main` is the deploy. Cloudflare Workers Builds then runs
+`npm clean-install` and `npx wrangler deploy`, which builds first
+(`wrangler.jsonc` `build.command`) and uploads `dist/`
+(`assets.directory: "./dist"`); the live site changes about a minute after
+the merge. A push to any other branch only uploads a preview version, served
+at a public workers.dev preview address; the live site does not change, but
+previews share production's bindings, so a visit to a preview is counted in
+`fulus_site_events` like live traffic.
+
+- **`main` is protected.** A PR merges only once the `gates` check
+  (`.github/workflows/checks.yml`) has passed on it, admins included.
+- **Never deploy by hand.** `npx wrangler deploy`, or a deploy from the
+  Cloudflare dashboard, ships whatever it is given and skips `gates`. Worker
+  vars live only in `wrangler.jsonc`: a var set in the dashboard is wiped by
+  the next merge.
+- **To undo a bad deploy**, roll back in Cloudflare (Workers & Pages →
+  fulus-site → Deployments) to the version that was live before it: a past
+  deployment built from `main`. This is the one dashboard deploy that is
+  allowed. Don't pick by position in the version list: Workers Builds adds a
+  version for every branch push, so the entry just below the live one is
+  usually the PR's own preview of the same code, and others are unmerged
+  branches, some of which failed `gates`. (`npx wrangler rollback`, with no
+  version id, picks the previous deployment for you, after `npx wrangler
+  login`.) Then fix forward with a PR, and merge it before anything else:
+  any merge into `main` redeploys `main`'s head, the bad commit included.
+- **A failed deploy opens an issue.** `.github/workflows/deploy-alert.yml`
+  opens one, labelled `site-deploy-failed` and assigned to the founder, when
+  Cloudflare's build of `main` fails or reports nothing within 20 minutes of a
+  merge, and closes it once Cloudflare deploys `main`.
+
+Local Worker preview: `npm run build && npx wrangler dev`.
 
 ## Fonts & licensing
 
@@ -72,7 +99,8 @@ whitelist in sync with the app's route table. To update:
 1. Edit the source in the Flutter repo at `audit/runbooks/h-2-7-fulus-site-files/`.
 2. Run the sentinel locally to confirm consistency.
 3. Open a PR there.
-4. After it merges, copy the updated file(s) here and push.
+4. After it merges, copy the updated file(s) here in a PR; merging it deploys
+   them.
 
 ## www redirect
 

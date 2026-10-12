@@ -53,16 +53,18 @@ without all of them (spec §5).
 - [ ] **Confirm `support@fulus.sa` exists and receives mail.** `privacy.html`,
   the Door's error copy, and the `<noscript>` mailto fallback all point at it.
   A dead mailto is a silent support-channel failure.
-- [ ] **Configure Cloudflare Workers Builds:** connect this repo, build
-  command `npm ci && npm run build`, deploy directory `dist/`. Push-to-main
-  stays the trigger; deploy time grows ~30 s → ~1–2 min — re-verify at launch.
+- [x] **Configure Cloudflare Workers Builds:** connected 2026-05-03. Since
+  2026-10-12 (PR #5) it builds through `wrangler.jsonc` `build.command`, so
+  no build command is set in the dashboard, and a merge into `main` deploys.
+  See README → Deploy.
 - [ ] **Run the manual device gate** in `docs/launch-checklist.md` (real
   mid-range Android + iPhone Safari).
 - [ ] **Plan the first invite wave within ~1 month of signups starting.**
   Waitlist→activation roughly halves after a month idle.
-- [ ] **Watch the first real CI run on `windows-latest`** (visual baselines)
-  and the **first Workers Builds deploy** end-to-end — both are untested
-  outside this branch's own setup.
+- [x] **Watch the first real CI run on `windows-latest`** (visual baselines)
+  and the **first Workers Builds deploy** end-to-end: CI has run on
+  `windows-latest` since launch, and a deploy was watched end to end on
+  2026-10-12 (docs/launch-checklist.md §5).
 
 ## 2. Post-launch
 

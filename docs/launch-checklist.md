@@ -18,7 +18,7 @@ plan; this file is the ops side plus the G5 device gate.
 
 ## 1 · Store IDs into Worker vars (owner: founder → then dev)
 
-- [~] Founder supplies the **App Store ID** (numeric, from the live listing
+- [x] Founder supplies the **App Store ID** (numeric, from the live listing
   URL `https://apps.apple.com/app/id<ID>`) and the **Play package name**
   (reverse-DNS, from the Play listing `?id=` parameter).
 
@@ -27,6 +27,10 @@ plan; this file is the ops side plus the G5 device gate.
       but the listing is in testing — PLAY_PACKAGE_ID stays empty on purpose so
       Android taps return to the door rather than a dead store page. Fill it and
       redeploy on publish day; no code change, no second flip.
+
+      2026-10-12: Play published 2026-09-01, and PLAY_PACKAGE_ID is now
+      com.fulus.fintech in wrangler.jsonc. Vars change only through a PR into
+      `main` now (README → Deploy): a dashboard edit is wiped by the next merge.
 
 - [x] Put them in `wrangler.jsonc` under `vars` — use the exact var names
   `src/worker.ts` reads from `env` (confirm against the file before editing):
@@ -43,6 +47,12 @@ plan; this file is the ops side plus the G5 device gate.
   the redirects never 404, spec §6).
 
 ## 2 · DOORS flip runbook (the launch moment — one var change)
+
+> **Step 2 below is out of date since 2026-10-12.** A merge into `main` is
+> now the deploy, and `main` takes a merge only once `gates` passes. To flip a
+> var again, change it in `wrangler.jsonc` in a PR and merge; a hand
+> `npx wrangler deploy` skips `gates`. The record below is the 2026-08-01
+> launch as it happened.
 
 Preconditions: both store listings live and public; IDs in vars (§1); OG
 assets deployed (§3); device gate passed (§4).
@@ -172,14 +182,32 @@ reduced-motion)."
 
 ## 5 · Ops
 
-- [n/a] Cloudflare Workers Builds: push-to-main runs `npm ci && npm run build`
-  and deploys — watch one deploy end-to-end before launch week.
+- [x] Cloudflare Workers Builds: a merge into `main` deploys (`npx wrangler
+  deploy`, which runs `npm run build` first through `wrangler.jsonc`
+  `build.command`).
+
+      2026-10-12: WORKING. (This box read [n/a] at launch, on the
+      misdiagnosis recorded below.) Workers Builds had been connected since
+      2026-05-03 (Cloudflare's PR #1) and deployed `main` until f9f8434
+      (2026-07-05). Every build of `main` failed from 850ec47 (2026-07-31)
+      on, because nothing built dist/ before the deploy, and nobody was
+      notified; PR #5 added build.command. Watched end to end: merge 9b69500
+      at 14:21:06 UTC went live as version 0588160c at 14:21:58, and the live
+      checks passed. `main` is protected (the `gates` check must pass before
+      a merge, admins included), so deploys are no longer manual: never
+      `npx wrangler deploy` by hand. deploy-alert.yml opens an issue if a
+      build of `main` fails or never reports.
 - [ ] `www.fulus.sa/*` → `https://fulus.sa/$1` (301) bulk redirect still live
   (configured at the Cloudflare dashboard, not `_redirects`).
 - [ ] `.well-known/*` deployed byte-identical: `node tools/check_wellknown.mjs`
   green, and `curl -s https://fulus.sa/.well-known/apple-app-site-association`
   serves the JSON. (LAW: never edit these files here — source of truth is the
   Flutter repo.)
+
+      CORRECTED 2026-10-12: the note below was a misdiagnosis. Workers Builds
+      had been connected since 2026-05-03; this push (f9f8434 -> 850ec47)
+      produced a FAILED build at 2026-07-31 22:25:36 UTC, which is why no
+      version appeared. The original note, unchanged:
 
       2026-08-01: NOT CONFIGURED, and that is now a recorded fact rather than
       an assumption. `main` was pushed (f9f8434 -> 850ec47) and the deployment

@@ -1,0 +1,84 @@
+# Opens an issue, assigned to the founder, when Cloudflare's build of `main`
+# fails or never reports, and closes it once Cloudflare deploys `main`.
+# Workers Builds deploys every merge to production; Cloudflare marks each build
+# red or green on its commit, but before this nothing notified anyone. The
+# logic, and a local dry-run recipe: .github/scripts/deploy-alert.sh.
+name: deploy alert
+
+on:
+  # Each merge: wait up to 20 minutes for Cloudflare's result. This is what
+  # notices a build that never reports at all (a disconnected Workers Builds).
+  push:
+    branches: [main]
+  # Each Cloudflare build result, including a retried build. GitHub starts this
+  # only from the copy of the file on `main`, and never for check runs that
+  # GitHub Actions created, so `gates` finishing does not start it.
+  check_run:
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: Act as if Cloudflare's build of main had failed (opens or refreshes a TEST issue; ignored while main really is failing; leaves a real alert alone)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  checks: read
+  issues: write
+
+jobs:
+  reconcile:
+    # Builds reported by Cloudflare's app come from every branch; each run
+    # checks main, so a branch build is just one more check.
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'check_run' && github.event.check_run.app.id == 85455) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    # One run at a time, at job level so that a run skipped by the `if:` above
+    # never joins. Each run re-reads the current state, so a queued run that
+    # GitHub drops changes nothing; the exception is a manual simulation, which
+    # is lost if a newer run replaces it while it waits (run it again).
+    concurrency:
+      group: deploy-alert
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: match the alert issue to Cloudflare's build of main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ASSIGNEE: AhmedBalkhair
+          SIMULATE_FAILURE: ${{ github.event_name == 'workflow_dispatch' && inputs.simulate_failure }}
+          WAIT_MINUTES: ${{ github.event_name == 'push' && '20' || '0' }}
+        run: bash .github/scripts/deploy-alert.sh
+      # If the script itself failed, a failed deploy may have gone unreported:
+      # open a minimal issue (unless one of the alert's issues is already open),
+      # without depending on the script.
+      - name: if that failed, open an issue anyway
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          repo="$GITHUB_REPOSITORY"
+          open=$(gh api "repos/$repo/issues?state=open&labels=site-deploy-failed&per_page=100" \
+            --jq '[.[] | select(.pull_request == null) | select((.body // "") | contains("<!-- site-deploy-alert -->"))] | length') || open=0
+          if [ "$open" != 0 ]; then
+            echo "An alert issue is already open; nothing more to do."
+            exit 0
+          fi
+          gh api -X POST "repos/$repo/labels" -f name=site-deploy-failed -f color=d73a4a \
+            -f description="Cloudflare's build of main failed; fulus.sa is not deploying" --silent 2>/dev/null || true
+          gh api -X POST "repos/$repo/issues" \
+            -f title="The fulus.sa deploy alert failed to run" \
+            -f body="The deploy alert failed while checking Cloudflare's build of \`main\`, so a failed deploy may have gone unreported. Check the run: $RUN_URL
+
+          This issue closes itself the next time the alert runs and Cloudflare has deployed \`main\`.
+
+          <!-- site-deploy-alert -->" \
+            -f "labels[]=site-deploy-failed" -f "assignees[]=AhmedBalkhair" --silent
