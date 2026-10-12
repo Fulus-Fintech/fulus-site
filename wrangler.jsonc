@@ -19,6 +19,15 @@
     { "pattern": "fulus.sa", "custom_domain": true },
     { "pattern": "www.fulus.sa", "custom_domain": true }
   ],
+  // Workers Builds (Cloudflare's Git integration) deploys main by running
+  // `npx wrangler deploy` and no build step of its own, so dist/ did not exist
+  // and every build failed from at least 2026-08-16 until this line
+  // (founder, 2026-10-12: auto-deploy main). wrangler runs this before
+  // `deploy` and `dev` alike, so every deploy ships a fresh build of the tree
+  // it runs in; a stale dist/ can no longer go out.
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
