@@ -51,11 +51,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], contextOptions: { reducedMotion: 'reduce' } },
     },
   ],
-  webServer: {
-    // Build first, then serve dist/ — tests always run against the built site.
-    command: 'npm run build && npm run preview -- --port 4173 --strictPort',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  // The redirect suite (DOORS_MODE set; .github/scripts/redirect-suite.ps1)
+  // targets `wrangler dev` on :8787 and needs no preview server. Starting this
+  // one anyway re-ran `npm run build`, which empties and rewrites dist/ under
+  // the running wrangler dev; its asset reload then served `/` as 404 (CI,
+  // 2026-10-12, "served HTML is stamped data-doors").
+  webServer: process.env.DOORS_MODE
+    ? undefined
+    : {
+        // Build first, then serve dist/ — tests always run against the built site.
+        command: 'npm run build && npm run preview -- --port 4173 --strictPort',
+        url: 'http://localhost:4173',
+        reuseExistingServer: !process.env.CI,
+        timeout: 180_000,
+      },
 });

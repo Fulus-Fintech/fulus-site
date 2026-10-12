@@ -9,7 +9,9 @@
 #
 # Run from the repo root. Caller sets DOORS_MODE ('pre' or 'open'); any
 # arguments are forwarded to `wrangler dev`, which is how the doors flip is
-# exercised (pass B adds --var DOORS:open and the store ids).
+# exercised (pass A adds --var DOORS:pre, pass B --var DOORS:open and the store
+# ids). Playwright starts no preview server when DOORS_MODE is set
+# (playwright.config.ts), so nothing rebuilds dist/ under wrangler dev.
 #
 # Windows-only (taskkill): checks.yml pins windows-latest so the committed
 # visual baselines compare against the same rasterizer.
@@ -19,8 +21,8 @@ $wranglerArgs = @('node_modules/wrangler/bin/wrangler.js', 'dev', '--port', '878
 $wrangler = Start-Process -FilePath 'node' -ArgumentList $wranglerArgs -PassThru -NoNewWindow
 try {
   # Poll rather than sleep a fixed amount: wrangler's first boot pulls workerd
-  # and can take a while on a cold runner, and it reloads once more when
-  # playwright's webServer rebuilds dist/ under it.
+  # and can take a while on a cold runner. (It no longer has to survive a
+  # rebuild of dist/ mid-run: see the DOORS_MODE note in the header.)
   $ready = $false
   foreach ($i in 1..60) {
     if ($wrangler.HasExited) { throw "wrangler dev exited early (code $($wrangler.ExitCode))" }

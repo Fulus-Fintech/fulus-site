@@ -5,9 +5,9 @@
 // DOORS_MODE; every test auto-skips otherwise, so plain `npx playwright test`
 // (and CI, until a wrangler step is added) stays green.
 //
-// Pass A — doors pre (wrangler.jsonc default vars):
+// Pass A — doors pre (forced: wrangler.jsonc ships DOORS=open since the launch):
 //   npm run build
-//   npx wrangler dev --port 8787            # wait for: Ready on http://127.0.0.1:8787
+//   npx wrangler dev --port 8787 --var DOORS:pre   # wait for: Ready on http://127.0.0.1:8787
 //   # second terminal (PowerShell):
 //   $env:DOORS_MODE = 'pre'; npx playwright test tests/e2e/redirects.spec.ts --project=chromium
 //
@@ -29,7 +29,7 @@ const APPLE = 'https://apps.apple.com/app/id6742000000';
 const PLAY = 'https://play.google.com/store/apps/details?id=sa.fulus.app';
 
 test.describe('doors pre', () => {
-  test.skip(MODE !== 'pre', 'start wrangler dev with wrangler.jsonc defaults and set DOORS_MODE=pre');
+  test.skip(MODE !== 'pre', 'start wrangler dev with --var DOORS:pre and set DOORS_MODE=pre');
   for (const path of ['/app', '/app/ios', '/app/android', '/app/qr']) {
     test(`${path} -> 302 /#walk-in, no-store`, async ({ request }) => {
       const res = await request.get(WORKER + path, {
