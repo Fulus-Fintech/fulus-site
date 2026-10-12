@@ -5,7 +5,7 @@
   "type": "module",
   "description": "fulus.sa — The Night Crossing",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "vite",
