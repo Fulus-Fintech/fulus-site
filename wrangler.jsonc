@@ -40,10 +40,11 @@
     "DOORS": "open",
     // Fulus Capital — live since 2026-04-14 (apps.apple.com/app/id6752026264)
     "APP_STORE_ID": "6752026264",
-    // Package is com.fulus.fintech (see .well-known/assetlinks.json), but the
-    // Play listing is in testing and not publicly reachable as of 2026-07-31 —
-    // paste the package here on the day it publishes and redeploy.
-    "PLAY_PACKAGE_ID": ""
+    // Fulus Capital on Google Play — published 2026-09-01. That day the value was
+    // set in the Cloudflare dashboard only, and a deploy replaces dashboard vars
+    // with this file's, so it is pinned here (2026-10-12) to keep /app/android and
+    // the Play badge pointing at the listing.
+    "PLAY_PACKAGE_ID": "com.fulus.fintech"
   },
   "analytics_engine_datasets": [
     { "binding": "EVENTS", "dataset": "fulus_site_events" }
