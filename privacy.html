@@ -47,6 +47,7 @@
         <!-- Crash reporting: keep in step with the app repo (Fulus-Fintech/fulus):
              lib/utils/sentry_scrub.dart and audit/runbooks/sentry-pii-scrubbing.md. -->
         <p><strong>To find and fix problems in the app:</strong> if the app crashes, freezes or hits an error, it sends a report to Sentry. The report contains what failed in the app's code, the app version, technical details of your phone such as its model, operating system, language and region settings and time zone, the app's most recent steps before the problem (up to 100), and a random identifier for this installation of the app. It does not include your password, and we do not add your name or email address to it, but <strong>the error details and recent steps can include information the app was handling</strong>, such as your account's internal ID, an email address you typed, or amounts and unit holdings quoted when an action is refused. The app also tells Sentry, with the same random identifier, when you open it and when you leave it, so we can see how often using the app ends in a crash. For about one launch in ten, it also sends how long the app took to start, with the same phone details, recent steps and random identifier. Like any server, Sentry receives the network address each report comes from, and we have set it not to store that address.</p>
+        <p><strong>To decide when to ask you for a store rating:</strong> from version 1.3.6, when you stay a few seconds on the receipt of a contribution someone else recorded for you, the app tells our server, and we keep a note of it: which receipt, whether you came from a notification or from inside your club, the app version, your phone's system and the time. We keep these notes until you delete your account.</p>
         <p>That is the whole list. The app does not ask for your location, your contacts or your calendar, it contains no advertising, and it has no advertising identifier.</p>
       </section>
 
@@ -73,13 +74,13 @@
           add is not shown on any screen." and get counsel's view on whether the
           API-level readability needs disclosing.
         -->
-        <p><strong>Companies that run parts of the service for us.</strong> They act on our instructions and may not use your information for their own purposes:</p>
+        <p><strong>Companies that run parts of the service for us.</strong> They act on our instructions and may not use your information for their own purposes, except as noted below:</p>
         <ul>
-          <li><strong>Supabase</strong> — stores the database, your account, and uploaded files.</li>
+          <li><strong>Supabase</strong> — stores the database, your account, and uploaded files. It also keeps a short log of each request the app makes, with the network address it came from and the approximate area that address points to.</li>
           <li><strong>Google</strong> — delivers push notifications to your phone (Firebase Cloud Messaging).</li>
           <li><strong>Logflare</strong> — receives a copy of our sign-in security log, which includes the email address used and the network address it came from. We use it to notice attacks on accounts.</li>
-          <li><strong>Cloudflare</strong> — serves this website and runs the anti-robot check on our sign-in and sign-up screens.</li>
-          <li><strong>Sentry</strong> — receives the crash reports, open-and-close signals and start-up reports described above, so we can find and fix problems in the app.</li>
+          <li><strong>Cloudflare</strong> — serves this website and runs the anti-robot check on our sign-in and sign-up screens. For that check it receives your network address and technical details of your phone's browser, and Cloudflare also uses them to improve its own robot detection.</li>
+          <li><strong>Sentry</strong> — receives the crash reports, open-and-close signals and start-up reports described above, so we can find and fix problems in the app. Its terms let it use parts of them that identify no one to improve its own product.</li>
           <li><strong>Apple</strong> and <strong>Google</strong> — only if you choose to sign in with them.</li>
         </ul>
         <p>We do not sell your information. We do not share it for advertising. We would disclose it if the law required us to.</p>
@@ -92,7 +93,7 @@
 
       <section class="privacy-block">
         <h2>How long we keep it</h2>
-        <p>Your account and profile are kept while your account is open. Your club's financial records are kept as long as the club keeps them, because they are the club's records and not yours alone — other members' balances are calculated from them. Sign-in security logs age out on our log provider's schedule. What the app sends to Sentry is kept for up to 90 days.</p>
+        <p>Your account and profile are kept while your account is open. Your club's financial records are kept as long as the club keeps them, because they are the club's records and not yours alone — other members' balances are calculated from them. Sign-in security logs age out on our log provider's schedule. Our database provider's request logs are deleted automatically within 7 days. What the app sends to Sentry is kept for up to 90 days.</p>
       </section>
 
       <section class="privacy-block">
@@ -137,6 +138,7 @@
           <p><strong>نشاطك في النادي:</strong> الاشتراكات والاستردادات والصفقات والإيرادات والمصروفات والأرصدة الافتتاحية التي تُدخلها أنت أو مدراء ناديك، مع أي ملاحظات مرفقة بها. وإذا رفعت إيصال تحويل، نحفظ الملف كما أرسلته — <strong>وغالبًا ما يُظهر الإيصال اسمك وبيانات حسابك البنكي</strong>، ومن الجدير أن تعرف أنه محفوظ.</p>
           <p><strong>لإرسال الإشعارات إليك:</strong> رمز جهاز من <bdi>Apple</bdi> أو <bdi>Google</bdi> ليصل الإشعار إلى هاتفك.</p>
           <p><strong>لاكتشاف مشكلات التطبيق وإصلاحها:</strong> إذا تعطّل التطبيق أو توقّف عن الاستجابة أو واجه خطأً، يرسل تقريرًا إلى <bdi>Sentry</bdi>. يتضمن التقرير: ما الذي فشل في شيفرة التطبيق، وإصدار التطبيق، وتفاصيل تقنية عن هاتفك مثل طرازه ونظام تشغيله وإعدادات اللغة والمنطقة، والمنطقة الزمنية، وآخر الخطوات التي قام بها التطبيق قبل المشكلة (بحد أقصى ١٠٠ خطوة)، ومعرّفًا عشوائيًا يميّز تثبيت التطبيق على جهازك. ولا يتضمن كلمة مرورك، ولا نُضيف إليه اسمك أو بريدك الإلكتروني، لكن <strong>تفاصيل الخطأ وآخر الخطوات قد تتضمن بيانات كان التطبيق يتعامل معها</strong>، مثل المعرّف الداخلي لحسابك، أو بريد إلكتروني كتبته، أو مبالغ ووحدات ذُكرت عند رفض عملية. ويُخبر التطبيق <bdi>Sentry</bdi> أيضًا، مع المعرّف العشوائي نفسه، عندما تفتحه وعندما تغادره، لنعرف كم مرة انتهى استخدام التطبيق بتعطّله. وفي نحو مرة من كل عشر مرات يُشغَّل فيها، يُرسل كذلك المدة التي استغرقها ليبدأ، ومعها تفاصيل هاتفك وآخر الخطوات والمعرّف العشوائي نفسه. وكأي خادم، تتلقى <bdi>Sentry</bdi> عنوان الشبكة الذي يأتي منه كل تقرير، وقد ضبطناها بحيث لا تخزّن هذا العنوان.</p>
+          <p><strong>لنعرف متى نطلب منك تقييم التطبيق في المتجر:</strong> ابتداءً من الإصدار <bdi>1.3.6</bdi>، حين تبقى بضع ثوانٍ على إيصال اشتراك سجّله لك شخص آخر، يُبلغ التطبيق خادمنا، ونحتفظ بملاحظة بذلك: أي إيصال، وهل وصلت إليه من إشعار أم من داخل ناديك، وإصدار التطبيق، ونظام هاتفك، والوقت. ونحتفظ بهذه الملاحظات حتى تحذف حسابك.</p>
           <p>هذه القائمة كاملة. التطبيق لا يطلب موقعك ولا جهات اتصالك ولا تقويمك، ولا يحتوي على إعلانات، وليس فيه معرّف إعلاني.</p>
         </section>
 
@@ -153,13 +155,13 @@
         <section class="privacy-block">
           <h3>من غيرنا يمكنه رؤية معلوماتك</h3>
           <p><strong>أعضاء ناديك الآخرون</strong> يرون اسمك واسم المستخدم وصورتك، ويرون معاملاتك في سجلات النادي — فهذا هو معنى السجل المشترك. ويستطيع مدراء النادي إضافةً إلى ذلك رؤية الطلبات التي تقدّمها والإيصالات التي ترفعها.</p>
-          <p><strong>شركات تُشغّل أجزاء من الخدمة نيابة عنا.</strong> تعمل وفق تعليماتنا ولا يجوز لها استخدام معلوماتك لأغراضها الخاصة:</p>
+          <p><strong>شركات تُشغّل أجزاء من الخدمة نيابة عنا.</strong> تعمل وفق تعليماتنا ولا يجوز لها استخدام معلوماتك لأغراضها الخاصة، إلا ما نذكره أدناه:</p>
           <ul>
-            <li><strong><bdi>Supabase</bdi></strong> — تخزّن قاعدة البيانات وحسابك والملفات المرفوعة.</li>
+            <li><strong><bdi>Supabase</bdi></strong> — تخزّن قاعدة البيانات وحسابك والملفات المرفوعة. وتحتفظ أيضًا بسجل قصير لكل طلب يرسله التطبيق، فيه عنوان الشبكة الذي جاء منه والمنطقة التقريبية التي يدل عليها ذلك العنوان.</li>
             <li><strong><bdi>Google</bdi></strong> — توصّل الإشعارات إلى هاتفك.</li>
             <li><strong><bdi>Logflare</bdi></strong> — تستقبل نسخة من سجل أمان تسجيل الدخول، وفيه البريد الإلكتروني المستخدم وعنوان الشبكة الذي جاء منه. نستخدمه لملاحظة الهجمات على الحسابات.</li>
-            <li><strong><bdi>Cloudflare</bdi></strong> — تستضيف هذا الموقع وتُشغّل فحص مكافحة الآلي في شاشتَي الدخول والتسجيل.</li>
-            <li><strong><bdi>Sentry</bdi></strong> — تستقبل تقارير الأعطال وإشارات فتح التطبيق ومغادرته وتقارير زمن بدء تشغيله الموضحة أعلاه، لنكتشف مشكلات التطبيق ونصلحها.</li>
+            <li><strong><bdi>Cloudflare</bdi></strong> — تستضيف هذا الموقع وتُشغّل فحص مكافحة الآلي في شاشتَي الدخول والتسجيل. ولهذا الفحص تتلقى عنوان شبكتك وتفاصيل تقنية عن متصفح هاتفك، وتستخدمها <bdi>Cloudflare</bdi> أيضًا لتحسين كشفها للبرامج الآلية.</li>
+            <li><strong><bdi>Sentry</bdi></strong> — تستقبل تقارير الأعطال وإشارات فتح التطبيق ومغادرته وتقارير زمن بدء تشغيله الموضحة أعلاه، لنكتشف مشكلات التطبيق ونصلحها. وتسمح لها شروطها باستخدام أجزاء منها لا تكشف هوية أحد لتحسين منتجها.</li>
             <li><strong><bdi>Apple</bdi></strong> و<strong><bdi>Google</bdi></strong> — فقط إن اخترت تسجيل الدخول عبرهما.</li>
           </ul>
           <p>لا نبيع معلوماتك. ولا نشاركها لأغراض إعلانية. وسنفصح عنها إن ألزمنا النظام بذلك.</p>
@@ -172,7 +174,7 @@
 
         <section class="privacy-block">
           <h3>كم نحتفظ بها</h3>
-          <p>حسابك وملفك الشخصي محفوظان ما دام حسابك مفتوحًا. أما السجلات المالية لناديك فتُحفظ ما دام النادي يحفظها، لأنها سجلات النادي وليست سجلاتك وحدك — فأرصدة الأعضاء الآخرين تُحتسب منها. وسجلات أمان تسجيل الدخول تنتهي مدتها وفق جدول مزوّد السجلات. وما يرسله التطبيق إلى <bdi>Sentry</bdi> يُحفظ لمدة أقصاها ٩٠ يومًا.</p>
+          <p>حسابك وملفك الشخصي محفوظان ما دام حسابك مفتوحًا. أما السجلات المالية لناديك فتُحفظ ما دام النادي يحفظها، لأنها سجلات النادي وليست سجلاتك وحدك — فأرصدة الأعضاء الآخرين تُحتسب منها. وسجلات أمان تسجيل الدخول تنتهي مدتها وفق جدول مزوّد السجلات. وسجلات الطلبات لدى مزوّد قاعدة البيانات تُحذف تلقائيًا خلال ٧ أيام. وما يرسله التطبيق إلى <bdi>Sentry</bdi> يُحفظ لمدة أقصاها ٩٠ يومًا.</p>
         </section>
 
         <section class="privacy-block">
