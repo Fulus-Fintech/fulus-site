@@ -91,7 +91,9 @@ body::before {
   display: flex; justify-content: space-between; align-items: center;
   padding: 18px clamp(18px, 4vw, 44px);
 }
-.wordmark { font-weight: 700; letter-spacing: .38em; font-size: .95rem; }
+/* The logotype is inline SVG (index.html) painted in the text colour. */
+.wordmark { display: flex; color: var(--text); }
+.wordmark svg { display: block; height: 20px; width: auto; fill: currentColor; }
 .meter {
   display: flex; align-items: center; gap: 10px;
   font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .22em;
@@ -191,7 +193,12 @@ html:has(#gl[data-world]) .act:focus-within { opacity: 1; pointer-events: auto; 
 html:has(#gl[data-world]) #beat-hero { top: 16%; }
 html:has(#gl[data-world]) #beat-mid { top: 20%; }
 html:has(#gl[data-world]) #beat-open { top: 14%; }
-html:has(#gl[data-world]) #walk-in { bottom: 12%; }
+/* The footer is the last thing in the document flow, so at the very end of the
+   scroll it rises into the bottom ~74px of the screen, under this fixed block.
+   12% alone clears it only on tall screens; on phones the sign-off line sat on
+   the footer text. 7rem is the footer's text height plus a breathing gap, so
+   the two never meet; above ~930px tall the authored 12% still rules. */
+html:has(#gl[data-world]) #walk-in { bottom: max(12%, 7rem); }
 
 /* ---- legal ---- */
 .legal {
@@ -202,7 +209,6 @@ html:has(#gl[data-world]) #walk-in { bottom: 12%; }
 }
 .legal p + p { margin-top: 8px; }
 .legal a { color: var(--text-quiet); }
-.tm { letter-spacing: .04em; }
 
 /*
  * AA contrast law (spec §6) — all text sits on Deep Ocean Night #020B18.

@@ -63,6 +63,37 @@ test('world mode: a beat that takes keyboard focus stages itself in', async ({ p
   await expect(walkIn).toHaveCSS('pointer-events', 'auto');
 });
 
+// The footer scrolls into the bottom of the screen at the very end of the
+// flight, under the fixed walk-in block. On phones the sign-off line used to
+// sit on the footer text (founder report, 2026-10-20).
+for (const [name, width, height] of [
+  ['small phone', 360, 640],
+  ['iphone', 390, 664],
+  ['landscape phone', 844, 390],
+  ['desktop', 1440, 900],
+] as const) {
+  test(`world mode: the end block clears the footer at the bottom of the scroll (${name})`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'world', 'runs only in the world project (SwiftShader WebGL2)');
+
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await expect(page.locator('canvas#gl')).toHaveAttribute('data-world', 'on', { timeout: 15_000 });
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+
+    const { endBottom, footerTop } = await page.evaluate(() => {
+      const shown = (el: Element): boolean => getComputedStyle(el).display !== 'none';
+      const walkIn = [...document.querySelectorAll('#walk-in > *')].filter(shown);
+      const footer = [...document.querySelectorAll('.legal p')].filter(shown);
+      return {
+        endBottom: Math.max(...walkIn.map((el) => el.getBoundingClientRect().bottom)),
+        footerTop: Math.min(...footer.map((el) => el.getBoundingClientRect().top)),
+      };
+    });
+    // Not just "no overlap": a few pixels apart still reads as one jammed block.
+    expect(footerTop - endBottom).toBeGreaterThanOrEqual(24);
+  });
+}
+
 test('reduced motion: poster edition only — no world boot, zero three.js bytes', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'reduced-motion', 'runs only in the reduced-motion project');
 

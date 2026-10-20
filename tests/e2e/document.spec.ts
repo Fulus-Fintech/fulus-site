@@ -19,7 +19,9 @@ test('title and meta description', async ({ page }) => {
 });
 
 test('copy lock - every rendered string verbatim', async ({ page }) => {
-  await expect(page.locator('.wordmark')).toHaveText('FULUS');
+  // The header carries the FULUS logotype (inline SVG), never typed letters.
+  await expect(page.locator('.wordmark')).toHaveText('');
+  await expect(page.locator('.wordmark svg')).toHaveAccessibleName('Fulus');
   await expect(page.locator('.meter-label')).toHaveText('THE WAY IN');
   await expect(page.locator('h1')).toHaveText('The group chat, now invested.');
   await expect(page.locator('.sub')).toHaveText('Group investing for the circle you already have.');
@@ -30,9 +32,8 @@ test('copy lock - every rendered string verbatim', async ({ page }) => {
   await expect(page.locator('.sig')).toHaveText('The group chat, now invested.');
   await expect(page.locator('.folio')).toHaveText('FULUS — 01.08.2026');
   await expect(page.locator('.legal-line')).toHaveText('PRIVACY · © 2026 FULUS');
-  await expect(page.locator('.tm')).toHaveText(
-    'App Store is a trademark of Apple Inc. · Google Play and the Google Play logo are trademarks of Google LLC.',
-  );
+  // Founder removed the store-trademark line (2026-10-20).
+  await expect(page.getByText('trademark')).toHaveCount(0);
 });
 
 test('badges are real links with the contract labels', async ({ page }) => {
