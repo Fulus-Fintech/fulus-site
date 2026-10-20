@@ -91,7 +91,9 @@ body::before {
   display: flex; justify-content: space-between; align-items: center;
   padding: 18px clamp(18px, 4vw, 44px);
 }
-.wordmark { font-weight: 700; letter-spacing: .38em; font-size: .95rem; }
+/* The logotype is inline SVG (index.html) painted in the text colour. */
+.wordmark { display: flex; color: var(--text); }
+.wordmark svg { display: block; height: 20px; width: auto; fill: currentColor; }
 .meter {
   display: flex; align-items: center; gap: 10px;
   font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .22em;
@@ -202,7 +204,6 @@ html:has(#gl[data-world]) #walk-in { bottom: 12%; }
 }
 .legal p + p { margin-top: 8px; }
 .legal a { color: var(--text-quiet); }
-.tm { letter-spacing: .04em; }
 
 /*
  * AA contrast law (spec §6) — all text sits on Deep Ocean Night #020B18.
