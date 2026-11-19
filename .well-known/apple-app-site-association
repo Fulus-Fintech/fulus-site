@@ -39,5 +39,8 @@
         ]
       }
     ]
+  },
+  "webcredentials": {
+    "apps": ["2P5F7CK94A.com.fulus.fintech"]
   }
 }
