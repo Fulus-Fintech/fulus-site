@@ -48,7 +48,7 @@
              lib/utils/sentry_scrub.dart and audit/runbooks/sentry-pii-scrubbing.md. -->
         <p><strong>To find and fix problems in the app:</strong> if the app crashes, freezes or hits an error, it sends a report to Sentry. The report contains what failed in the app's code, the app version, technical details of your phone such as its model, operating system, language and region settings and time zone, the app's most recent steps before the problem (up to 100), and a random identifier for this installation of the app. It does not include your password, and we do not add your name or email address to it, but <strong>the error details and recent steps can include information the app was handling</strong>, such as your account's internal ID, an email address you typed, or amounts and unit holdings quoted when an action is refused. The app also tells Sentry, with the same random identifier, when you open it and when you leave it, so we can see how often using the app ends in a crash. For about one launch in ten, it also sends how long the app took to start, with the same phone details, recent steps and random identifier. Like any server, Sentry receives the network address each report comes from, and we have set it not to store that address.</p>
         <p><strong>To decide when to ask you for a store rating:</strong> from version 1.3.6, when you stay a few seconds on the receipt of a contribution someone else recorded for you, the app tells our server, and we keep a note of it: which receipt, whether you came from a notification or from inside your club, the app version, your phone's system and the time. We keep these notes until you delete your account.</p>
-        <p>That is the whole list. The app does not ask for your location, your contacts or your calendar, it contains no advertising, and it has no advertising identifier.</p>
+        <p>The app does not ask for your location, your contacts or your calendar, it contains no advertising, and it has no advertising identifier.</p>
       </section>
 
       <section class="privacy-block">
@@ -63,6 +63,7 @@
 
       <section class="privacy-block">
         <h2>Who else can see your information</h2>
+        <p>While a change we are rolling out is completed, other people who use Fulus can see your name, your username and your photo.</p>
         <p><strong>Other members of your club</strong> see your name, your username and your photo, and they see your transactions in the club's records — that is what a shared ledger is. Club managers can additionally see the requests you make and the receipts you upload.</p>
         <!--
           ACCURACY NOTE, remove before publishing only if still true then:
@@ -101,7 +102,7 @@
         <p>You can ask us to delete your account at any time — from the app, or from <a href="/delete-account">the deletion page</a> on this site.</p>
         <p>We want to be straight about what deletion can and cannot do. <strong>If you still hold units in a club, we will ask you to redeem them or leave the club first</strong> — deleting you while you have money in the pool would erase the record of a claim you still own, and we are not willing to do that to you.</p>
         <p>Once you have no live claim, we remove your name, username, email address, phone number, date of birth and profile photo, unlink your Apple and Google sign-in, and end your sessions. <strong>Your transactions stay in the club's ledger, without your name on them</strong> — they are also other members' records, and removing them would change everyone else's balance. Receipts you uploaded stay with the club's financial records for the same reason. Your profile photo is removed from the app.</p>
-        <p>If you have never joined a club or recorded anything, there is nothing to keep, and your account is deleted outright.</p>
+        <p>If you have never joined a club or recorded anything, there is nothing to keep, and your account is deleted rather than anonymised.</p>
       </section>
 
       <section class="privacy-block">
@@ -119,7 +120,7 @@
         <p>If we change something that materially affects you, we will say so in the app before it takes effect.</p>
       </section>
 
-      <p class="privacy-updated">Last updated 13 October 2026. Questions: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+      <p class="privacy-updated">Last updated 25 November 2026. Questions: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
 
       <div class="privacy-arabic" lang="ar" dir="rtl">
         <h2>الخصوصية</h2>
@@ -139,7 +140,7 @@
           <p><strong>لإرسال الإشعارات إليك:</strong> رمز جهاز من <bdi>Apple</bdi> أو <bdi>Google</bdi> ليصل الإشعار إلى هاتفك.</p>
           <p><strong>لاكتشاف مشكلات التطبيق وإصلاحها:</strong> إذا تعطّل التطبيق أو توقّف عن الاستجابة أو واجه خطأً، يرسل تقريرًا إلى <bdi>Sentry</bdi>. يتضمن التقرير: ما الذي فشل في شيفرة التطبيق، وإصدار التطبيق، وتفاصيل تقنية عن هاتفك مثل طرازه ونظام تشغيله وإعدادات اللغة والمنطقة، والمنطقة الزمنية، وآخر الخطوات التي قام بها التطبيق قبل المشكلة (بحد أقصى ١٠٠ خطوة)، ومعرّفًا عشوائيًا يميّز تثبيت التطبيق على جهازك. ولا يتضمن كلمة مرورك، ولا نُضيف إليه اسمك أو بريدك الإلكتروني، لكن <strong>تفاصيل الخطأ وآخر الخطوات قد تتضمن بيانات كان التطبيق يتعامل معها</strong>، مثل المعرّف الداخلي لحسابك، أو بريد إلكتروني كتبته، أو مبالغ ووحدات ذُكرت عند رفض عملية. ويُخبر التطبيق <bdi>Sentry</bdi> أيضًا، مع المعرّف العشوائي نفسه، عندما تفتحه وعندما تغادره، لنعرف كم مرة انتهى استخدام التطبيق بتعطّله. وفي نحو مرة من كل عشر مرات يُشغَّل فيها، يُرسل كذلك المدة التي استغرقها ليبدأ، ومعها تفاصيل هاتفك وآخر الخطوات والمعرّف العشوائي نفسه. وكأي خادم، تتلقى <bdi>Sentry</bdi> عنوان الشبكة الذي يأتي منه كل تقرير، وقد ضبطناها بحيث لا تخزّن هذا العنوان.</p>
           <p><strong>لنعرف متى نطلب منك تقييم التطبيق في المتجر:</strong> ابتداءً من الإصدار <bdi>1.3.6</bdi>، حين تبقى بضع ثوانٍ على إيصال اشتراك سجّله لك شخص آخر، يُبلغ التطبيق خادمنا، ونحتفظ بملاحظة بذلك: أي إيصال، وهل وصلت إليه من إشعار أم من داخل ناديك، وإصدار التطبيق، ونظام هاتفك، والوقت. ونحتفظ بهذه الملاحظات حتى تحذف حسابك.</p>
-          <p>هذه القائمة كاملة. التطبيق لا يطلب موقعك ولا جهات اتصالك ولا تقويمك، ولا يحتوي على إعلانات، وليس فيه معرّف إعلاني.</p>
+          <p>التطبيق لا يطلب موقعك ولا جهات اتصالك ولا تقويمك، ولا يحتوي على إعلانات، وليس فيه معرّف إعلاني.</p>
         </section>
 
         <section class="privacy-block">
@@ -154,6 +155,7 @@
 
         <section class="privacy-block">
           <h3>من غيرنا يمكنه رؤية معلوماتك</h3>
+          <p>ريثما يكتمل تغيير نعمل على تطبيقه، يستطيع أشخاص آخرون يستخدمون فلوس رؤية اسمك واسم المستخدم وصورتك.</p>
           <p><strong>أعضاء ناديك الآخرون</strong> يرون اسمك واسم المستخدم وصورتك، ويرون معاملاتك في سجلات النادي — فهذا هو معنى السجل المشترك. ويستطيع مدراء النادي إضافةً إلى ذلك رؤية الطلبات التي تقدّمها والإيصالات التي ترفعها.</p>
           <p><strong>شركات تُشغّل أجزاء من الخدمة نيابة عنا.</strong> تعمل وفق تعليماتنا ولا يجوز لها استخدام معلوماتك لأغراضها الخاصة، إلا ما نذكره أدناه:</p>
           <ul>
@@ -182,7 +184,7 @@
           <p>يمكنك أن تطلب حذف حسابك في أي وقت — من التطبيق، أو من <a href="/delete-account">صفحة الحذف</a> في هذا الموقع.</p>
           <p>ونريد أن نكون صريحين بشأن ما يستطيع الحذف فعله وما لا يستطيع. <strong>إن كنت لا تزال تملك وحدات في نادٍ، سنطلب منك استردادها أو مغادرة النادي أولًا</strong> — فحذفك ولك مال في الوعاء يمحو سجل حقٍّ ما زال لك، ولسنا مستعدين لفعل ذلك بك.</p>
           <p>وحين لا يبقى لك حق قائم، نزيل اسمك واسم المستخدم وبريدك الإلكتروني ورقم هاتفك وتاريخ ميلادك وصورتك الشخصية، ونفك ارتباط تسجيل الدخول عبر <bdi>Apple</bdi> و<bdi>Google</bdi>، وننهي جلساتك. <strong>وتبقى معاملاتك في سجل النادي بلا اسمك عليها</strong> — فهي أيضًا سجلات الأعضاء الآخرين، وإزالتها تغيّر أرصدة الجميع. وتبقى الإيصالات التي رفعتها ضمن السجلات المالية للنادي للسبب نفسه. أما صورتك الشخصية فتُزال من التطبيق.</p>
-          <p>وإن لم تنضم إلى نادٍ قط ولم تسجّل شيئًا، فلا شيء يستدعي الحفظ، ويُحذف حسابك كليًا.</p>
+          <p>وإن لم تنضم إلى نادٍ قط ولم تسجّل شيئًا، فلا شيء يستدعي الحفظ، ويُحذف حسابك بدلًا من جعله مجهول الهوية.</p>
         </section>
 
         <section class="privacy-block">
@@ -200,7 +202,7 @@
           <p>إن غيّرنا شيئًا يؤثر عليك جوهريًا، سنخبرك بذلك في التطبيق قبل أن يسري.</p>
         </section>
 
-        <p class="privacy-updated">آخر تحديث ١٣ أكتوبر ٢٠٢٦. للأسئلة: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
+        <p class="privacy-updated">آخر تحديث ٢٥ نوفمبر ٢٠٢٦. للأسئلة: <a href="mailto:support@fulus.sa" dir="ltr"><bdi>support@fulus.sa</bdi></a>.</p>
       </div>
     </div>
   </main>
